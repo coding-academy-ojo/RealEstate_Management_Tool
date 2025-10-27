@@ -1,0 +1,288 @@
+/* Auth layout specific styles */
+body.auth-page {
+    background-color: #f8f9fa;
+    min-height: 100vh; /* Keep min-height for flexibility */
+    display: flex;
+    align-items: center; /* Center for normal login pages */
+    justify-content: center;
+    padding: 20px 0; /* Add padding for better spacing */
+}
+
+/* Activation pages specific adjustments - override centering */
+body.auth-page.activation-page {
+    align-items: flex-start; /* Start from top for activation pages */
+}
+
+.auth-page .auth-body {
+    padding: 1.5rem;
+    overflow-y: visible;
+}
+
+.auth-page .login-wrapper {
+    width: 100%;
+    max-width: none;
+}
+
+.auth-page .activation-info-card {
+    margin-bottom: 1.5rem;
+}
+
+.auth-container {
+    max-width: 1000px;
+    width: 100%;
+    padding: 1rem;
+}
+
+.auth-card {
+    border-radius: 10px;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    width: 100%;
+    display: flex; /* Make the card display as flex */
+    flex-direction: row; /* Ensure row direction for left/right layout */
+}
+
+.auth-image-section {
+    flex: 0 0 50%; /* Take up 50% of the card's width */
+    position: relative;
+    overflow: hidden;
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-header-mobile {
+    background-color: black;
+    color: white;
+    padding: 0.8rem 1.5rem;
+    display: none; /* Hidden by default on desktop */
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+}
+
+.auth-form-section {
+    flex: 0 0 50%; /* Take up 50% of the card's width */
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-header {
+    background-color: black;
+    color: white;
+    padding: 0.8rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.auth-body {
+    flex: 1;
+    background-color: white;
+}
+
+.logo-container {
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    min-width: 40px;
+    background-color: #ffffff; /* Adding a white background to make the logo visible */
+    border-radius: 4px;
+}
+
+.logo-container img {
+    max-height: 390px;
+    width: 50px;
+    display: block; /* Ensure the image is displayed as a block element */
+}
+
+.logo-square {
+    width: 35px;
+    height: 35px;
+    background-color: #ff7900; /* Orange color */
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.auth-header h4 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+/* Login page specific styles */
+.login-wrapper {
+    animation: fadeIn 0.5s ease-in-out;
+    width: 100%;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login-image-wrapper {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    background-color: black; /* Set background color to black */
+    align-items: center;
+    justify-content: center;
+}
+
+.login-img {
+    object-fit: contain;
+    max-width: 100%;
+    max-height: 500px;
+    width: 100%;
+}
+
+.orange-heading {
+    color: #ff7900;
+    font-weight: 600;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.auth-form {
+    transition: all 0.4s ease;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #555;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 0.5rem 0.75rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+.input-icon {
+    color: #888;
+    margin-right: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.styled-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 1rem;
+}
+
+.styled-input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.toggle-password {
+    background: transparent;
+    border: none;
+    color: #888;
+    padding-left: 0.5rem;
+}
+
+.toggle-password:hover {
+    color: #ff7900;
+}
+
+.form-check-input:checked {
+    background-color: #ff7900;
+    border-color: #ff7900;
+}
+
+.btn-orange {
+    background-color: #ff7900;
+    border-color: #ff7900;
+    font-weight: 500;
+}
+
+.btn-orange:hover {
+    background-color: #e66c00;
+    border-color: #e66c00;
+    transform: translateY(-1px);
+}
+
+.text-orange {
+    color: #ff7900;
+    text-decoration: none;
+}
+
+.text-orange:hover {
+    color: #e66c00;
+    text-decoration: underline;
+}
+
+/* Login form container styling */
+.login-form-container {
+    width: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    body.auth-page {
+        padding: 10px 0; /* Reduced padding for mobile */
+        align-items: center; /* Keep centered for normal login on mobile */
+    }
+
+    /* Activation pages on mobile should start from top */
+    body.auth-page.activation-page {
+        align-items: flex-start; /* Start from top for activation pages on mobile */
+    }
+
+    .auth-container {
+        padding: 0.5rem; /* Reduced container padding */
+    }
+
+    .auth-card {
+        flex-direction: column; /* Stack vertically on smaller screens */
+        min-height: auto; /* Allow natural height */
+    }
+    .auth-image-section,
+    .auth-form-section {
+        flex: 0 0 100%; /* Take full width on smaller screens */
+    }
+    .auth-image-section {
+        min-height: 200px; /* Reduced height for mobile */
+        order: 2; /* Make image second on small screens */
+    }
+    .auth-form-section {
+        order: 3; /* Make form third on small screens */
+    }
+    .auth-header {
+        display: none; /* Hide the desktop header on small screens */
+    }
+    .auth-header-mobile {
+        display: flex; /* Show the mobile header on small screens */
+        order: 1; /* Keep mobile header at the top */
+    }
+
+    /* Mobile specific adjustments for activation pages */
+    .auth-page .auth-body {
+        padding: 1rem;
+    }
+
+    .auth-page .login-form-container {
+        padding: 20px;
+    }
+}
