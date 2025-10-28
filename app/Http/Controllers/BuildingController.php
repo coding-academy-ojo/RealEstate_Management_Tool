@@ -211,7 +211,14 @@ class BuildingController extends Controller
 
     public function show(Building $building)
     {
-        $building->load(['site.images', 'lands.images', 'waterServices', 'electricityServices', 'rennovations', 'images']);
+        $building->load([
+            'site.images',
+            'lands.images',
+            'waterServices' => fn($query) => $query->with('latestReading'),
+            'electricityServices',
+            'rennovations',
+            'images',
+        ]);
         $documents = collect([
             'building-permit' => [
                 'label' => 'Building Permit',
@@ -545,8 +552,13 @@ class BuildingController extends Controller
 
     protected function purgeWaterServiceMedia(WaterService $service): void
     {
-        foreach (['invoice_file', 'payment_receipt'] as $attribute) {
-            $this->deleteFileIfExists($service->{$attribute});
+        $service->loadMissing('readings');
+
+        $this->deleteFileIfExists($service->initial_meter_image);
+
+        foreach ($service->readings as $reading) {
+            $this->deleteFileIfExists($reading->meter_image);
+            $this->deleteFileIfExists($reading->bill_image);
         }
     }
 

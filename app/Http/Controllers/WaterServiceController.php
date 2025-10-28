@@ -30,7 +30,7 @@ class WaterServiceController extends Controller
         $direction = $request->input('direction', 'asc');
 
         // Build query
-        $query = WaterService::with('building.site');
+        $query = WaterService::with(['building.site', 'latestReading']);
 
         // Apply search filter
         if ($filters['search']) {
@@ -59,12 +59,6 @@ class WaterServiceController extends Controller
                 break;
             case 'iron':
                 $query->orderBy('iron_number', $direction);
-                break;
-            case 'previous':
-                $query->orderBy('previous_reading', $direction);
-                break;
-            case 'current':
-                $query->orderBy('current_reading', $direction);
                 break;
             case 'building':
                 $query->join('buildings', 'water_services.building_id', '=', 'buildings.id')
@@ -108,20 +102,12 @@ class WaterServiceController extends Controller
             'company_name' => 'required|string|max:255',
             'registration_number' => 'required|string|max:255',
             'iron_number' => 'nullable|string|max:255',
-            'previous_reading' => 'required|numeric|min:0',
-            'current_reading' => 'required|numeric|min:0',
-            'reading_date' => 'required|date',
-            'invoice_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'payment_receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'remarks' => 'nullable|string',
+            'initial_meter_image' => 'nullable|file|mimes:jpg,jpeg,png|max:4096',
         ]);
 
-        // Handle file uploads
-        if ($request->hasFile('invoice_file')) {
-            $validated['invoice_file'] = $request->file('invoice_file')->store('water-services/invoices', 'public');
-        }
-
-        if ($request->hasFile('payment_receipt')) {
-            $validated['payment_receipt'] = $request->file('payment_receipt')->store('water-services/receipts', 'public');
+        if ($request->hasFile('initial_meter_image')) {
+            $validated['initial_meter_image'] = $request->file('initial_meter_image')->store('water-services/reference-meters', 'public');
         }
 
         WaterService::create($validated);
@@ -133,8 +119,17 @@ class WaterServiceController extends Controller
      */
     public function show(WaterService $waterService)
     {
-        $waterService->load('building.site');
-        return view('water-services.show', compact('waterService'));
+        $waterService->load([
+            'building.site',
+            'readings' => fn($query) => $query->orderByDesc('reading_date')->orderByDesc('id'),
+        ]);
+
+        $readings = $waterService->readings;
+        $latestReading = $readings->first();
+        $totalConsumption = $readings->sum('consumption_value');
+        $outstandingAmount = $readings->where('is_paid', false)->sum('bill_amount');
+
+        return view('water-services.show', compact('waterService', 'readings', 'latestReading', 'totalConsumption', 'outstandingAmount'));
     }
 
     /**
@@ -156,20 +151,13 @@ class WaterServiceController extends Controller
             'company_name' => 'required|string|max:255',
             'registration_number' => 'required|string|max:255',
             'iron_number' => 'nullable|string|max:255',
-            'previous_reading' => 'required|numeric|min:0',
-            'current_reading' => 'required|numeric|min:0',
-            'reading_date' => 'required|date',
-            'invoice_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'payment_receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'remarks' => 'nullable|string',
+            'initial_meter_image' => 'nullable|file|mimes:jpg,jpeg,png|max:4096',
         ]);
 
-        // Handle file uploads
-        if ($request->hasFile('invoice_file')) {
-            $validated['invoice_file'] = $request->file('invoice_file')->store('water-services/invoices', 'public');
-        }
-
-        if ($request->hasFile('payment_receipt')) {
-            $validated['payment_receipt'] = $request->file('payment_receipt')->store('water-services/receipts', 'public');
+        if ($request->hasFile('initial_meter_image')) {
+            $this->deleteStoredFile($waterService->initial_meter_image);
+            $validated['initial_meter_image'] = $request->file('initial_meter_image')->store('water-services/reference-meters', 'public');
         }
 
         $waterService->update($validated);
@@ -191,7 +179,7 @@ class WaterServiceController extends Controller
     public function deleted()
     {
         $waterServices = WaterService::onlyTrashed()
-            ->with('building.site')
+            ->with(['building.site', 'latestReading'])
             ->latest('deleted_at')
             ->paginate(15);
         return view('water-services.deleted', compact('waterServices'));
@@ -212,48 +200,29 @@ class WaterServiceController extends Controller
      */
     public function forceDelete($id)
     {
-        $waterService = WaterService::onlyTrashed()->findOrFail($id);
+        $waterService = WaterService::onlyTrashed()
+            ->with('readings')
+            ->findOrFail($id);
 
-        // Delete files if they exist
-        if ($waterService->invoice_file && Storage::disk('public')->exists($waterService->invoice_file)) {
-            Storage::disk('public')->delete($waterService->invoice_file);
-        }
-        if ($waterService->payment_receipt && Storage::disk('public')->exists($waterService->payment_receipt)) {
-            Storage::disk('public')->delete($waterService->payment_receipt);
+        $this->deleteStoredFile($waterService->initial_meter_image);
+
+        foreach ($waterService->readings as $reading) {
+            $this->deleteStoredFile($reading->meter_image);
+            $this->deleteStoredFile($reading->bill_image);
         }
 
         $waterService->forceDelete();
         return redirect()->route('water-services.deleted')->with('success', 'Water service permanently deleted!');
     }
 
-    public function file(WaterService $waterService, string $document)
+    private function deleteStoredFile(?string $path): void
     {
-        $documentMap = [
-            'invoice' => 'invoice_file',
-            'payment-receipt' => 'payment_receipt',
-        ];
-
-        if (!array_key_exists($document, $documentMap)) {
-            abort(404);
+        if (!$path) {
+            return;
         }
 
-        $attribute = $documentMap[$document];
-        $path = $waterService->{$attribute};
-
-        if (!$path || !Storage::disk('public')->exists($path)) {
-            abort(404, 'File not found.');
+        if (Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
         }
-
-        $absolutePath = Storage::disk('public')->path($path);
-
-        if (request()->boolean('download')) {
-            return response()->download($absolutePath, basename($path));
-        }
-
-        $mime = mime_content_type($absolutePath) ?: 'application/octet-stream';
-
-        return response()->file($absolutePath, [
-            'Content-Type' => $mime,
-        ]);
     }
 }

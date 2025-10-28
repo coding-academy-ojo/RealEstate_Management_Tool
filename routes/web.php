@@ -327,9 +327,6 @@ Route::middleware('auth')->group(function () {
     Route::get('buildings/{building}/files/{document}', [\App\Http\Controllers\BuildingController::class, 'file'])
         ->name('buildings.files.show');
 
-    Route::get('water-services/{waterService}/files/{document}', [\App\Http\Controllers\WaterServiceController::class, 'file'])
-        ->middleware('privilege:water')
-        ->name('water-services.files.show');
     Route::get('water-services/deleted/list', [\App\Http\Controllers\WaterServiceController::class, 'deleted'])
         ->middleware('privilege:water')
         ->name('water-services.deleted');
@@ -339,6 +336,18 @@ Route::middleware('auth')->group(function () {
     Route::delete('water-services/{id}/force-delete', [\App\Http\Controllers\WaterServiceController::class, 'forceDelete'])
         ->middleware('privilege:water')
         ->name('water-services.force-delete');
+    Route::get('water-services/{waterService}/readings/{waterReading}/files/{document}', [\App\Http\Controllers\WaterReadingController::class, 'file'])
+        ->middleware('privilege:water')
+        ->name('water-services.readings.files.show');
+    Route::post('water-services/{waterService}/readings', [\App\Http\Controllers\WaterReadingController::class, 'store'])
+        ->middleware('privilege:water')
+        ->name('water-services.readings.store');
+    Route::put('water-services/{waterService}/readings/{waterReading}', [\App\Http\Controllers\WaterReadingController::class, 'update'])
+        ->middleware('privilege:water')
+        ->name('water-services.readings.update');
+    Route::delete('water-services/{waterService}/readings/{waterReading}', [\App\Http\Controllers\WaterReadingController::class, 'destroy'])
+        ->middleware('privilege:water')
+        ->name('water-services.readings.destroy');
     Route::resource('water-services', \App\Http\Controllers\WaterServiceController::class);
 
     Route::get('electricity-services/{electricityService}/files/{document}', [\App\Http\Controllers\ElectricityServiceController::class, 'file'])

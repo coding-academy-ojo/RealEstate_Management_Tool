@@ -163,26 +163,8 @@
                                     </span>
                                 </a>
                             </th>
-                            <th class="sortable">
-                                <a href="{{ $buildSortUrl('previous') }}"
-                                    class="d-flex align-items-center justify-content-between text-decoration-none text-dark">
-                                    <span>Previous Reading</span>
-                                    <span class="sort-arrows">
-                                        <i class="bi bi-caret-up-fill {{ $arrowClass('previous', 'asc') }}"></i>
-                                        <i class="bi bi-caret-down-fill {{ $arrowClass('previous', 'desc') }}"></i>
-                                    </span>
-                                </a>
-                            </th>
-                            <th class="sortable">
-                                <a href="{{ $buildSortUrl('current') }}"
-                                    class="d-flex align-items-center justify-content-between text-decoration-none text-dark">
-                                    <span>Current Reading</span>
-                                    <span class="sort-arrows">
-                                        <i class="bi bi-caret-up-fill {{ $arrowClass('current', 'asc') }}"></i>
-                                        <i class="bi bi-caret-down-fill {{ $arrowClass('current', 'desc') }}"></i>
-                                    </span>
-                                </a>
-                            </th>
+                            <th>Latest Reading</th>
+                            <th>Latest Bill</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -215,8 +197,36 @@
                                 <td class="fw-semibold">{{ $service->company_name }}</td>
                                 <td>{{ $service->registration_number }}</td>
                                 <td>{{ $service->iron_number ?? 'N/A' }}</td>
-                                <td>{{ number_format($service->previous_reading, 2) }}</td>
-                                <td>{{ number_format($service->current_reading, 2) }}</td>
+                                @php
+                                    $latestReading = $service->latestReading;
+                                @endphp
+                                <td>
+                                    @if ($latestReading)
+                                        <div class="fw-semibold">
+                                            {{ number_format((float) $latestReading->current_reading, 2) }}
+                                            <span class="text-muted">m³</span>
+                                        </div>
+                                        <small class="text-muted">
+                                            {{ optional($latestReading->reading_date)->format('Y-m-d') ?? 'No date' }}
+                                        </small>
+                                    @else
+                                        <span class="text-muted">No readings</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($latestReading && !is_null($latestReading->bill_amount))
+                                        <div class="fw-semibold">
+                                            {{ number_format((float) $latestReading->bill_amount, 2) }}
+                                            <span class="text-muted">JOD</span>
+                                        </div>
+                                        <span
+                                            class="badge rounded-pill fw-semibold {{ $latestReading->is_paid ? 'bg-success text-white' : 'bg-warning text-dark' }}">
+                                            {{ $latestReading->is_paid ? 'Paid' : 'Unpaid' }}
+                                        </span>
+                                    @else
+                                        <span class="text-muted">No bill</span>
+                                    @endif
+                                </td>
                                 <td>
                                     <div class="btn-group" role="group">
                                         <a href="{{ route('water-services.show', $service) }}"

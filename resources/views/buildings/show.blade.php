@@ -329,63 +329,61 @@ foreach ($building->images as $image) {
                         <tr>
                             <th scope="col">Company</th>
                             <th scope="col">Registration</th>
-                            <th scope="col">Previous (m³)</th>
-                            <th scope="col">Current (m³)</th>
-                            <th scope="col">Usage (m³)</th>
-                            <th scope="col">Reading Date</th>
-                            <th scope="col">Documents</th>
+                            <th scope="col">Latest Reading</th>
+                            <th scope="col">Latest Bill</th>
+                            <th scope="col">Meter Image</th>
+                            <th scope="col">Remarks</th>
                             <th scope="col" class="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($building->waterServices as $service)
                             @php
-                                $usage = null;
-                                if (!is_null($service->current_reading) && !is_null($service->previous_reading)) {
-                                    $usage = (float) $service->current_reading - (float) $service->previous_reading;
-                                }
+                                $latestReading = $service->latestReading;
                             @endphp
                             <tr>
                                 <td class="fw-semibold">{{ $service->company_name }}</td>
                                 <td>{{ $service->registration_number ?? '—' }}</td>
-                                <td>{{ number_format($service->previous_reading ?? 0, 2) }}</td>
-                                <td>{{ number_format($service->current_reading ?? 0, 2) }}</td>
-                                <td>{{ $usage !== null ? number_format($usage, 2) : '—' }}</td>
-                                <td>{{ optional($service->reading_date)->format('Y-m-d') ?? '—' }}</td>
                                 <td>
-                                    <div class="d-flex flex-column gap-2">
-                                        @if ($service->invoice_file)
-                                            @php $invoiceUrl = route('water-services.files.show', [$service, 'invoice']); @endphp
-                                            <div class="d-flex flex-wrap gap-2 align-items-center">
-                                                <span class="small text-muted">Invoice</span>
-                                                <a href="{{ $invoiceUrl }}" target="_blank"
-                                                    class="btn btn-sm btn-outline-info">
-                                                    <i class="bi bi-eye me-1"></i>View
-                                                </a>
-                                                <a href="{{ $invoiceUrl }}?download=1"
-                                                    class="btn btn-sm btn-outline-secondary">
-                                                    <i class="bi bi-download me-1"></i>
-                                                </a>
-                                            </div>
-                                        @endif
-                                        @if ($service->payment_receipt)
-                                            @php $receiptUrl = route('water-services.files.show', [$service, 'payment-receipt']); @endphp
-                                            <div class="d-flex flex-wrap gap-2 align-items-center">
-                                                <span class="small text-muted">Receipt</span>
-                                                <a href="{{ $receiptUrl }}" target="_blank"
-                                                    class="btn btn-sm btn-outline-success">
-                                                    <i class="bi bi-eye me-1"></i>View
-                                                </a>
-                                                <a href="{{ $receiptUrl }}?download=1"
-                                                    class="btn btn-sm btn-outline-secondary">
-                                                    <i class="bi bi-download me-1"></i>
-                                                </a>
-                                            </div>
-                                        @endif
-                                        @if (!$service->invoice_file && !$service->payment_receipt)
-                                            <span class="text-muted">No uploads</span>
-                                        @endif
-                                    </div>
+                                    @if ($latestReading)
+                                        <div class="fw-semibold">
+                                            {{ number_format((float) $latestReading->current_reading, 2) }}
+                                            <span class="text-muted">m³</span>
+                                        </div>
+                                        <small class="text-muted">{{ $latestReading->reading_date?->format('Y-m-d') ?? 'No date' }}</small>
+                                    @else
+                                        <span class="text-muted">No readings</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($latestReading && !is_null($latestReading->bill_amount))
+                                        <div class="fw-semibold">
+                                            {{ number_format((float) $latestReading->bill_amount, 2) }}
+                                            <span class="text-muted">JOD</span>
+                                        </div>
+                                        <span class="badge rounded-pill fw-semibold {{ $latestReading->is_paid ? 'bg-success text-white' : 'bg-warning text-dark' }}">
+                                            {{ $latestReading->is_paid ? 'Paid' : 'Unpaid' }}
+                                        </span>
+                                    @else
+                                        <span class="text-muted">No bill</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($service->initial_meter_image)
+                                        <a href="{{ asset('storage/' . $service->initial_meter_image) }}" target="_blank"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-camera"></i> View
+                                        </a>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($service->remarks)
+                                        {{ \Illuminate\Support\Str::limit($service->remarks, 70) }}
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
                                 </td>
                                 <td class="text-end">
                                     <div class="btn-group" role="group">

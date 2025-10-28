@@ -17,11 +17,8 @@ return new class extends Migration
             $table->string('company_name');
             $table->string('registration_number');
             $table->string('iron_number')->nullable();
-            $table->decimal('previous_reading', 10, 2)->nullable();
-            $table->decimal('current_reading', 10, 2)->nullable();
-            $table->date('reading_date')->nullable();
-            $table->string('invoice_file')->nullable();
-            $table->string('payment_receipt')->nullable();
+            $table->text('remarks')->nullable();
+            $table->string('initial_meter_image')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

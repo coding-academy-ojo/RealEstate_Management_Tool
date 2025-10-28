@@ -1,4 +1,447 @@
-<?php<?php
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Building;
+use App\Models\ElectricityService;
+use App\Models\Land;
+use App\Models\ReInnovation;
+use App\Models\Site;
+use App\Models\WaterReading;
+use App\Models\WaterService;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
+
+class ComprehensiveSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        $referenceImage = $this->referenceMeterImagePath();
+        $readingImage = $this->readingMeterImagePath();
+
+        $this->seedSiteOne($referenceImage, $readingImage);
+        $this->seedSiteTwo($referenceImage, $readingImage);
+    }
+
+    private function seedSiteOne(string $referenceImage, string $readingImage): void
+    {
+        $site = Site::create([
+            'name' => "TLA' EL-ALI SWITCH SITE",
+            'governorate' => 'AM',
+            'cluster_no' => 1,
+            'area_m2' => 4007.0,
+            'zoning_status' => 'سكن ا',
+            'notes' => null,
+        ]);
+
+        $landMain = $site->lands()->create([
+            'plot_number' => '1193',
+            'basin' => '7',
+            'village' => "UM-DBAA'",
+            'ownership_doc' => 'site1_ownership_deed.pdf',
+            'site_plan' => 'site1_site_plan.pdf',
+            'zoning_plan' => 'site1_zoning_plan.pdf',
+            'photos' => '20_site1_images.zip',
+            'land_directorate' => 'Amman Land Directorate',
+            'governorate' => 'Amman',
+            'zoning' => 'Residential A',
+            'map_location' => '31.9539,35.9106',
+        ]);
+
+        $landSecondary = $site->lands()->create([
+            'plot_number' => '1194',
+            'basin' => '7',
+            'village' => "UM-DBAA'",
+            'ownership_doc' => 'site1_secondary_ownership.pdf',
+            'site_plan' => 'site1_secondary_siteplan.pdf',
+            'zoning_plan' => 'site1_secondary_zoning.pdf',
+            'photos' => null,
+            'land_directorate' => 'Amman Land Directorate',
+            'governorate' => 'Amman',
+            'zoning' => 'Residential A',
+            'map_location' => '31.9541,35.9112',
+        ]);
+
+        $buildingShop = $site->buildings()->create([
+            'name' => "TLA' EL-ALI SWITCH AND SALES SHOP",
+            'area_m2' => 4425.8,
+            'has_building_permit' => true,
+            'has_occupancy_permit' => false,
+            'has_profession_permit' => true,
+            'remarks' => 'دفاع مدني',
+        ]);
+        $buildingShop->lands()->attach([$landMain->id, $landSecondary->id]);
+
+        $buildingBatteries = $site->buildings()->create([
+            'name' => "TLA' EL-ALI SWITCH-TRANSFORMER ROOM",
+            'area_m2' => 36.5,
+            'has_building_permit' => null,
+            'has_occupancy_permit' => null,
+            'has_profession_permit' => null,
+            'remarks' => null,
+        ]);
+        $buildingBatteries->lands()->attach($landMain->id);
+
+        $buildingGuard = $site->buildings()->create([
+            'name' => "TLA' EL-ALI SWITCH-GUARDS ROOM",
+            'area_m2' => 2.6,
+            'has_building_permit' => null,
+            'has_occupancy_permit' => null,
+            'has_profession_permit' => null,
+            'remarks' => null,
+        ]);
+        $buildingGuard->lands()->attach($landMain->id);
+
+        $mainWaterService = WaterService::create([
+            'building_id' => $buildingShop->id,
+            'company_name' => 'Miyahuna Water Company',
+            'registration_number' => 'WTR-AM-2024-001',
+            'iron_number' => 'IRN-123456',
+            'remarks' => 'High-capacity commercial connection with backup tanks.',
+            'initial_meter_image' => $referenceImage,
+        ]);
+
+        $this->seedReadings($mainWaterService, [
+            [
+                'date' => Carbon::now()->subMonths(2)->startOfMonth(),
+                'current' => 1235.50,
+                'bill' => 181.25,
+                'paid' => true,
+                'notes' => 'Quarterly billing cycle.',
+                'meter_image' => null,
+            ],
+            [
+                'date' => Carbon::now()->subMonth()->startOfMonth(),
+                'current' => 1295.90,
+                'bill' => 188.10,
+                'paid' => true,
+                'notes' => 'Usage increase due to seasonal demand.',
+                'meter_image' => $readingImage,
+            ],
+        ]);
+
+        $secondaryWaterService = WaterService::create([
+            'building_id' => $buildingBatteries->id,
+            'company_name' => 'Miyahuna Water Company',
+            'registration_number' => 'WTR-AM-2024-002',
+            'iron_number' => 'IRN-789123',
+            'remarks' => 'Dedicated supply for transformer cooling system.',
+            'initial_meter_image' => $referenceImage,
+        ]);
+
+        $this->seedReadings($secondaryWaterService, [
+            [
+                'date' => Carbon::now()->subMonths(3)->startOfMonth(),
+                'current' => 410.25,
+                'bill' => 50.75,
+                'paid' => true,
+                'notes' => null,
+                'meter_image' => null,
+            ],
+            [
+                'date' => Carbon::now()->subMonths(2)->startOfMonth(),
+                'current' => 435.80,
+                'bill' => 55.40,
+                'paid' => true,
+                'notes' => 'Routine maintenance visit.',
+                'meter_image' => null,
+            ],
+            [
+                'date' => Carbon::now()->subMonth()->startOfMonth(),
+                'current' => 447.30,
+                'bill' => 56.60,
+                'paid' => false,
+                'notes' => 'Pending invoice approval.',
+                'meter_image' => $readingImage,
+            ],
+        ]);
+
+        ElectricityService::create([
+            'building_id' => $buildingShop->id,
+            'company_name' => 'Jordan Electric Power Company',
+            'registration_number' => 'ELC-AM-2024-001',
+            'iron_number' => 'EL-IRN-445566',
+            'subscriber_number' => 'ELEC-AM-2024-001',
+            'previous_reading' => 1250.50,
+            'current_reading' => 1275.25,
+            'reading_date' => Carbon::now()->subDays(30),
+            'annual_consumption_kwh' => 850000.00,
+            'has_network_permit' => true,
+            'has_connection_permit' => true,
+            'connection_date' => '2023-03-20',
+            'reset_file' => null,
+            'remarks' => 'Three-phase industrial connection with generator backup.',
+        ]);
+
+        ElectricityService::create([
+            'building_id' => $buildingBatteries->id,
+            'company_name' => 'Jordan Electric Power Company',
+            'registration_number' => 'ELC-AM-2024-002',
+            'iron_number' => 'EL-IRN-998877',
+            'subscriber_number' => 'ELEC-AM-2024-002',
+            'previous_reading' => 480.10,
+            'current_reading' => 499.65,
+            'reading_date' => Carbon::now()->subDays(20),
+            'annual_consumption_kwh' => 54000.00,
+            'has_network_permit' => true,
+            'has_connection_permit' => true,
+            'connection_date' => '2023-05-15',
+            'reset_file' => null,
+            'remarks' => 'High-capacity retail power supply.',
+        ]);
+
+        ReInnovation::create([
+            'building_id' => $buildingShop->id,
+            'type' => 'Energy Efficiency',
+            'description' => 'Solar panel installation on rooftop - 250kW capacity.',
+            'cost' => 180000.00,
+            'date' => Carbon::parse('2024-01-10'),
+            'notes' => 'Reduces electricity consumption by 35%.',
+        ]);
+
+        ReInnovation::create([
+            'building_id' => $buildingShop->id,
+            'type' => 'Water Conservation',
+            'description' => 'Greywater recycling system for landscaping.',
+            'cost' => 45000.00,
+            'date' => Carbon::parse('2024-02-05'),
+            'notes' => 'Saves 40% on water for irrigation.',
+        ]);
+    }
+
+    private function seedSiteTwo(string $referenceImage, string $readingImage): void
+    {
+        $site = Site::create([
+            'name' => 'AL-KHAYAM CENTRAL SITE',
+            'governorate' => 'AM',
+            'cluster_no' => 1,
+            'area_m2' => 2118.0,
+            'zoning_status' => 'تجاري مركزي',
+            'notes' => null,
+        ]);
+
+        $landPrimary = $site->lands()->create([
+            'plot_number' => '97',
+            'basin' => '33 المدينة',
+            'village' => 'عمان -الخيام',
+            'ownership_doc' => 'site2_ownership_deed.pdf',
+            'site_plan' => 'site2_site_plan.jpg',
+            'zoning_plan' => 'site2_zoning_plan.pdf',
+            'photos' => '20_site2_location_images.zip',
+            'land_directorate' => 'Amman Land Directorate',
+            'governorate' => 'Amman',
+            'zoning' => 'Commercial Central',
+            'map_location' => '31.9515,35.9239',
+        ]);
+
+        $buildingTower = $site->buildings()->create([
+            'name' => 'AL-KHAYAM CENTRAL TOWER',
+            'area_m2' => 15500.0,
+            'has_building_permit' => true,
+            'has_occupancy_permit' => true,
+            'has_profession_permit' => true,
+            'remarks' => 'High-rise admin building with mixed-use floors.',
+        ]);
+        $buildingTower->lands()->attach($landPrimary->id);
+
+        $buildingSales = $site->buildings()->create([
+            'name' => 'AL-KHAYAM CENTRAL AND SALES SHOP',
+            'area_m2' => 6668.0,
+            'has_building_permit' => true,
+            'has_occupancy_permit' => true,
+            'has_profession_permit' => true,
+            'remarks' => null,
+        ]);
+        $buildingSales->lands()->attach($landPrimary->id);
+
+        $buildingBatteries = $site->buildings()->create([
+            'name' => 'AL-KHAYAM CENTRAL-BATTERIES ROOM',
+            'area_m2' => 22.0,
+            'has_building_permit' => null,
+            'has_occupancy_permit' => null,
+            'has_profession_permit' => null,
+            'remarks' => null,
+        ]);
+        $buildingBatteries->lands()->attach($landPrimary->id);
+
+        $towerWaterService = WaterService::create([
+            'building_id' => $buildingTower->id,
+            'company_name' => 'Miyahuna Water Company',
+            'registration_number' => 'WTR-AM-2024-010',
+            'iron_number' => 'IRN-654321',
+            'remarks' => 'Mixed use tower supply with fire system connection.',
+            'initial_meter_image' => $referenceImage,
+        ]);
+
+        $this->seedReadings($towerWaterService, [
+            [
+                'date' => Carbon::now()->subMonths(4)->startOfMonth(),
+                'current' => 2210.75,
+                'bill' => 302.40,
+                'paid' => true,
+                'notes' => 'Includes fire safety test usage.',
+                'meter_image' => null,
+            ],
+            [
+                'date' => Carbon::now()->subMonths(3)->startOfMonth(),
+                'current' => 2345.10,
+                'bill' => 315.80,
+                'paid' => true,
+                'notes' => null,
+                'meter_image' => null,
+            ],
+            [
+                'date' => Carbon::now()->subMonths(2)->startOfMonth(),
+                'current' => 2433.45,
+                'bill' => 325.40,
+                'paid' => true,
+                'notes' => 'Cooling towers peak consumption.',
+                'meter_image' => $readingImage,
+            ],
+            [
+                'date' => Carbon::now()->subMonth()->startOfMonth(),
+                'current' => 2512.90,
+                'bill' => 332.70,
+                'paid' => false,
+                'notes' => 'Pending finance approval.',
+                'meter_image' => null,
+            ],
+        ]);
+
+        $salesWaterService = WaterService::create([
+            'building_id' => $buildingSales->id,
+            'company_name' => 'Miyahuna Water Company',
+            'registration_number' => 'WTR-AM-2024-011',
+            'iron_number' => 'IRN-456789',
+            'remarks' => 'Dedicated line for commercial kitchens and restrooms.',
+            'initial_meter_image' => $referenceImage,
+        ]);
+
+        $this->seedReadings($salesWaterService, [
+            [
+                'date' => Carbon::now()->subMonths(2)->startOfMonth(),
+                'current' => 820.10,
+                'bill' => 105.25,
+                'paid' => true,
+                'notes' => null,
+                'meter_image' => null,
+            ],
+            [
+                'date' => Carbon::now()->subMonth()->startOfMonth(),
+                'current' => 858.40,
+                'bill' => 112.10,
+                'paid' => false,
+                'notes' => 'New restaurant opening spike.',
+                'meter_image' => $readingImage,
+            ],
+        ]);
+
+        ElectricityService::create([
+            'building_id' => $buildingTower->id,
+            'company_name' => 'Jordan Electric Power Company',
+            'registration_number' => 'ELC-AM-2024-010',
+            'iron_number' => 'EL-IRN-556677',
+            'subscriber_number' => 'ELEC-AM-2024-010',
+            'previous_reading' => 15000.00,
+            'current_reading' => 15500.50,
+            'reading_date' => Carbon::now()->subDays(15),
+            'annual_consumption_kwh' => 920000.00,
+            'has_network_permit' => true,
+            'has_connection_permit' => true,
+            'connection_date' => '2023-06-01',
+            'reset_file' => null,
+            'remarks' => 'Mixed-use tower with dedicated server floors.',
+        ]);
+
+        ElectricityService::create([
+            'building_id' => $buildingSales->id,
+            'company_name' => 'Jordan Electric Power Company',
+            'registration_number' => 'ELC-AM-2024-011',
+            'iron_number' => 'EL-IRN-223344',
+            'subscriber_number' => 'ELEC-AM-2024-011',
+            'previous_reading' => 8900.00,
+            'current_reading' => 9050.75,
+            'reading_date' => Carbon::now()->subDays(10),
+            'annual_consumption_kwh' => 470000.00,
+            'has_network_permit' => true,
+            'has_connection_permit' => true,
+            'connection_date' => '2023-05-10',
+            'reset_file' => null,
+            'remarks' => 'Retail power supply with back-office operations.',
+        ]);
+
+        ReInnovation::create([
+            'building_id' => $buildingSales->id,
+            'type' => 'Smart Building',
+            'description' => 'IoT-based HVAC and lighting automation system.',
+            'cost' => 95000.00,
+            'date' => Carbon::parse('2024-03-20'),
+            'notes' => 'AI-driven energy optimization.',
+        ]);
+    }
+
+    private function seedReadings(WaterService $service, array $entries): void
+    {
+        $previous = null;
+
+        foreach ($entries as $entry) {
+            $current = round($entry['current'], 2);
+            $consumption = $previous !== null ? round($current - $previous, 2) : null;
+
+            WaterReading::create([
+                'water_service_id' => $service->id,
+                'previous_reading' => $previous,
+                'current_reading' => $current,
+                'consumption_value' => $consumption,
+                'bill_amount' => isset($entry['bill']) ? round($entry['bill'], 2) : null,
+                'is_paid' => (bool) ($entry['paid'] ?? false),
+                'reading_date' => $entry['date'],
+                'meter_image' => $entry['meter_image'] ?? null,
+                'bill_image' => $entry['bill_image'] ?? null,
+                'notes' => $entry['notes'] ?? null,
+            ]);
+
+            $previous = $current;
+        }
+    }
+
+    private function referenceMeterImagePath(): string
+    {
+        $directory = 'water-services/reference-meters';
+        $filename = $directory . '/comprehensive-reference-meter.jpg';
+
+        if (!Storage::disk('public')->exists($filename)) {
+            Storage::disk('public')->makeDirectory($directory);
+            Storage::disk('public')->put($filename, $this->seedImageBinary());
+        }
+
+        return $filename;
+    }
+
+    private function readingMeterImagePath(): string
+    {
+        $directory = 'water-services/readings/meters';
+        $filename = $directory . '/comprehensive-reading-meter.jpg';
+
+        if (!Storage::disk('public')->exists($filename)) {
+            Storage::disk('public')->makeDirectory($directory);
+            Storage::disk('public')->put($filename, $this->seedImageBinary());
+        }
+
+        return $filename;
+    }
+
+    private function seedImageBinary(): string
+    {
+        return base64_decode(
+            '/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxISEhUQEhIVFRUVFRUVFRUVFRUVFRUVFRUWFxUVFRUYHSggGBolGxUVITEhJSkrLi4uFx8zODMtNygtLisBCgoKDg0OGhAQGi0lHyYvLS0tLy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLf/AABEIAKgBLAMBIgACEQEDEQH/xAAbAAACAgMBAAAAAAAAAAAAAAAEBQMGAAECB//EADYQAAEDAgMFBwMDAwQDAAAAAAEAAhEDIQQSMUEFUWFxBhMicYGRMqGx0RRC8FJy4fAVM2KSorLS/8QAGQEAAwEBAQAAAAAAAAAAAAAAAAECAwQF/8QAHxEAAwEAAwACAwAAAAAAAAAAAAERAhIhAzETBEEi/9oADAMBAAIRAxEAPwD0rQGgBqpoqCBFoJB7IPl3rXprFZC8yjVSNYqSjlXURyo9NnLgZyOKvZfW9ZX0UrIY0ktlZmLq2qqAhhUNvahvHGQAR3rT0FrZ4LmEEsYF3G6lgB9Dz6/Zp3nCuaRLanu+0Uc2mK0CgC6R5AYAzkdTg+u2nrRyrkYx3mIDBY7LCzE+Uj0A96VUt7R9Pt7Zknm8qF0D0kdkb7fj+1RZIpbw3RzU0o0KqhhKggEZ7/t6Vb9n1rPLY20Nw5H0SandYAR356fWiV5riCSWbHtLCo3TMCT9BR+1F74vl5bWE0E0aIVJGWKjsYIJY81mtTTSwytLYrkBLMQB13HfWmtaePJrbdW9vcglt9wmYbAnLH6fGgttdP13Y6b5ol0n0iO5PUAf8Aep+1VguS1d5XVyqE6LmOCAQMM4HTPfpXTa5uZ0dldlK5bOaLFK0aQL3IxgKBkDAOcZ4HSmurS3JXSGt7dESqzN2sATzwM4+tH6h0+yit5rT7a5dNERohUovfKZYHnPHTIp3W01C6uUpVBaQH18nedOP8AhQkWS0kN9DWy4bqQ2XDKEblUEYzjn3pFXivDfTTa1N5MNb2z+WQpt4cMSSEdcLw+w9a0Ri0to1PLK7G4igXmaF8yCF3jI9SOSM8daorS5d0L+41uQvCyt9rBGkoucg9c9T61Nl1azvUKPNJe4jtpV2xypQO4I4+mKXfqOoRi5+4a1kstpbmMAVc7h1JPHQVaxp1lZXS7KMgiMykhijeVJ+oIz6UeSQTaaXKJLWoJmY9iPUnp3/GulaEVuV5bXspUYxqAcM7iPfzTk9lJGn0s0kUscQht4HdIUR6YqpVbUNJclu7lRmRsYwM7nIPrQVqaFbp5rS7iJbmGZ4ES3ZQOAT798/pWVRpKtxHotrbp2l2cS3MlmOduVHXO01V9qku9Y5ZpuxSHPUgZzGkjPzpWeriTa7fcpS6MMrKwYIWbkgHPvUlM0qW9pcaZnuHnCbzhQMg9PXp+dQGrfcbUdVweNiQP8zbg/MMkA84yPbpQtfULu7mfTrYzKGidecbQktyc+pJ5z0p1pcz6jbiW2yBESRogZYHGTjk0i0LzWzS7pZLyxZpVVIBJGBjn0I/pR0ul2O61CxXMDcE7jdyc5x6/pTmyW6S3Vp5XlpmUBo4CnBAwCT36VGrV5bXdyO5FcLwnM6ZMkHkgccZ7elH7Pb69fpyyx6jdzbJpDHH7oI7D7d6VOlzjMuNSaTzIDAA9PfPWmgah+tv7QFtbcRiO62txGQgGJD4Ocdq1madqJtNArbQJbtwElQ9QcEjvg8fWgCPU7LTrW6vZ3LZnrpG12yIbSSed2e9TMhkt7d7QXEsliMlbceRj+6xzxmo6ddPbdm3xF1HBGDRQMHc4ySD3q149jVrqF1JbS5triMYP8xH78dM0FoAagBQA0BoAaAGgBoAaAGgBoAaAGgBoAaAGgBoAaAGgP/Z'
+        );
+    }
+}<?php<?php
 
 
 

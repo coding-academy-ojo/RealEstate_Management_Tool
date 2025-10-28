@@ -42,8 +42,8 @@
                             <th>Company</th>
                             <th>Registration #</th>
                             <th>Iron #</th>
-                            <th>Previous Reading</th>
-                            <th>Current Reading</th>
+                            <th>Latest Reading</th>
+                            <th>Latest Bill</th>
                             <th>Deleted At</th>
                             <th class="text-center">Actions</th>
                         </tr>
@@ -61,8 +61,35 @@
                                 <td class="fw-semibold">{{ $service->company_name }}</td>
                                 <td>{{ $service->registration_number }}</td>
                                 <td>{{ $service->iron_number ?? 'N/A' }}</td>
-                                <td>{{ number_format($service->previous_reading, 2) }}</td>
-                                <td>{{ number_format($service->current_reading, 2) }}</td>
+                                @php
+                                    $latestReading = $service->latestReading;
+                                @endphp
+                                <td>
+                                    @if ($latestReading)
+                                        <div class="fw-semibold">
+                                            {{ number_format((float) $latestReading->current_reading, 2) }}
+                                            <span class="text-muted">m³</span>
+                                        </div>
+                                        <small class="text-muted">
+                                            {{ $latestReading->reading_date?->format('Y-m-d') ?? 'No date' }}
+                                        </small>
+                                    @else
+                                        <span class="text-muted">No readings</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($latestReading && !is_null($latestReading->bill_amount))
+                                        <div class="fw-semibold">
+                                            {{ number_format((float) $latestReading->bill_amount, 2) }}
+                                            <span class="text-muted">JOD</span>
+                                        </div>
+                                        <span class="badge rounded-pill fw-semibold {{ $latestReading->is_paid ? 'bg-success text-white' : 'bg-warning text-dark' }}">
+                                            {{ $latestReading->is_paid ? 'Paid' : 'Unpaid' }}
+                                        </span>
+                                    @else
+                                        <span class="text-muted">No bill</span>
+                                    @endif
+                                </td>
                                 <td>
                                     <small class="text-muted">
                                         {{ $service->deleted_at->format('Y-m-d H:i') }}

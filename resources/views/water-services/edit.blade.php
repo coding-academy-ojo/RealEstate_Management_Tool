@@ -20,8 +20,7 @@
                     </h4>
                 </div>
                 <div class="card-body p-4">
-                    <form action="{{ route('water-services.update', $waterService) }}" method="POST"
-                        enctype="multipart/form-data">
+                    <form action="{{ route('water-services.update', $waterService) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
 
@@ -92,103 +91,40 @@
                         <hr class="my-4">
 
                         <h5 class="mb-3 text-orange">
-                            <i class="bi bi-speedometer2 me-2"></i>Meter Readings
+                            <i class="bi bi-journal-text me-2"></i>Additional Details
                         </h5>
 
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="previous_reading" class="form-label fw-bold">
-                                    Previous Reading (m³) <span class="text-danger">*</span>
-                                </label>
-                                <input type="number" step="0.01" name="previous_reading" id="previous_reading"
-                                    class="form-control @error('previous_reading') is-invalid @enderror"
-                                    value="{{ old('previous_reading', $waterService->previous_reading) }}" required>
-                                @error('previous_reading')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4 mb-3">
-                                <label for="current_reading" class="form-label fw-bold">
-                                    Current Reading (m³) <span class="text-danger">*</span>
-                                </label>
-                                <input type="number" step="0.01" name="current_reading" id="current_reading"
-                                    class="form-control @error('current_reading') is-invalid @enderror"
-                                    value="{{ old('current_reading', $waterService->current_reading) }}" required>
-                                @error('current_reading')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4 mb-3">
-                                <label for="reading_date" class="form-label fw-bold">
-                                    Reading Date <span class="text-danger">*</span>
-                                </label>
-                                <input type="date" name="reading_date" id="reading_date"
-                                    class="form-control @error('reading_date') is-invalid @enderror"
-                                    value="{{ old('reading_date', $waterService->reading_date ? $waterService->reading_date->format('Y-m-d') : '') }}"
-                                    required>
-                                @error('reading_date')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
+                        <div class="mb-3">
+                            <label for="remarks" class="form-label fw-bold">
+                                Remarks & Notes
+                            </label>
+                            <textarea name="remarks" id="remarks" rows="4"
+                                class="form-control @error('remarks') is-invalid @enderror"
+                                placeholder="Add any special instructions or notes for this water service...">{{ old('remarks', $waterService->remarks) }}</textarea>
+                            @error('remarks')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
 
-                        <div class="alert alert-info">
-                            <i class="bi bi-calculator me-2"></i>
-                            <strong>Usage Calculation:</strong> Current Reading - Previous Reading = Water Usage
-                        </div>
-
-                        <hr class="my-4">
-
-                        <h5 class="mb-3 text-orange">
-                            <i class="bi bi-file-earmark-arrow-up me-2"></i>Documents
-                        </h5>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="invoice_file" class="form-label fw-bold">
-                                    Invoice File
-                                </label>
-                                @if ($waterService->invoice_file)
-                                    <div class="mb-2">
-                                        <a href="{{ route('water-services.files.show', [$waterService, 'invoice']) }}"
-                                            target="_blank" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-file-earmark-pdf"></i> View Current File
-                                        </a>
-                                    </div>
-                                @endif
-                                <input type="file" name="invoice_file" id="invoice_file"
-                                    class="form-control @error('invoice_file') is-invalid @enderror"
-                                    accept=".pdf,.jpg,.jpeg,.png">
-                                @error('invoice_file')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <small class="text-muted">Accepted: PDF, JPG, PNG (leave empty to keep current
-                                    file)</small>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label for="payment_receipt" class="form-label fw-bold">
-                                    Payment Receipt
-                                </label>
-                                @if ($waterService->payment_receipt)
-                                    <div class="mb-2">
-                                        <a href="{{ route('water-services.files.show', [$waterService, 'payment-receipt']) }}"
-                                            target="_blank" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-file-earmark-pdf"></i> View Current File
-                                        </a>
-                                    </div>
-                                @endif
-                                <input type="file" name="payment_receipt" id="payment_receipt"
-                                    class="form-control @error('payment_receipt') is-invalid @enderror"
-                                    accept=".pdf,.jpg,.jpeg,.png">
-                                @error('payment_receipt')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <small class="text-muted">Accepted: PDF, JPG, PNG (leave empty to keep current
-                                    file)</small>
-                            </div>
+                        <div class="mb-3">
+                            <label for="initial_meter_image" class="form-label fw-bold">
+                                Reference Meter Image
+                            </label>
+                            @if ($waterService->initial_meter_image)
+                                <div class="mb-2">
+                                    <a href="{{ asset('storage/' . $waterService->initial_meter_image) }}" target="_blank"
+                                        class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye me-1"></i> View current image
+                                    </a>
+                                </div>
+                            @endif
+                            <input type="file" name="initial_meter_image" id="initial_meter_image"
+                                class="form-control @error('initial_meter_image') is-invalid @enderror"
+                                accept=".jpg,.jpeg,.png">
+                            @error('initial_meter_image')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted">Upload a new photo to replace the existing reference image.</small>
                         </div>
 
                         <!-- Submit Buttons -->
