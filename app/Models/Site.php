@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
+use App\Models\Rennovation;
 
 class Site extends Model
 {
@@ -112,9 +113,9 @@ class Site extends Model
         return $this->hasMany(Building::class);
     }
 
-    public function reInnovations(): MorphMany
+    public function rennovations(): MorphMany
     {
-        return $this->morphMany(ReInnovation::class, 'innovatable');
+        return $this->morphMany(Rennovation::class, 'innovatable');
     }
 
     public function zoningStatuses(): BelongsToMany

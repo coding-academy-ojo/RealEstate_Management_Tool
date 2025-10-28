@@ -12,6 +12,7 @@
         $permitDocuments = $documents->where('is_permit', true);
         $asBuiltDocument = $documents->firstWhere('slug', 'as-built-drawing');
         $availableDocuments = $documents->where('has_file', true);
+        $currentUser = auth()->user();
     @endphp
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
@@ -23,17 +24,19 @@
             <a href="{{ route('buildings.index') }}" class="btn btn-light">
                 <i class="bi bi-arrow-left me-1"></i> Back
             </a>
-            <a href="{{ route('buildings.edit', $building) }}" class="btn btn-orange">
-                <i class="bi bi-pencil me-1"></i> Edit
-            </a>
-            <form action="{{ route('buildings.destroy', $building) }}" method="POST" class="d-inline"
-                onsubmit="return confirm('Are you sure you want to delete this building?');">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-danger">
-                    <i class="bi bi-trash me-1"></i> Delete
-                </button>
-            </form>
+            @if ($currentUser?->isSuperAdmin())
+                <a href="{{ route('buildings.edit', $building) }}" class="btn btn-orange">
+                    <i class="bi bi-pencil me-1"></i> Edit
+                </a>
+                <form action="{{ route('buildings.destroy', $building) }}" method="POST" class="d-inline"
+                    onsubmit="return confirm('Are you sure you want to delete this building?');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i> Delete
+                    </button>
+                </form>
+            @endif
         </div>
     </div>
 
@@ -207,9 +210,9 @@
                         </span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Re-Innovations:</span>
+                        <span class="text-muted">Rennovations:</span>
                         <span class="stat-chip">
-                            <i class="bi bi-lightbulb text-success"></i>{{ $building->reInnovations->count() }}
+                            <i class="bi bi-lightbulb text-success"></i>{{ $building->rennovations->count() }}
                         </span>
                     </div>
                 </div>
@@ -397,10 +400,10 @@ foreach ($building->images as $image) {
 
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-white py-3">
-            <h5 class="mb-0"><i class="bi bi-lightbulb me-2 text-orange"></i>Re-Innovations</h5>
+            <h5 class="mb-0"><i class="bi bi-lightbulb me-2 text-orange"></i>Rennovations</h5>
         </div>
         <div class="card-body">
-            @forelse ($building->reInnovations as $innovation)
+            @forelse ($building->rennovations as $innovation)
                 <div class="border rounded-3 p-3 mb-3">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
                         <div>
@@ -416,13 +419,13 @@ foreach ($building->images as $image) {
                         <p class="mb-0 mt-2 text-muted">{{ $innovation->description }}</p>
                     @endif
                     <div class="mt-3 text-end">
-                        <a href="{{ route('re-innovations.show', $innovation) }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ route('rennovations.show', $innovation) }}" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-eye me-1"></i>View details
                         </a>
                     </div>
                 </div>
             @empty
-                <p class="text-muted mb-0 text-center">No re-innovations recorded.</p>
+                <p class="text-muted mb-0 text-center">No rennovations recorded.</p>
             @endforelse
         </div>
     </div>

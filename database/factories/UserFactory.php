@@ -23,12 +23,30 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $privilegePool = [
+            'sites_lands_buildings',
+            'water',
+            'electricity',
+            'rennovation',
+        ];
+
+        $selectedPrivileges = fake()->randomElements(
+            $privilegePool,
+            fake()->numberBetween(1, count($privilegePool))
+        );
+
+        if (in_array('sites_lands_buildings', $selectedPrivileges, true)) {
+            $selectedPrivileges = ['sites_lands_buildings'];
+        }
+
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'role' => 'engineer',
+            'privileges' => $selectedPrivileges,
         ];
     }
 
@@ -39,6 +57,17 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is a super admin.
+     */
+    public function superAdmin(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'role' => 'super_admin',
+            'privileges' => null,
         ]);
     }
 }

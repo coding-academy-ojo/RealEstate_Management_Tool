@@ -21,6 +21,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'privileges',
     ];
 
     /**
@@ -43,6 +45,33 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'privileges' => 'array',
         ];
+    }
+
+    /**
+     * Determine if the user is a super admin.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    /**
+     * Check if the user has the given privilege.
+     */
+    public function hasPrivilege(string $privilege): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        $privileges = $this->privileges ?? [];
+
+        if (in_array('sites_lands_buildings', $privileges, true)) {
+            return true;
+        }
+
+        return in_array($privilege, $privileges, true);
     }
 }

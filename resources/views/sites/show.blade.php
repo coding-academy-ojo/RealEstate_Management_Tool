@@ -8,21 +8,27 @@
 @endsection
 
 @section('content')
+    @php
+        $currentUser = auth()->user();
+    @endphp
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">
             <span class="text-orange fw-bold">{{ $site->code }}</span>
             <span class="mx-2">-</span>
             {{ $site->name }}
         </h2>
-        <div>
-            <a href="{{ route('sites.edit', $site) }}" class="btn btn-orange">
-                <i class="bi bi-pencil me-1"></i> Edit
-            </a>
-            <button type="button" class="btn btn-danger"
-                onclick="openDeleteModal('{{ $site->id }}', '{{ $site->code }}', '{{ $site->name }}')">
-                <i class="bi bi-trash me-1"></i> Delete
-            </button>
-        </div>
+        @if ($currentUser?->isSuperAdmin())
+            <div>
+                <a href="{{ route('sites.edit', $site) }}" class="btn btn-orange">
+                    <i class="bi bi-pencil me-1"></i> Edit
+                </a>
+                <button type="button" class="btn btn-danger"
+                    onclick="openDeleteModal('{{ $site->id }}', '{{ $site->code }}', '{{ $site->name }}')">
+                    <i class="bi bi-trash me-1"></i> Delete
+                </button>
+            </div>
+        @endif
     </div>
 
     <div class="row">
@@ -164,9 +170,9 @@
                         </a>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Re-Innovations:</span>
+                        <span class="text-muted">Rennovations:</span>
                         <span class="fw-bold text-warning">
-                            {{ $site->reInnovations->count() }}
+                            {{ $site->rennovations->count() }}
                         </span>
                     </div>
                 </div>
@@ -181,17 +187,22 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{{ route('buildings.create') }}?site_id={{ $site->id }}"
-                            class="btn btn-orange btn-sm">
-                            <i class="bi bi-building-fill-add me-1"></i> Add Building
-                        </a>
-                        <a href="{{ route('lands.create') }}?site_id={{ $site->id }}" class="btn btn-info btn-sm">
-                            <i class="bi bi-map-fill me-1"></i> Add Land
-                        </a>
-                        <a href="{{ route('re-innovations.create') }}?innovatable_type=Site&innovatable_id={{ $site->id }}"
-                            class="btn btn-warning btn-sm">
-                            <i class="bi bi-lightbulb-fill me-1"></i> Add Innovation
-                        </a>
+                        @if ($currentUser?->isSuperAdmin())
+                            <a href="{{ route('buildings.create') }}?site_id={{ $site->id }}"
+                                class="btn btn-orange btn-sm">
+                                <i class="bi bi-building-fill-add me-1"></i> Add Building
+                            </a>
+                            <a href="{{ route('lands.create') }}?site_id={{ $site->id }}" class="btn btn-info btn-sm">
+                                <i class="bi bi-map-fill me-1"></i> Add Land
+                            </a>
+                        @endif
+
+                        @if ($currentUser?->isSuperAdmin() || $currentUser?->hasPrivilege('rennovation'))
+                            <a href="{{ route('rennovations.create') }}?innovatable_type=Site&innovatable_id={{ $site->id }}"
+                                class="btn btn-warning btn-sm">
+                                <i class="bi bi-lightbulb-fill me-1"></i> Add Rennovation
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -292,12 +303,12 @@ foreach ($site->lands as $land) {
                     </table>
         </div>
         @endif
-    @empty
-        <p class="text-muted text-center mb-0 py-4">No buildings found. Create your first building!</p>
-        @endforelse
-    </div>
-    </div>
-
+                    @if ($currentUser?->isSuperAdmin() || $currentUser?->hasPrivilege('rennovation'))
+                        <a href="{{ route('rennovations.create') }}?innovatable_type=Site&innovatable_id={{ $site->id }}"
+                            class="btn btn-warning btn-sm">
+                            <i class="bi bi-lightbulb-fill me-1"></i> Add Rennovation
+                        </a>
+                    @endif
     <!-- Lands Section -->
     <div class="card border-0 shadow-sm mb-4" id="lands-section">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
@@ -350,20 +361,22 @@ foreach ($site->lands as $land) {
     </div>
     </div>
 
-    <!-- Re-Innovations Section -->
+    <!-- Rennovations Section -->
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
-                <i class="bi bi-lightbulb me-2 text-orange"></i>Re-Innovations
-                <span class="text-muted">({{ $site->reInnovations->count() }})</span>
+                <i class="bi bi-lightbulb me-2 text-orange"></i>Rennovations
+                <span class="text-muted">({{ $site->rennovations->count() }})</span>
             </h5>
-            <a href="{{ route('re-innovations.create') }}?innovatable_type=Site&innovatable_id={{ $site->id }}"
-                class="btn btn-orange">
-                <i class="bi bi-plus-circle me-1"></i> Add Innovation
-            </a>
+            @if ($currentUser?->isSuperAdmin() || $currentUser?->hasPrivilege('rennovation'))
+                <a href="{{ route('rennovations.create') }}?innovatable_type=Site&innovatable_id={{ $site->id }}"
+                    class="btn btn-orange">
+                    <i class="bi bi-plus-circle me-1"></i> Add Rennovation
+                </a>
+            @endif
         </div>
         <div class="card-body p-0">
-            @forelse($site->reInnovations as $innovation)
+            @forelse($site->rennovations as $innovation)
                 @if ($loop->first)
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
@@ -383,7 +396,7 @@ foreach ($site->lands as $land) {
                     <td>{{ $innovation->date->format('Y-m-d') }}</td>
                     <td>
                         <div class="btn-group" role="group">
-                            <a href="{{ route('re-innovations.show', $innovation) }}"
+                            <a href="{{ route('rennovations.show', $innovation) }}"
                                 class="btn btn-sm btn-outline-primary" title="View">
                                 <i class="bi bi-eye"></i>
                             </a>
@@ -396,7 +409,7 @@ foreach ($site->lands as $land) {
         </div>
         @endif
     @empty
-        <p class="text-muted text-center mb-0 py-4">No re-innovations recorded for this site.</p>
+    <p class="text-muted text-center mb-0 py-4">No rennovations recorded for this site.</p>
         @endforelse
     </div>
     </div>

@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Storage;
 
 class SiteController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('privilege:sites_lands_buildings')->except(['index', 'show', 'getNextCluster']);
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -232,7 +237,7 @@ class SiteController extends Controller
      */
     public function show(Site $site)
     {
-        $site->load(['buildings.images', 'lands.images', 'reInnovations', 'zoningStatuses', 'images']);
+        $site->load(['buildings.images', 'lands.images', 'rennovations', 'zoningStatuses', 'images']);
         return view('sites.show', compact('site'));
     }
 

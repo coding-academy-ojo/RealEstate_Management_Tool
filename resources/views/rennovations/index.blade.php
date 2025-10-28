@@ -1,22 +1,29 @@
 @extends('layouts.app')
 
-@section('title', 'Re-Innovations')
+@section('title', 'Rennovations')
 
 @section('breadcrumbs')
-    <li class="breadcrumb-item active">Re-Innovations</li>
+    <li class="breadcrumb-item active">Rennovations</li>
 @endsection
 
 @section('content')
+    @php
+        $currentUser = auth()->user();
+        $canManageRennovations = $currentUser?->isSuperAdmin() || $currentUser?->hasPrivilege('rennovation');
+    @endphp
+
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">Re-Innovations Management</h2>
-        <div>
-            <a href="{{ route('re-innovations.deleted') }}" class="btn btn-trash me-2">
-                <i class="bi bi-trash"></i> Deleted Re-Innovations
-            </a>
-            <a href="{{ route('re-innovations.create') }}" class="btn btn-orange">
-                <i class="bi bi-plus-circle me-1"></i> Add New Re-Innovation
-            </a>
-        </div>
+        <h2 class="mb-0">Rennovations Management</h2>
+        @if ($canManageRennovations)
+            <div>
+                <a href="{{ route('rennovations.deleted') }}" class="btn btn-trash me-2">
+                    <i class="bi bi-trash"></i> Deleted Rennovations
+                </a>
+                <a href="{{ route('rennovations.create') }}" class="btn btn-orange">
+                    <i class="bi bi-plus-circle me-1"></i> Add New Rennovation
+                </a>
+            </div>
+        @endif
     </div>
 
     @if (session('success'))
@@ -26,10 +33,9 @@
         </div>
     @endif
 
-    <!-- Search and Filter Card -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
-            <form method="GET" action="{{ route('re-innovations.index') }}">
+            <form method="GET" action="{{ route('rennovations.index') }}">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="position-relative">
@@ -58,7 +64,7 @@
                             <button type="submit" class="btn btn-orange flex-fill" style="border-radius: 10px;">
                                 <i class="bi bi-funnel me-1"></i> Apply
                             </button>
-                            <a href="{{ route('re-innovations.index') }}" class="btn btn-light flex-fill"
+                            <a href="{{ route('rennovations.index') }}" class="btn btn-light flex-fill"
                                 style="border-radius: 10px;">
                                 <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
                             </a>
@@ -71,7 +77,7 @@
             </form>
 
             <div class="mt-3">
-                <small class="text-muted">{{ $reInnovations->total() }} re-innovation(s) found</small>
+                <small class="text-muted">{{ $rennovations->total() }} rennovation(s) found</small>
             </div>
         </div>
     </div>
@@ -88,7 +94,7 @@
             $params['sort'] = $column;
             $params['direction'] = $activeSort === $column && $activeDirection === 'asc' ? 'desc' : 'asc';
 
-            return route('re-innovations.index', $params);
+            return route('rennovations.index', $params);
         };
 
         $arrowClass = function (string $column, string $direction) use ($activeSort, $activeDirection) {
@@ -151,55 +157,53 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($reInnovations as $index => $innovation)
+                        @forelse ($rennovations as $index => $rennovation)
                             @php
-                                // LIFO numbering: newest record gets lowest number
                                 if ($activeSort === 'number' && $activeDirection === 'desc') {
-                                    // When sorting desc, reverse the numbering
                                     $rowNumber =
-                                        $reInnovations->total() -
-                                        (($reInnovations->currentPage() - 1) * $reInnovations->perPage() + $index);
+                                        $rennovations->total() -
+                                        (($rennovations->currentPage() - 1) * $rennovations->perPage() + $index);
                                 } else {
-                                    // Default asc: normal numbering (1, 2, 3...)
-                                    $rowNumber = ($reInnovations->firstItem() ?? 0) + $index;
+                                    $rowNumber = ($rennovations->firstItem() ?? 0) + $index;
                                 }
                             @endphp
                             <tr>
                                 <td class="text-center fw-bold text-muted">{{ $rowNumber }}</td>
                                 <td>
-                                    <div class="fw-semibold">{{ class_basename($innovation->innovatable_type) }}</div>
-                                    @if ($innovation->innovatable)
+                                    <div class="fw-semibold">{{ class_basename($rennovation->innovatable_type) }}</div>
+                                    @if ($rennovation->innovatable)
                                         @php
                                             $routeName =
                                                 strtolower(
-                                                    str_replace('App\\Models\\', '', $innovation->innovatable_type),
+                                                    str_replace('App\\Models\\', '', $rennovation->innovatable_type),
                                                 ) . 's.show';
                                         @endphp
-                                        <a href="{{ route($routeName, $innovation->innovatable) }}"
+                                        <a href="{{ route($routeName, $rennovation->innovatable) }}"
                                             class="text-decoration-none text-primary">
-                                            {{ $innovation->innovatable->name ?? ($innovation->innovatable->code ?? 'N/A') }}
+                                            {{ $rennovation->innovatable->name ?? ($rennovation->innovatable->code ?? 'N/A') }}
                                         </a>
                                     @else
                                         <span class="text-muted">Deleted</span>
                                     @endif
                                 </td>
-                                <td>{{ $innovation->date ? $innovation->date->format('Y-m-d') : 'N/A' }}</td>
-                                <td>{{ number_format($innovation->cost, 2) }}</td>
+                                <td>{{ $rennovation->date ? $rennovation->date->format('Y-m-d') : 'N/A' }}</td>
+                                <td>{{ number_format($rennovation->cost, 2) }}</td>
                                 <td>
-                                    <span class="text-muted small">{{ Str::limit($innovation->description, 50) }}</span>
+                                    <span
+                                        class="text-muted small">{{ \Illuminate\Support\Str::limit($rennovation->description, 50) }}</span>
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a href="{{ route('re-innovations.show', $innovation) }}"
+                                        <a href="{{ route('rennovations.show', $rennovation) }}"
                                             class="btn btn-sm btn-outline-primary" title="View">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="{{ route('re-innovations.edit', $innovation) }}"
+                                        <a href="{{ route('rennovations.edit', $rennovation) }}"
                                             class="btn btn-sm btn-outline-secondary" title="Edit">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger" title="Delete"
-                                            onclick="openDeleteModal('{{ $innovation->id }}', '{{ $innovation->name }}', '{{ class_basename($innovation->innovatable_type) }}')">
+                                            onclick="openDeleteModal('{{ $rennovation->id }}', '{{ $rennovation->name }}', '{{ class_basename($rennovation->innovatable_type) }}')">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -209,7 +213,7 @@
                             <tr>
                                 <td colspan="6" class="text-center py-4">
                                     <i class="bi bi-lightbulb" style="font-size: 3rem; opacity: 0.3;"></i>
-                                    <p class="text-muted mt-2">No re-innovations found.</p>
+                                    <p class="text-muted mt-2">No rennovations found.</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -217,14 +221,13 @@
                 </table>
             </div>
         </div>
-        @if ($reInnovations->hasPages())
+        @if ($rennovations->hasPages())
             <div class="card-footer bg-white">
-                {{ $reInnovations->links() }}
+                {{ $rennovations->links() }}
             </div>
         @endif
     </div>
 
-    <!-- Delete Confirmation Modal -->
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -235,13 +238,13 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-2">Are you sure you want to delete this re-innovation?</p>
+                    <p class="mb-2">Are you sure you want to delete this rennovation?</p>
                     <div class="alert alert-warning mb-0">
-                        <strong id="deleteInnovationName"></strong> (<span id="deleteInnovationType"></span>)
+                        <strong id="deleteRennovationName"></strong> (<span id="deleteRennovationType"></span>)
                     </div>
                     <p class="text-muted mt-2 mb-0">
-                        <small>This action will move the re-innovation to trash. You can restore it later from the
-                            Deleted Re-Innovations page.</small>
+                        <small>This action will move the rennovation to trash. You can restore it later from the Deleted
+                            Rennovations page.</small>
                     </p>
                 </div>
                 <div class="modal-footer border-0">
@@ -259,12 +262,11 @@
     </div>
 
     <script>
-        function openDeleteModal(innovationId, innovationName, innovationType) {
-            document.getElementById('deleteInnovationName').textContent = innovationName;
-            document.getElementById('deleteInnovationType').textContent = innovationType;
-            document.getElementById('deleteForm').action = '/re-innovations/' + innovationId;
+        function openDeleteModal(rennovationId, rennovationName, rennovationType) {
+            document.getElementById('deleteRennovationName').textContent = rennovationName;
+            document.getElementById('deleteRennovationType').textContent = rennovationType;
+            document.getElementById('deleteForm').action = '/rennovations/' + rennovationId;
 
-            // Use Boosted modal API
             const modalElement = document.getElementById('deleteModal');
             const modal = new boosted.Modal(modalElement);
             modal.show();

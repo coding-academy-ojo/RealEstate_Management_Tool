@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Storage;
 
 class LandController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('privilege:sites_lands_buildings')->except(['index', 'show']);
+    }
+
     public function index(Request $request)
     {
         $filters = $request->only([
@@ -95,6 +100,7 @@ class LandController extends Controller
             'governorate' => 'governorate',
             'area' => 'area_m2',
         ];
+
 
         if ($sort === 'number') {
             $query->orderBy('id', $direction === 'asc' ? 'desc' : 'asc');

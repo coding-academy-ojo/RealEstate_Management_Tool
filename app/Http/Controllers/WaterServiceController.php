@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Storage;
 
 class WaterServiceController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('privilege:water')->except(['index', 'show']);
+    }
+
     /**
      * Display a listing of the resource.
      */

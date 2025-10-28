@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Storage;
 
 class ElectricityServiceController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('privilege:electricity')->except(['index', 'show']);
+    }
+
     /**
      * Display a listing of the resource.
      */

@@ -44,7 +44,7 @@
                         <option value="water" {{ $typeFilter === 'water' ? 'selected' : '' }}>Water Services</option>
                         <option value="electricity" {{ $typeFilter === 'electricity' ? 'selected' : '' }}>Electricity
                             Services</option>
-                        <option value="innovation" {{ $typeFilter === 'innovation' ? 'selected' : '' }}>Re-Innovations
+                        <option value="innovation" {{ $typeFilter === 'innovation' ? 'selected' : '' }}>Rennovations
                         </option>
                     </select>
                 </div>

@@ -1,19 +1,19 @@
 @extends('layouts.app')
 
-@section('title', 'Deleted Re-Innovations')
+@section('title', 'Deleted Rennovations')
 
 @section('breadcrumbs')
-    <li class="breadcrumb-item"><a href="{{ route('re-innovations.index') }}">Re-Innovations</a></li>
-    <li class="breadcrumb-item active">Deleted Re-Innovations</li>
+    <li class="breadcrumb-item"><a href="{{ route('rennovations.index') }}">Rennovations</a></li>
+    <li class="breadcrumb-item active">Deleted Rennovations</li>
 @endsection
 
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">
-            <i class="bi bi-trash me-2 text-muted"></i>Deleted Re-Innovations
+            <i class="bi bi-trash me-2 text-muted"></i>Deleted Rennovations
         </h2>
-        <a href="{{ route('re-innovations.index') }}" class="btn btn-back">
-            <i class="bi bi-arrow-left me-1"></i> Back to Re-Innovations
+        <a href="{{ route('rennovations.index') }}" class="btn btn-back">
+            <i class="bi bi-arrow-left me-1"></i> Back to Rennovations
         </a>
     </div>
 
@@ -28,8 +28,8 @@
         <div class="card-header bg-white py-3">
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
-                    <i class="bi bi-archive me-2 text-muted"></i>Trashed Re-Innovations
-                    <span class="badge bg-secondary">{{ $reInnovations->total() }}</span>
+                    <i class="bi bi-archive me-2 text-muted"></i>Trashed Rennovations
+                    <span class="badge bg-secondary">{{ $rennovations->total() }}</span>
                 </h5>
             </div>
         </div>
@@ -47,39 +47,40 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($reInnovations as $innovation)
+                        @forelse ($rennovations as $rennovation)
                             <tr>
                                 <td>
-                                    <div class="fw-semibold">{{ class_basename($innovation->innovatable_type) }}</div>
-                                    @if ($innovation->innovatable)
+                                    <div class="fw-semibold">{{ class_basename($rennovation->innovatable_type) }}</div>
+                                    @if ($rennovation->innovatable)
                                         <span class="text-primary">
-                                            {{ $innovation->innovatable->name ?? ($innovation->innovatable->code ?? 'N/A') }}
+                                            {{ $rennovation->innovatable->name ?? ($rennovation->innovatable->code ?? 'N/A') }}
                                         </span>
                                     @else
                                         <span class="text-muted">Deleted</span>
                                     @endif
                                 </td>
-                                <td>{{ $innovation->date ? $innovation->date->format('Y-m-d') : 'N/A' }}</td>
-                                <td>{{ number_format($innovation->cost, 2) }}</td>
+                                <td>{{ $rennovation->date ? $rennovation->date->format('Y-m-d') : 'N/A' }}</td>
+                                <td>{{ number_format($rennovation->cost, 2) }}</td>
                                 <td>
-                                    <span class="text-muted small">{{ Str::limit($innovation->description, 50) }}</span>
+                                    <span
+                                        class="text-muted small">{{ \Illuminate\Support\Str::limit($rennovation->description, 50) }}</span>
                                 </td>
                                 <td>
                                     <small class="text-muted">
-                                        {{ $innovation->deleted_at->format('Y-m-d H:i') }}
+                                        {{ $rennovation->deleted_at->format('Y-m-d H:i') }}
                                         <br>
-                                        <span class="text-warning">{{ $innovation->deleted_at->diffForHumans() }}</span>
+                                        <span class="text-warning">{{ $rennovation->deleted_at->diffForHumans() }}</span>
                                     </small>
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
                                         <button type="button" class="btn btn-sm btn-outline-success" title="Restore"
-                                            onclick="openRestoreModal('{{ $innovation->id }}', '{{ $innovation->name }}', '{{ class_basename($innovation->innovatable_type) }}')">
+                                            onclick="openRestoreModal('{{ $rennovation->id }}', '{{ $rennovation->name }}', '{{ class_basename($rennovation->innovatable_type) }}')">
                                             <i class="bi bi-arrow-counterclockwise"></i>
                                         </button>
                                         <button type="button" class="btn btn-sm btn-outline-danger"
                                             title="Delete Permanently"
-                                            onclick="openForceDeleteModal('{{ $innovation->id }}', '{{ $innovation->name }}', '{{ class_basename($innovation->innovatable_type) }}')">
+                                            onclick="openForceDeleteModal('{{ $rennovation->id }}', '{{ $rennovation->name }}', '{{ class_basename($rennovation->innovatable_type) }}')">
                                             <i class="bi bi-trash-fill"></i>
                                         </button>
                                     </div>
@@ -89,7 +90,7 @@
                             <tr>
                                 <td colspan="6" class="text-center py-5">
                                     <i class="bi bi-lightbulb" style="font-size: 3rem; opacity: 0.3;"></i>
-                                    <p class="text-muted mt-2 mb-0">No deleted re-innovations found.</p>
+                                    <p class="text-muted mt-2 mb-0">No deleted rennovations found.</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -97,14 +98,13 @@
                 </table>
             </div>
         </div>
-        @if ($reInnovations->hasPages())
+        @if ($rennovations->hasPages())
             <div class="card-footer bg-white">
-                {{ $reInnovations->links() }}
+                {{ $rennovations->links() }}
             </div>
         @endif
     </div>
 
-    <!-- Restore Confirmation Modal -->
     <div class="modal fade" id="restoreModal" tabindex="-1" aria-labelledby="restoreModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -115,12 +115,12 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-2">Are you sure you want to restore this re-innovation?</p>
+                    <p class="mb-2">Are you sure you want to restore this rennovation?</p>
                     <div class="alert alert-info mb-0">
-                        <strong id="restoreInnovationName"></strong> (<span id="restoreInnovationType"></span>)
+                        <strong id="restoreRennovationName"></strong> (<span id="restoreRennovationType"></span>)
                     </div>
                     <p class="text-muted mt-2 mb-0">
-                        <small>This re-innovation will be moved back to the active list.</small>
+                        <small>This rennovation will be moved back to the active list.</small>
                     </p>
                 </div>
                 <div class="modal-footer border-0">
@@ -136,7 +136,6 @@
         </div>
     </div>
 
-    <!-- Force Delete Confirmation Modal -->
     <div class="modal fade" id="forceDeleteModal" tabindex="-1" aria-labelledby="forceDeleteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -149,13 +148,13 @@
                 </div>
                 <div class="modal-body">
                     <p class="mb-2"><strong>⚠️ This action cannot be undone!</strong></p>
-                    <p class="mb-2">Are you sure you want to permanently delete this re-innovation?</p>
+                    <p class="mb-2">Are you sure you want to permanently delete this rennovation?</p>
                     <div class="alert alert-danger mb-0">
-                        <strong id="forceDeleteInnovationName"></strong> (<span id="forceDeleteInnovationType"></span>)
+                        <strong id="forceDeleteRennovationName"></strong> (<span id="forceDeleteRennovationType"></span>)
                     </div>
                     <p class="text-danger mt-2 mb-0">
-                        <small><strong>Warning:</strong> This will permanently delete the re-innovation. This action cannot
-                            be reversed!</small>
+                        <small><strong>Warning:</strong> This will permanently delete the rennovation. This action cannot be
+                            reversed!</small>
                     </p>
                 </div>
                 <div class="modal-footer border-0">
@@ -173,23 +172,21 @@
     </div>
 
     <script>
-        function openRestoreModal(innovationId, innovationName, innovationType) {
-            document.getElementById('restoreInnovationName').textContent = innovationName;
-            document.getElementById('restoreInnovationType').textContent = innovationType;
-            document.getElementById('restoreForm').action = '/re-innovations/' + innovationId + '/restore';
+        function openRestoreModal(rennovationId, rennovationName, rennovationType) {
+            document.getElementById('restoreRennovationName').textContent = rennovationName;
+            document.getElementById('restoreRennovationType').textContent = rennovationType;
+            document.getElementById('restoreForm').action = '/rennovations/' + rennovationId + '/restore';
 
-            // Use Boosted modal API
             const modalElement = document.getElementById('restoreModal');
             const modal = new boosted.Modal(modalElement);
             modal.show();
         }
 
-        function openForceDeleteModal(innovationId, innovationName, innovationType) {
-            document.getElementById('forceDeleteInnovationName').textContent = innovationName;
-            document.getElementById('forceDeleteInnovationType').textContent = innovationType;
-            document.getElementById('forceDeleteForm').action = '/re-innovations/' + innovationId + '/force-delete';
+        function openForceDeleteModal(rennovationId, rennovationName, rennovationType) {
+            document.getElementById('forceDeleteRennovationName').textContent = rennovationName;
+            document.getElementById('forceDeleteRennovationType').textContent = rennovationType;
+            document.getElementById('forceDeleteForm').action = '/rennovations/' + rennovationId + '/force-delete';
 
-            // Use Boosted modal API
             const modalElement = document.getElementById('forceDeleteModal');
             const modal = new boosted.Modal(modalElement);
             modal.show();

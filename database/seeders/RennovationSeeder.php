@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\ReInnovation;
+use App\Models\Rennovation;
 use App\Models\Building;
 use Illuminate\Database\Seeder;
 
-class ReInnovationSeeder extends Seeder
+class RennovationSeeder extends Seeder
 {
   /**
    * Run the database seeds.
@@ -20,7 +20,7 @@ class ReInnovationSeeder extends Seeder
       return;
     }
 
-    // Add re-innovations to 40% of buildings
+    // Add rennovations to 40% of buildings
     $buildingsForInnovation = $buildings->random(min((int)($buildings->count() * 0.4), $buildings->count()));
 
     $innovationTypes = [
@@ -86,7 +86,7 @@ class ReInnovationSeeder extends Seeder
         $descriptions = $innovationTypes[$type];
         $description = $descriptions[array_rand($descriptions)];
 
-        ReInnovation::create([
+        Rennovation::create([
           'innovatable_id' => $building->id,
           'innovatable_type' => 'App\Models\Building',
           'date' => $this->generateCompletionDate(),
@@ -99,8 +99,8 @@ class ReInnovationSeeder extends Seeder
       }
     }
 
-    $this->command->info('✓ Created ' . $totalInnovations . ' re-innovations for ' . $buildingsForInnovation->count() . ' buildings');
-    $this->command->info('  Total Re-Innovations: ' . ReInnovation::count());
+    $this->command->info('✓ Created ' . $totalInnovations . ' rennovations for ' . $buildingsForInnovation->count() . ' buildings');
+    $this->command->info('  Total Rennovations: ' . Rennovation::count());
   }
 
   private function generateCompletionDate(): string

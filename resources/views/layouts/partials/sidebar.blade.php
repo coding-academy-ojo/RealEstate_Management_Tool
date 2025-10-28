@@ -155,16 +155,24 @@
             <span>Electricity</span>
         </a>
 
-        <a href="{{ route('re-innovations.index') }}"
-            class="sidebar-link {{ request()->routeIs('re-innovations.*') ? 'active' : '' }}"
-            data-tooltip="Re-Innovations">
+        <a href="{{ route('rennovations.index') }}"
+            class="sidebar-link {{ request()->routeIs('rennovations.*') ? 'active' : '' }}"
+            data-tooltip="Rennovations">
             <i class="bi bi-lightbulb"></i>
-            <span>Re-Innovations</span>
+            <span>Rennovations</span>
         </a>
     </div>
 
     <div class="sidebar-section">
         <h6 class="sidebar-title">SYSTEM</h6>
+
+        @if (auth()->check() && auth()->user()->isSuperAdmin())
+            <a href="{{ route('admin.users.index') }}"
+                class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" data-tooltip="Admin">
+                <i class="bi bi-person-gear"></i>
+                <span>Admin Management</span>
+            </a>
+        @endif
 
         <a href="#" class="sidebar-link" data-tooltip="Reports">
             <i class="bi bi-graph-up"></i>

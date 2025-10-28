@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Building;
 use App\Models\ElectricityService;
-use App\Models\ReInnovation;
+use App\Models\Rennovation;
 use App\Models\Site;
 use App\Models\WaterService;
 use Illuminate\Http\Request;
@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\Storage;
 
 class BuildingController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('privilege:sites_lands_buildings')->except(['index', 'show', 'file']);
+    }
+
     public function index(Request $request)
     {
         $filters = $request->only(['search', 'permit', 'area']);
@@ -175,7 +180,7 @@ class BuildingController extends Controller
 
     public function show(Building $building)
     {
-        $building->load(['site.images', 'lands.images', 'waterServices', 'electricityServices', 'reInnovations', 'images']);
+        $building->load(['site.images', 'lands.images', 'waterServices', 'electricityServices', 'rennovations', 'images']);
         $documents = collect([
             'building-permit' => [
                 'label' => 'Building Permit',
@@ -333,7 +338,7 @@ class BuildingController extends Controller
     {
         $building->waterServices()->get()->each->delete();
         $building->electricityServices()->get()->each->delete();
-        $building->reInnovations()->get()->each->delete();
+        $building->rennovations()->get()->each->delete();
 
         $building->delete();
 
@@ -393,14 +398,14 @@ class BuildingController extends Controller
             ->with([
                 'waterServices' => fn($query) => $query->withTrashed(),
                 'electricityServices' => fn($query) => $query->withTrashed(),
-                'reInnovations' => fn($query) => $query->withTrashed(),
+            'rennovations' => fn($query) => $query->withTrashed(),
             ])
             ->findOrFail($id);
 
         $building->restore();
         $building->waterServices()->withTrashed()->restore();
         $building->electricityServices()->withTrashed()->restore();
-        $building->reInnovations()->withTrashed()->restore();
+        $building->rennovations()->withTrashed()->restore();
 
         return redirect()->route('buildings.deleted')->with('success', 'Building restored successfully!');
     }
@@ -412,7 +417,7 @@ class BuildingController extends Controller
                 'lands' => fn($query) => $query->withTrashed(),
                 'waterServices' => fn($query) => $query->withTrashed(),
                 'electricityServices' => fn($query) => $query->withTrashed(),
-                'reInnovations' => fn($query) => $query->withTrashed(),
+            'rennovations' => fn($query) => $query->withTrashed(),
             ])
             ->findOrFail($id);
 
@@ -430,7 +435,7 @@ class BuildingController extends Controller
             $service->forceDelete();
         });
 
-        $building->reInnovations()->withTrashed()->get()->each(function (ReInnovation $innovation) {
+        $building->rennovations()->withTrashed()->get()->each(function (Rennovation $innovation) {
             $innovation->forceDelete();
         });
 

@@ -103,7 +103,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0 text-uppercase small fw-bold" style="color: #ff7900;">Re-Innovations</h6>
+                            <h6 class="mb-0 text-uppercase small fw-bold" style="color: #ff7900;">Rennovations</h6>
                             <h3 class="mb-0 mt-1 text-white fw-bold">{{ $stats['total_innovations'] }}</h3>
                             <small class="text-white-50" style="font-size: 0.7rem;">
                                 <i class="bi bi-currency-dollar me-1"></i>
@@ -113,7 +113,7 @@
                     </div>
                 </div>
                 <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3">
-                    <a href="{{ route('re-innovations.index') }}" class="btn btn-sm text-decoration-none"
+                    <a href="{{ route('rennovations.index') }}" class="btn btn-sm text-decoration-none"
                         style="background-color: #ff7900; color: white; border: none;">
                         <i class="bi bi-eye me-1"></i> View Innovations
                     </a>
@@ -205,7 +205,7 @@
                         </div>
                     </div>
 
-                    <!-- Re-Innovations -->
+                    <!-- Rennovations -->
                     <div class="mb-3">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <div class="d-flex align-items-center">
@@ -213,7 +213,7 @@
                                     <i class="bi bi-lightbulb-fill text-danger" style="font-size: 1rem;"></i>
                                 </div>
                                 <div>
-                                    <h6 class="mb-0 fw-semibold" style="font-size: 0.875rem;">Re-Innovations</h6>
+                                    <h6 class="mb-0 fw-semibold" style="font-size: 0.875rem;">Rennovations</h6>
                                     <small class="text-muted" style="font-size: 0.7rem;">Total projects</small>
                                 </div>
                             </div>
@@ -239,7 +239,7 @@
                             </div>
                             <h4 class="mb-0 fw-bold text-success">{{ number_format($stats['total_innovation_cost'], 0) }}
                                 <small class="text-muted">JOD</small></h4>
-                            <small class="text-muted fw-semibold">Total Innovation Investment</small>
+                            <small class="text-muted fw-semibold">Total Rennovation Investment</small>
                         </div>
                     </div>
 
@@ -251,8 +251,8 @@
                         <a href="{{ route('electricity-services.index') }}" class="btn btn-sm btn-warning">
                             <i class="bi bi-lightning-charge me-1"></i>Manage Electricity
                         </a>
-                        <a href="{{ route('re-innovations.index') }}" class="btn btn-sm btn-danger">
-                            <i class="bi bi-lightbulb me-1"></i>View Innovations
+                        <a href="{{ route('rennovations.index') }}" class="btn btn-sm btn-danger">
+                            <i class="bi bi-lightbulb me-1"></i>View Rennovations
                         </a>
                     </div>
                 </div>
