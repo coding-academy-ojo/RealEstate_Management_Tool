@@ -15,6 +15,7 @@ class WaterService extends Model
     protected $fillable = [
         'building_id',
         'company_name',
+        'meter_owner_name',
         'registration_number',
         'iron_number',
         'remarks',

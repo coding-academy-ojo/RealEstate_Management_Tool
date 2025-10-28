@@ -76,16 +76,30 @@
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="iron_number" class="form-label fw-bold">
-                                Iron Number (Water Meter)
-                            </label>
-                            <input type="text" name="iron_number" id="iron_number"
-                                class="form-control @error('iron_number') is-invalid @enderror"
-                                value="{{ old('iron_number', $waterService->iron_number) }}">
-                            @error('iron_number')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="meter_owner_name" class="form-label fw-bold">
+                                    Meter Owner Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="meter_owner_name" id="meter_owner_name"
+                                    class="form-control @error('meter_owner_name') is-invalid @enderror"
+                                    value="{{ old('meter_owner_name', $waterService->meter_owner_name) }}" required>
+                                @error('meter_owner_name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="iron_number" class="form-label fw-bold">
+                                    Iron Number (Water Meter)
+                                </label>
+                                <input type="text" name="iron_number" id="iron_number"
+                                    class="form-control @error('iron_number') is-invalid @enderror"
+                                    value="{{ old('iron_number', $waterService->iron_number) }}">
+                                @error('iron_number')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
 
                         <hr class="my-4">

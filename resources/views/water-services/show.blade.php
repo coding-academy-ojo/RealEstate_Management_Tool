@@ -110,6 +110,15 @@
 
                     <div class="row mb-3">
                         <div class="col-md-4">
+                            <strong class="text-muted">Meter Owner:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ $waterService->meter_owner_name }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
                             <strong class="text-muted">Registration Number:</strong>
                         </div>
                         <div class="col-md-8">

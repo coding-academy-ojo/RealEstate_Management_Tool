@@ -327,8 +327,7 @@ foreach ($building->images as $image) {
                 <table class="table table-sm align-middle service-section__table mb-0">
                     <thead>
                         <tr>
-                            <th scope="col">Company</th>
-                            <th scope="col">Registration</th>
+                            <th scope="col">Meter Info</th>
                             <th scope="col">Latest Reading</th>
                             <th scope="col">Latest Bill</th>
                             <th scope="col">Meter Image</th>
@@ -342,8 +341,14 @@ foreach ($building->images as $image) {
                                 $latestReading = $service->latestReading;
                             @endphp
                             <tr>
-                                <td class="fw-semibold">{{ $service->company_name }}</td>
-                                <td>{{ $service->registration_number ?? '—' }}</td>
+                                <td>
+                                    <div class="fw-semibold text-dark">{{ $service->meter_owner_name }}</div>
+                                    <div class="text-muted small">{{ $service->company_name }}</div>
+                                    <div class="d-flex flex-wrap gap-2 mt-1 small">
+                                        <span class="badge bg-light text-muted border">Reg: {{ $service->registration_number ?? '—' }}</span>
+                                        <span class="badge bg-light text-muted border">Iron: {{ $service->iron_number ?? 'N/A' }}</span>
+                                    </div>
+                                </td>
                                 <td>
                                     @if ($latestReading)
                                         <div class="fw-semibold">

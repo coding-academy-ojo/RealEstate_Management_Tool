@@ -38,6 +38,7 @@ class WaterServiceController extends Controller
                 $q->where('registration_number', 'like', "%{$filters['search']}%")
                     ->orWhere('iron_number', 'like', "%{$filters['search']}%")
                     ->orWhere('company_name', 'like', "%{$filters['search']}%")
+                    ->orWhere('meter_owner_name', 'like', "%{$filters['search']}%")
                     ->orWhereHas('building', function ($buildingQuery) use ($filters) {
                         $buildingQuery->where('name', 'like', "%{$filters['search']}%");
                     });
@@ -53,6 +54,9 @@ class WaterServiceController extends Controller
         switch ($sort) {
             case 'company':
                 $query->orderBy('company_name', $direction);
+                break;
+            case 'owner':
+                $query->orderBy('meter_owner_name', $direction);
                 break;
             case 'registration':
                 $query->orderBy('registration_number', $direction);
@@ -100,6 +104,7 @@ class WaterServiceController extends Controller
         $validated = $request->validate([
             'building_id' => 'required|exists:buildings,id',
             'company_name' => 'required|string|max:255',
+            'meter_owner_name' => 'required|string|max:255',
             'registration_number' => 'required|string|max:255',
             'iron_number' => 'nullable|string|max:255',
             'remarks' => 'nullable|string',
@@ -149,6 +154,7 @@ class WaterServiceController extends Controller
         $validated = $request->validate([
             'building_id' => 'required|exists:buildings,id',
             'company_name' => 'required|string|max:255',
+            'meter_owner_name' => 'required|string|max:255',
             'registration_number' => 'required|string|max:255',
             'iron_number' => 'nullable|string|max:255',
             'remarks' => 'nullable|string',

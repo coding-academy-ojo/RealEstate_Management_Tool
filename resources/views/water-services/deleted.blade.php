@@ -39,9 +39,7 @@
                     <thead class="table-light">
                         <tr>
                             <th>Building</th>
-                            <th>Company</th>
-                            <th>Registration #</th>
-                            <th>Iron #</th>
+                            <th>Meter Info</th>
                             <th>Latest Reading</th>
                             <th>Latest Bill</th>
                             <th>Deleted At</th>
@@ -58,9 +56,14 @@
                                         <span class="text-muted">No Building</span>
                                     @endif
                                 </td>
-                                <td class="fw-semibold">{{ $service->company_name }}</td>
-                                <td>{{ $service->registration_number }}</td>
-                                <td>{{ $service->iron_number ?? 'N/A' }}</td>
+                                <td>
+                                    <div class="fw-semibold text-dark">{{ $service->meter_owner_name }}</div>
+                                    <div class="text-muted small">{{ $service->company_name }}</div>
+                                    <div class="d-flex flex-wrap gap-2 mt-1 small">
+                                        <span class="badge bg-light text-muted border">Reg: {{ $service->registration_number }}</span>
+                                        <span class="badge bg-light text-muted border">Iron: {{ $service->iron_number ?? 'N/A' }}</span>
+                                    </div>
+                                </td>
                                 @php
                                     $latestReading = $service->latestReading;
                                 @endphp
@@ -113,7 +116,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-5">
+                                <td colspan="6" class="text-center py-5">
                                     <i class="bi bi-droplet" style="font-size: 3rem; opacity: 0.3;"></i>
                                     <p class="text-muted mt-2 mb-0">No deleted water services found.</p>
                                 </td>

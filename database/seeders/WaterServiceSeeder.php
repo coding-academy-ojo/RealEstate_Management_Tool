@@ -32,6 +32,7 @@ class WaterServiceSeeder extends Seeder
             $service = WaterService::create([
         'building_id' => $building->id,
         'company_name' => $this->getWaterCompany($site->governorate),
+                'meter_owner_name' => fake()->name(),
         'registration_number' => $this->generateRegistrationNumber($site->governorate, 'W'),
         'iron_number' => 'IRON-' . rand(10000, 99999),
                 'remarks' => fake()->optional()->sentence(),

@@ -136,30 +136,10 @@
                             <th class="sortable">
                                 <a href="{{ $buildSortUrl('company') }}"
                                     class="d-flex align-items-center justify-content-between text-decoration-none text-dark">
-                                    <span>Company</span>
+                                    <span>Meter Info</span>
                                     <span class="sort-arrows">
                                         <i class="bi bi-caret-up-fill {{ $arrowClass('company', 'asc') }}"></i>
                                         <i class="bi bi-caret-down-fill {{ $arrowClass('company', 'desc') }}"></i>
-                                    </span>
-                                </a>
-                            </th>
-                            <th class="sortable">
-                                <a href="{{ $buildSortUrl('registration') }}"
-                                    class="d-flex align-items-center justify-content-between text-decoration-none text-dark">
-                                    <span>Registration #</span>
-                                    <span class="sort-arrows">
-                                        <i class="bi bi-caret-up-fill {{ $arrowClass('registration', 'asc') }}"></i>
-                                        <i class="bi bi-caret-down-fill {{ $arrowClass('registration', 'desc') }}"></i>
-                                    </span>
-                                </a>
-                            </th>
-                            <th class="sortable">
-                                <a href="{{ $buildSortUrl('iron') }}"
-                                    class="d-flex align-items-center justify-content-between text-decoration-none text-dark">
-                                    <span>Iron #</span>
-                                    <span class="sort-arrows">
-                                        <i class="bi bi-caret-up-fill {{ $arrowClass('iron', 'asc') }}"></i>
-                                        <i class="bi bi-caret-down-fill {{ $arrowClass('iron', 'desc') }}"></i>
                                     </span>
                                 </a>
                             </th>
@@ -194,9 +174,14 @@
                                         <span class="text-muted">No Building</span>
                                     @endif
                                 </td>
-                                <td class="fw-semibold">{{ $service->company_name }}</td>
-                                <td>{{ $service->registration_number }}</td>
-                                <td>{{ $service->iron_number ?? 'N/A' }}</td>
+                                <td>
+                                    <div class="fw-semibold text-dark">{{ $service->meter_owner_name }}</div>
+                                    <div class="text-muted small">{{ $service->company_name }}</div>
+                                    <div class="d-flex flex-wrap gap-2 mt-1 small">
+                                        <span class="badge bg-light text-muted border">Reg: {{ $service->registration_number }}</span>
+                                        <span class="badge bg-light text-muted border">Iron: {{ $service->iron_number ?? 'N/A' }}</span>
+                                    </div>
+                                </td>
                                 @php
                                     $latestReading = $service->latestReading;
                                 @endphp
@@ -246,7 +231,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-4">
+                                <td colspan="6" class="text-center py-4">
                                     <i class="bi bi-droplet" style="font-size: 3rem; opacity: 0.3;"></i>
                                     <p class="text-muted mt-2">No water services found.</p>
                                 </td>

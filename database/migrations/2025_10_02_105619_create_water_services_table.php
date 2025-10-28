@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('building_id')->constrained()->cascadeOnDelete();
             $table->string('company_name');
+            $table->string('meter_owner_name');
             $table->string('registration_number');
             $table->string('iron_number')->nullable();
             $table->text('remarks')->nullable();
