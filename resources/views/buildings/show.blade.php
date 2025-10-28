@@ -11,6 +11,7 @@
     @php
         $permitDocuments = $documents->where('is_permit', true);
         $asBuiltDocument = $documents->firstWhere('slug', 'as-built-drawing');
+        $leaseContractDocument = $documents->firstWhere('slug', 'lease-contract');
         $availableDocuments = $documents->where('has_file', true);
         $currentUser = auth()->user();
     @endphp
@@ -63,6 +64,16 @@
                             <div class="text-muted text-uppercase small fw-semibold">Area (m²)</div>
                             <div>{{ number_format($building->area_m2, 2) }}</div>
                         </div>
+                        <div class="col-md-4">
+                            <div class="text-muted text-uppercase small fw-semibold">Tenure</div>
+                            <div>
+                                @if ($building->tenure_type === 'rental')
+                                    <span class="badge bg-warning-subtle text-warning fw-semibold">Rental</span>
+                                @else
+                                    <span class="badge bg-success-subtle text-success fw-semibold">Owned</span>
+                                @endif
+                            </div>
+                        </div>
                         <div class="col-md-6">
                             <div class="text-muted text-uppercase small fw-semibold">Site</div>
                             <div>
@@ -94,6 +105,59 @@
                                 <span class="text-muted">Not uploaded.</span>
                             @endif
                         </div>
+
+                        @if ($building->tenure_type === 'rental')
+                            <div class="col-12">
+                                <hr class="my-3">
+                                <h6 class="text-orange mb-3">
+                                    <i class="bi bi-file-earmark-text me-2"></i>Lease Details
+                                </h6>
+                                <div class="row gy-3">
+                                    <div class="col-md-4">
+                                        <div class="text-muted text-uppercase small fw-semibold">Lease Start</div>
+                                        <div>{{ optional($building->lease_start_date)->format('Y-m-d') ?? '—' }}</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-muted text-uppercase small fw-semibold">Lease End</div>
+                                        <div>{{ optional($building->lease_end_date)->format('Y-m-d') ?? '—' }}</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-muted text-uppercase small fw-semibold">Contract Value</div>
+                                        <div>{{ $building->contract_value !== null ? number_format($building->contract_value, 2) . ' JOD' : '—' }}</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-muted text-uppercase small fw-semibold">Annual Increase</div>
+                                        <div>{{ $building->annual_increase_rate !== null ? rtrim(rtrim(number_format($building->annual_increase_rate, 2), '0'), '.') . '%' : '—' }}</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-muted text-uppercase small fw-semibold">Increase Effective</div>
+                                        <div>{{ optional($building->increase_effective_date)->format('Y-m-d') ?? '—' }}</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-muted text-uppercase small fw-semibold">Lease Contract</div>
+                                        @if ($leaseContractDocument && $leaseContractDocument['has_file'])
+                                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                                <a href="{{ $leaseContractDocument['inline_url'] }}" target="_blank"
+                                                    class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye me-1"></i>View
+                                                </a>
+                                                <a href="{{ $leaseContractDocument['download_url'] }}"
+                                                    class="btn btn-sm btn-outline-secondary">
+                                                    <i class="bi bi-download me-1"></i>Download
+                                                </a>
+                                                <span class="document-meta">{{ $leaseContractDocument['file_name'] }}</span>
+                                            </div>
+                                        @else
+                                            <span class="text-muted">No contract uploaded</span>
+                                        @endif
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="text-muted text-uppercase small fw-semibold">Special Conditions</div>
+                                        <div>{{ $building->special_conditions ?: 'No special conditions documented.' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     <hr class="my-4">

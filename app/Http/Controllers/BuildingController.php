@@ -9,6 +9,7 @@ use App\Models\Site;
 use App\Models\WaterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class BuildingController extends Controller
 {
@@ -19,7 +20,7 @@ class BuildingController extends Controller
 
     public function index(Request $request)
     {
-        $filters = $request->only(['search', 'permit', 'area']);
+        $filters = $request->only(['search', 'permit', 'area', 'tenure']);
 
         $query = Building::query()
             ->with([
@@ -78,6 +79,10 @@ class BuildingController extends Controller
             }
         }
 
+        if (!empty($filters['tenure']) && in_array($filters['tenure'], ['owned', 'rental'], true)) {
+            $query->where('tenure_type', $filters['tenure']);
+        }
+
         $sort = $request->query('sort', 'number');
         $direction = strtolower($request->query('direction', 'asc')) === 'desc' ? 'desc' : 'asc';
 
@@ -85,6 +90,7 @@ class BuildingController extends Controller
             'code' => 'code',
             'name' => 'name',
             'area' => 'area_m2',
+            'tenure' => 'tenure_type',
         ];
 
         if ($sort === 'number') {
@@ -127,6 +133,14 @@ class BuildingController extends Controller
             'lands.*' => 'exists:lands,id',
             'name' => 'required|string|max:255',
             'area_m2' => 'required|numeric|min:0',
+            'tenure_type' => ['required', Rule::in(['owned', 'rental'])],
+            'lease_start_date' => ['nullable', 'date', 'required_if:tenure_type,rental'],
+            'lease_end_date' => ['nullable', 'date', 'after_or_equal:lease_start_date', 'required_if:tenure_type,rental'],
+            'contract_value' => ['nullable', 'numeric', 'min:0', 'required_if:tenure_type,rental'],
+            'special_conditions' => ['nullable', 'string'],
+            'contract_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+            'annual_increase_rate' => ['nullable', 'numeric', 'min:0', 'max:100', 'required_if:tenure_type,rental'],
+            'increase_effective_date' => ['nullable', 'date', 'after_or_equal:lease_start_date', 'required_if:tenure_type,rental'],
             'has_building_permit' => 'nullable|boolean',
             'has_occupancy_permit' => 'nullable|boolean',
             'has_profession_permit' => 'nullable|boolean',
@@ -137,10 +151,19 @@ class BuildingController extends Controller
             'remarks' => 'nullable|string',
         ]);
 
+        $tenureType = $validated['tenure_type'];
+
         $building = Building::create([
             'site_id' => $validated['site_id'],
             'name' => $validated['name'],
             'area_m2' => $validated['area_m2'],
+            'tenure_type' => $tenureType,
+            'lease_start_date' => $tenureType === 'rental' ? $validated['lease_start_date'] : null,
+            'lease_end_date' => $tenureType === 'rental' ? $validated['lease_end_date'] : null,
+            'contract_value' => $tenureType === 'rental' ? $validated['contract_value'] : null,
+            'special_conditions' => $tenureType === 'rental' ? ($validated['special_conditions'] ?? null) : null,
+            'annual_increase_rate' => $tenureType === 'rental' ? $validated['annual_increase_rate'] : null,
+            'increase_effective_date' => $tenureType === 'rental' ? $validated['increase_effective_date'] : null,
             'has_building_permit' => $request->has('has_building_permit'),
             'has_occupancy_permit' => $request->has('has_occupancy_permit'),
             'has_profession_permit' => $request->has('has_profession_permit'),
@@ -166,6 +189,10 @@ class BuildingController extends Controller
         if ($request->hasFile('as_built_drawing')) {
             $path = $request->file('as_built_drawing')->store('drawings/as-built', 'public');
             $building->as_built_drawing = $path;
+        }
+
+        if ($tenureType === 'rental' && $request->hasFile('contract_file')) {
+            $building->contract_file = $request->file('contract_file')->store('contracts/buildings', 'public');
         }
 
         $building->save();
@@ -204,6 +231,12 @@ class BuildingController extends Controller
                 'label' => 'As-Built Drawing',
                 'attribute' => 'as_built_drawing',
                 'status' => null,
+                'is_permit' => false,
+            ],
+            'lease-contract' => [
+                'label' => 'Lease Contract',
+                'attribute' => 'contract_file',
+                'status' => $building->tenure_type === 'rental',
                 'is_permit' => false,
             ],
         ])->map(function (array $config, string $slug) use ($building) {
@@ -256,6 +289,14 @@ class BuildingController extends Controller
             'lands.*' => 'exists:lands,id',
             'name' => 'required|string|max:255',
             'area_m2' => 'required|numeric|min:0',
+            'tenure_type' => ['required', Rule::in(['owned', 'rental'])],
+            'lease_start_date' => ['nullable', 'date', 'required_if:tenure_type,rental'],
+            'lease_end_date' => ['nullable', 'date', 'after_or_equal:lease_start_date', 'required_if:tenure_type,rental'],
+            'contract_value' => ['nullable', 'numeric', 'min:0', 'required_if:tenure_type,rental'],
+            'special_conditions' => ['nullable', 'string'],
+            'contract_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+            'annual_increase_rate' => ['nullable', 'numeric', 'min:0', 'max:100', 'required_if:tenure_type,rental'],
+            'increase_effective_date' => ['nullable', 'date', 'after_or_equal:lease_start_date', 'required_if:tenure_type,rental'],
             'has_building_permit' => 'nullable|boolean',
             'has_occupancy_permit' => 'nullable|boolean',
             'has_profession_permit' => 'nullable|boolean',
@@ -266,9 +307,31 @@ class BuildingController extends Controller
             'remarks' => 'nullable|string',
         ]);
 
+        $tenureType = $validated['tenure_type'];
+
         $building->site_id = $validated['site_id'];
         $building->name = $validated['name'];
         $building->area_m2 = $validated['area_m2'];
+        $building->tenure_type = $tenureType;
+        if ($tenureType === 'rental') {
+            $building->lease_start_date = $validated['lease_start_date'];
+            $building->lease_end_date = $validated['lease_end_date'];
+            $building->contract_value = $validated['contract_value'];
+            $building->special_conditions = $validated['special_conditions'] ?? null;
+            $building->annual_increase_rate = $validated['annual_increase_rate'];
+            $building->increase_effective_date = $validated['increase_effective_date'];
+        } else {
+            $building->lease_start_date = null;
+            $building->lease_end_date = null;
+            $building->contract_value = null;
+            $building->special_conditions = null;
+            $building->annual_increase_rate = null;
+            $building->increase_effective_date = null;
+            if ($building->contract_file) {
+                $this->deleteFileIfExists($building->contract_file);
+                $building->contract_file = null;
+            }
+        }
         $building->has_building_permit = $request->boolean('has_building_permit');
         $building->has_occupancy_permit = $request->boolean('has_occupancy_permit');
         $building->has_profession_permit = $request->boolean('has_profession_permit');
@@ -323,6 +386,13 @@ class BuildingController extends Controller
             $building->as_built_drawing = $request->file('as_built_drawing')->store('drawings/as-built', 'public');
         }
 
+        if ($tenureType === 'rental' && $request->hasFile('contract_file')) {
+            if ($building->contract_file && Storage::disk('public')->exists($building->contract_file)) {
+                Storage::disk('public')->delete($building->contract_file);
+            }
+            $building->contract_file = $request->file('contract_file')->store('contracts/buildings', 'public');
+        }
+
         $building->save();
 
         $landIds = $request->input('lands', []);
@@ -352,6 +422,7 @@ class BuildingController extends Controller
             'occupancy-permit' => 'occupancy_permit_file',
             'profession-permit' => 'profession_permit_file',
             'as-built-drawing' => 'as_built_drawing',
+            'lease-contract' => 'contract_file',
         ];
 
         if (!array_key_exists($document, $documentMap)) {
@@ -421,7 +492,7 @@ class BuildingController extends Controller
             ])
             ->findOrFail($id);
 
-        foreach (['building_permit_file', 'occupancy_permit_file', 'profession_permit_file', 'as_built_drawing'] as $fileAttribute) {
+        foreach (['building_permit_file', 'occupancy_permit_file', 'profession_permit_file', 'as_built_drawing', 'contract_file'] as $fileAttribute) {
             $this->deleteFileIfExists($building->{$fileAttribute});
         }
 

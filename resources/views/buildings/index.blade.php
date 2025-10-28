@@ -29,7 +29,7 @@
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
             <form method="GET" action="{{ route('buildings.index') }}" class="row g-3">
-                <div class="col-md-4">
+                <div class="col-lg-3 col-md-6">
                     <div class="position-relative">
                         <i class="bi bi-search position-absolute"
                             style="left: 12px; top: 50%; transform: translateY(-50%); color: #999;"></i>
@@ -39,7 +39,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-lg-2 col-md-6">
                     <select id="permit" name="permit" class="form-select" style="border-radius: 10px;">
                         <option value="" {{ empty($filters['permit']) ? 'selected' : '' }}>All Permits</option>
                         <option value="building" {{ ($filters['permit'] ?? '') === 'building' ? 'selected' : '' }}>Has
@@ -53,7 +53,7 @@
                     </select>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-lg-2 col-md-6">
                     <select id="area" name="area" class="form-select" style="border-radius: 10px;">
                         <option value="" {{ empty($filters['area']) ? 'selected' : '' }}>All Areas</option>
                         <option value="0-500" {{ ($filters['area'] ?? '') === '0-500' ? 'selected' : '' }}>0 - 500 m²
@@ -67,7 +67,15 @@
                     </select>
                 </div>
 
-                <div class="col-md-2">
+                <div class="col-lg-2 col-md-6">
+                    <select id="tenure" name="tenure" class="form-select" style="border-radius: 10px;">
+                        <option value="" {{ empty($filters['tenure']) ? 'selected' : '' }}>All Tenure</option>
+                        <option value="owned" {{ ($filters['tenure'] ?? '') === 'owned' ? 'selected' : '' }}>Owned</option>
+                        <option value="rental" {{ ($filters['tenure'] ?? '') === 'rental' ? 'selected' : '' }}>Rental</option>
+                    </select>
+                </div>
+
+                <div class="col-lg-3 col-md-12">
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-orange flex-fill" style="border-radius: 10px;">
                             <i class="bi bi-funnel me-1"></i> Apply
@@ -200,7 +208,10 @@
                             <tr>
                                 <td class="text-center fw-bold text-muted">{{ $rowNumber }}</td>
                                 <td>{{ $building->code }}</td>
-                                <td class="fw-semibold">{{ $building->name }}</td>
+                                <td class="fw-semibold">
+                                    <div>{{ $building->name }}</div>
+                                    <div class="text-muted small">{{ ucfirst($building->tenure_type) }}</div>
+                                </td>
                                 <td>
                                     @if ($building->site && !$building->site->trashed())
                                         <a href="{{ route('sites.show', $building->site) }}"

@@ -8,6 +8,9 @@
 @endsection
 
 @section('content')
+    @php
+        $oldTenure = old('tenure_type', 'owned');
+    @endphp
     <div class="row justify-content-center">
         <div class="col-lg-10">
             <div class="card border-0 shadow-sm">
@@ -95,6 +98,110 @@
                                     class="form-control @error('area_m2') is-invalid @enderror"
                                     value="{{ old('area_m2') }}" required>
                                 @error('area_m2')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row align-items-end">
+                            <div class="col-md-4 mb-3">
+                                <label for="tenure_type" class="form-label fw-bold">
+                                    Tenure Type <span class="text-danger">*</span>
+                                </label>
+                                <select name="tenure_type" id="tenure_type"
+                                    class="form-select @error('tenure_type') is-invalid @enderror" required>
+                                    <option value="owned" {{ $oldTenure === 'owned' ? 'selected' : '' }}>Owned</option>
+                                    <option value="rental" {{ $oldTenure === 'rental' ? 'selected' : '' }}>Rental</option>
+                                </select>
+                                <small class="text-muted">Choose how this building is held</small>
+                                @error('tenure_type')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div id="rental-fields" class="mt-3"
+                            style="display: {{ $oldTenure === 'rental' ? 'block' : 'none' }};">
+                            <div class="alert alert-warning d-flex align-items-center gap-2">
+                                <i class="bi bi-info-circle-fill"></i>
+                                <span>Provide lease information for rental buildings.</span>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="lease_start_date" class="form-label fw-bold">
+                                        Lease Start Date <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" name="lease_start_date" id="lease_start_date"
+                                        class="form-control @error('lease_start_date') is-invalid @enderror"
+                                        value="{{ old('lease_start_date') }}" data-rental-required="true">
+                                    @error('lease_start_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="lease_end_date" class="form-label fw-bold">
+                                        Lease End Date <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" name="lease_end_date" id="lease_end_date"
+                                        class="form-control @error('lease_end_date') is-invalid @enderror"
+                                        value="{{ old('lease_end_date') }}" data-rental-required="true">
+                                    @error('lease_end_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="contract_value" class="form-label fw-bold">
+                                        Annual Contract Value (JOD) <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" step="0.01" name="contract_value" id="contract_value"
+                                        class="form-control @error('contract_value') is-invalid @enderror"
+                                        value="{{ old('contract_value') }}" data-rental-required="true">
+                                    @error('contract_value')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="annual_increase_rate" class="form-label fw-bold">
+                                        Annual Increase Rate (%) <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" step="0.01" name="annual_increase_rate"
+                                        id="annual_increase_rate"
+                                        class="form-control @error('annual_increase_rate') is-invalid @enderror"
+                                        value="{{ old('annual_increase_rate') }}" data-rental-required="true">
+                                    @error('annual_increase_rate')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="increase_effective_date" class="form-label fw-bold">
+                                        Increase Effective Date <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" name="increase_effective_date" id="increase_effective_date"
+                                        class="form-control @error('increase_effective_date') is-invalid @enderror"
+                                        value="{{ old('increase_effective_date') }}" data-rental-required="true">
+                                    @error('increase_effective_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="contract_file" class="form-label fw-bold">
+                                        Lease Contract File
+                                    </label>
+                                    <input type="file" name="contract_file" id="contract_file"
+                                        class="form-control @error('contract_file') is-invalid @enderror"
+                                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                                    <small class="text-muted d-block">Accepted: PDF, JPG, PNG, DOC (Max 10MB)</small>
+                                    @error('contract_file')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="special_conditions" class="form-label fw-bold">Special Conditions</label>
+                                <textarea name="special_conditions" id="special_conditions" rows="3"
+                                    class="form-control @error('special_conditions') is-invalid @enderror">{{ old('special_conditions') }}</textarea>
+                                <small class="text-muted">Add escalation clauses or special terms if any</small>
+                                @error('special_conditions')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -230,6 +337,8 @@
                 const siteSelect = document.getElementById('site_id');
                 const landsSection = document.getElementById('lands-section');
                 const landsContainer = document.getElementById('lands-container');
+                const tenureSelect = document.getElementById('tenure_type');
+                const rentalFields = document.getElementById('rental-fields');
 
                 // Permit toggle handlers
                 const buildingPermitCheck = document.getElementById('has_building_permit');
@@ -280,10 +389,38 @@
                     });
                 }
 
+                const toggleRentalFields = () => {
+                    if (!tenureSelect || !rentalFields) {
+                        return;
+                    }
+
+                    const isRental = tenureSelect.value === 'rental';
+                    rentalFields.style.display = isRental ? 'block' : 'none';
+
+                    const inputs = rentalFields.querySelectorAll('input, textarea, select');
+                    inputs.forEach((input) => {
+                        input.disabled = !isRental;
+
+                        if (!isRental && input.type === 'file') {
+                            input.value = '';
+                        }
+
+                        if (input.dataset.rentalRequired === 'true') {
+                            input.required = isRental;
+                        }
+                    });
+                };
+
+                if (tenureSelect) {
+                    tenureSelect.addEventListener('change', toggleRentalFields);
+                    toggleRentalFields();
+                }
+
                 console.log('Elements found:', {
                     siteSelect: !!siteSelect,
                     landsSection: !!landsSection,
-                    landsContainer: !!landsContainer
+                    landsContainer: !!landsContainer,
+                    tenureSelect: !!tenureSelect,
                 });
 
                 if (!siteSelect || !landsSection || !landsContainer) {
