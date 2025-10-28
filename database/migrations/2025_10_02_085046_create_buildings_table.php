@@ -35,7 +35,8 @@ return new class extends Migration
             $table->boolean('has_profession_permit')->nullable();
             $table->string('profession_permit_file')->nullable(); // رخصة مهن
 
-            $table->string('as_built_drawing')->nullable(); // ملف PDF أو AutoCAD
+            $table->string('as_built_drawing_pdf')->nullable();
+            $table->string('as_built_drawing_cad')->nullable();
 
             $table->text('remarks')->nullable();
             $table->timestamps();

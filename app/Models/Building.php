@@ -31,7 +31,8 @@ class Building extends Model
         'occupancy_permit_file',
         'has_profession_permit',
         'profession_permit_file',
-        'as_built_drawing',
+    'as_built_drawing_pdf',
+    'as_built_drawing_cad',
         'remarks',
         // يُملأ تلقائيًا:
         // 'sequence', 'code'

@@ -9,8 +9,9 @@
 
 @section('content')
     @php
-        $permitDocuments = $documents->where('is_permit', true);
-        $asBuiltDocument = $documents->firstWhere('slug', 'as-built-drawing');
+    $permitDocuments = $documents->where('is_permit', true);
+    $asBuiltPdfDocument = $documents->firstWhere('slug', 'as-built-drawing-pdf');
+    $asBuiltCadDocument = $documents->firstWhere('slug', 'as-built-drawing-cad');
         $leaseContractDocument = $documents->firstWhere('slug', 'lease-contract');
         $availableDocuments = $documents->where('has_file', true);
         $currentUser = auth()->user();
@@ -88,18 +89,32 @@
                             <div>{{ $building->remarks ?: 'No remarks provided.' }}</div>
                         </div>
                         <div class="col-12">
-                            <div class="text-muted text-uppercase small fw-semibold">As-Built Drawing</div>
-                            @if ($asBuiltDocument && $asBuiltDocument['has_file'])
-                                <div class="d-flex flex-wrap align-items-center gap-2">
-                                    <span class="fw-semibold">{{ $asBuiltDocument['file_name'] }}</span>
-                                    <a href="{{ $asBuiltDocument['inline_url'] }}" target="_blank"
-                                        class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye me-1"></i>View
-                                    </a>
-                                    <a href="{{ $asBuiltDocument['download_url'] }}"
-                                        class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-download me-1"></i>Download
-                                    </a>
+                            <div class="text-muted text-uppercase small fw-semibold">As-Built Documents</div>
+                            @if (($asBuiltPdfDocument && $asBuiltPdfDocument['has_file']) || ($asBuiltCadDocument && $asBuiltCadDocument['has_file']))
+                                <div class="d-flex flex-column gap-2">
+                                    @if ($asBuiltPdfDocument && $asBuiltPdfDocument['has_file'])
+                                        <div class="d-flex flex-wrap align-items-center gap-2">
+                                            <span class="fw-semibold">PDF: {{ $asBuiltPdfDocument['file_name'] }}</span>
+                                            <a href="{{ $asBuiltPdfDocument['inline_url'] }}" target="_blank"
+                                                class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye me-1"></i>View
+                                            </a>
+                                            <a href="{{ $asBuiltPdfDocument['download_url'] }}"
+                                                class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-download me-1"></i>Download
+                                            </a>
+                                        </div>
+                                    @endif
+                                    @if ($asBuiltCadDocument && $asBuiltCadDocument['has_file'])
+                                        <div class="d-flex flex-wrap align-items-center gap-2">
+                                            <span class="fw-semibold">CAD: {{ $asBuiltCadDocument['file_name'] }}</span>
+                                            <a href="{{ $asBuiltCadDocument['download_url'] }}"
+                                                class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-download me-1"></i>Download
+                                            </a>
+                                            <span class="document-meta text-muted small">Preview unavailable</span>
+                                        </div>
+                                    @endif
                                 </div>
                             @else
                                 <span class="text-muted">Not uploaded.</span>
@@ -544,7 +559,7 @@ foreach ($building->images as $image) {
                                     </div>
                                 </div>
 
-                                @if ($document['extension'] === 'dwg')
+                                @if (in_array($document['extension'], ['dwg', 'dxf']))
                                     {{-- DWG files cannot be previewed in browser --}}
                                     <div
                                         style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); border-radius: 16px; padding: 50px 40px; text-align: center;">
@@ -554,7 +569,7 @@ foreach ($building->images as $image) {
                                                 style="font-size: 50px; color: #ff7900;"></i>
                                         </div>
                                         <h3 style="color: #ffffff; margin-bottom: 15px; font-size: 22px;">Cannot Preview
-                                            DWG File</h3>
+                                            {{ strtoupper($document['extension']) }} File</h3>
                                         <p
                                             style="color: #cbd5e1; margin-bottom: 12px; font-size: 15px; line-height: 1.6; max-width: 500px; margin-left: auto; margin-right: auto;">
                                             DWG files cannot be opened in a web browser. Please download the file and open
@@ -568,7 +583,7 @@ foreach ($building->images as $image) {
                                         <a href="{{ $document['download_url'] }}" class="btn"
                                             style="background: #ff7900; color: white; border: none; padding: 16px 40px; border-radius: 10px; font-weight: 600; font-size: 16px; display: inline-flex; align-items: center; gap: 10px; text-decoration: none; transition: all 0.3s; box-shadow: 0 4px 15px rgba(255, 121, 0, 0.3);">
                                             <i class="bi bi-download" style="font-size: 20px;"></i>
-                                            Download DWG File
+                                            Download {{ strtoupper($document['extension']) }} File
                                         </a>
 
                                         {{-- Software Recommendations --}}

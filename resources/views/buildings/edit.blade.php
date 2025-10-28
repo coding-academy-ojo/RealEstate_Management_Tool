@@ -326,23 +326,42 @@
                             <i class="bi bi-file-earmark-ruled me-2"></i>Technical Documents
                         </h5>
 
-                        <div class="mb-3">
-                            <label for="as_built_drawing" class="form-label fw-bold">As-Built Drawing (مخطط
-                                التنفيذ)</label>
-                            <input type="file" name="as_built_drawing" id="as_built_drawing"
-                                class="form-control @error('as_built_drawing') is-invalid @enderror" accept=".pdf,.dwg">
-                            <small class="text-muted d-block">Accepted formats: PDF, DWG (AutoCAD) (Max: 50MB)</small>
-                            @if ($building->as_built_drawing)
-                                <div class="alert alert-light border mt-2 small">
-                                    <i class="bi bi-file-earmark-text me-1 text-orange"></i>
-                                    Current file:
-                                    <a href="{{ asset('storage/' . $building->as_built_drawing) }}"
-                                        target="_blank">Download</a>
-                                </div>
-                            @endif
-                            @error('as_built_drawing')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="as_built_drawing_pdf" class="form-label fw-bold">As-Built Drawing (PDF)</label>
+                                <input type="file" name="as_built_drawing_pdf" id="as_built_drawing_pdf"
+                                    class="form-control @error('as_built_drawing_pdf') is-invalid @enderror" accept=".pdf">
+                                <small class="text-muted d-block">Accepted format: PDF (Max: 50MB)</small>
+                                @if ($building->as_built_drawing_pdf)
+                                    <div class="alert alert-light border mt-2 small">
+                                        <i class="bi bi-file-earmark-text me-1 text-orange"></i>
+                                        Current file:
+                                        <a href="{{ route('buildings.files.show', [$building, 'as-built-drawing-pdf']) }}"
+                                            target="_blank">Download</a>
+                                    </div>
+                                @endif
+                                @error('as_built_drawing_pdf')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="as_built_drawing_cad" class="form-label fw-bold">As-Built Drawing (AutoCAD)</label>
+                                <input type="file" name="as_built_drawing_cad" id="as_built_drawing_cad"
+                                    class="form-control @error('as_built_drawing_cad') is-invalid @enderror"
+                                    accept=".dwg,.dxf">
+                                <small class="text-muted d-block">Accepted formats: DWG, DXF (Max: 50MB)</small>
+                                @if ($building->as_built_drawing_cad)
+                                    <div class="alert alert-light border mt-2 small">
+                                        <i class="bi bi-file-earmark-text me-1 text-orange"></i>
+                                        Current file:
+                                        <a href="{{ route('buildings.files.show', [$building, 'as-built-drawing-cad']) }}"
+                                            target="_blank">Download</a>
+                                    </div>
+                                @endif
+                                @error('as_built_drawing_cad')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
 
                         <div class="mb-4">

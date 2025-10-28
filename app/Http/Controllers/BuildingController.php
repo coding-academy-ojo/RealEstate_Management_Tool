@@ -147,7 +147,8 @@ class BuildingController extends Controller
             'building_permit_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
             'occupancy_permit_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
             'profession_permit_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
-            'as_built_drawing' => 'nullable|file|mimes:pdf,dwg|max:51200',
+            'as_built_drawing_pdf' => 'nullable|file|mimes:pdf|max:51200',
+            'as_built_drawing_cad' => 'nullable|file|mimes:dwg,dxf|max:51200',
             'remarks' => 'nullable|string',
         ]);
 
@@ -186,9 +187,12 @@ class BuildingController extends Controller
             $building->profession_permit_file = $path;
         }
 
-        if ($request->hasFile('as_built_drawing')) {
-            $path = $request->file('as_built_drawing')->store('drawings/as-built', 'public');
-            $building->as_built_drawing = $path;
+        if ($request->hasFile('as_built_drawing_pdf')) {
+            $building->as_built_drawing_pdf = $request->file('as_built_drawing_pdf')->store('drawings/as-built/pdf', 'public');
+        }
+
+        if ($request->hasFile('as_built_drawing_cad')) {
+            $building->as_built_drawing_cad = $request->file('as_built_drawing_cad')->store('drawings/as-built/cad', 'public');
         }
 
         if ($tenureType === 'rental' && $request->hasFile('contract_file')) {
@@ -227,9 +231,15 @@ class BuildingController extends Controller
                 'status' => (bool) $building->has_profession_permit,
                 'is_permit' => true,
             ],
-            'as-built-drawing' => [
-                'label' => 'As-Built Drawing',
-                'attribute' => 'as_built_drawing',
+            'as-built-drawing-pdf' => [
+                'label' => 'As-Built Drawing (PDF)',
+                'attribute' => 'as_built_drawing_pdf',
+                'status' => null,
+                'is_permit' => false,
+            ],
+            'as-built-drawing-cad' => [
+                'label' => 'As-Built Drawing (CAD)',
+                'attribute' => 'as_built_drawing_cad',
                 'status' => null,
                 'is_permit' => false,
             ],
@@ -303,7 +313,8 @@ class BuildingController extends Controller
             'building_permit_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
             'occupancy_permit_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
             'profession_permit_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
-            'as_built_drawing' => 'nullable|file|mimes:pdf,dwg|max:51200',
+            'as_built_drawing_pdf' => 'nullable|file|mimes:pdf|max:51200',
+            'as_built_drawing_cad' => 'nullable|file|mimes:dwg,dxf|max:51200',
             'remarks' => 'nullable|string',
         ]);
 
@@ -379,11 +390,18 @@ class BuildingController extends Controller
             $building->profession_permit_file = null;
         }
 
-        if ($request->hasFile('as_built_drawing')) {
-            if ($building->as_built_drawing && Storage::disk('public')->exists($building->as_built_drawing)) {
-                Storage::disk('public')->delete($building->as_built_drawing);
+        if ($request->hasFile('as_built_drawing_pdf')) {
+            if ($building->as_built_drawing_pdf && Storage::disk('public')->exists($building->as_built_drawing_pdf)) {
+                Storage::disk('public')->delete($building->as_built_drawing_pdf);
             }
-            $building->as_built_drawing = $request->file('as_built_drawing')->store('drawings/as-built', 'public');
+            $building->as_built_drawing_pdf = $request->file('as_built_drawing_pdf')->store('drawings/as-built/pdf', 'public');
+        }
+
+        if ($request->hasFile('as_built_drawing_cad')) {
+            if ($building->as_built_drawing_cad && Storage::disk('public')->exists($building->as_built_drawing_cad)) {
+                Storage::disk('public')->delete($building->as_built_drawing_cad);
+            }
+            $building->as_built_drawing_cad = $request->file('as_built_drawing_cad')->store('drawings/as-built/cad', 'public');
         }
 
         if ($tenureType === 'rental' && $request->hasFile('contract_file')) {
@@ -421,7 +439,8 @@ class BuildingController extends Controller
             'building-permit' => 'building_permit_file',
             'occupancy-permit' => 'occupancy_permit_file',
             'profession-permit' => 'profession_permit_file',
-            'as-built-drawing' => 'as_built_drawing',
+            'as-built-drawing-pdf' => 'as_built_drawing_pdf',
+            'as-built-drawing-cad' => 'as_built_drawing_cad',
             'lease-contract' => 'contract_file',
         ];
 
@@ -492,7 +511,7 @@ class BuildingController extends Controller
             ])
             ->findOrFail($id);
 
-        foreach (['building_permit_file', 'occupancy_permit_file', 'profession_permit_file', 'as_built_drawing', 'contract_file'] as $fileAttribute) {
+        foreach (['building_permit_file', 'occupancy_permit_file', 'profession_permit_file', 'as_built_drawing_pdf', 'as_built_drawing_cad', 'contract_file'] as $fileAttribute) {
             $this->deleteFileIfExists($building->{$fileAttribute});
         }
 
