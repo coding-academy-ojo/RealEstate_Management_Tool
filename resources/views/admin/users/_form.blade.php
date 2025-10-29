@@ -33,20 +33,6 @@
     </div>
 
     <div class="col-md-6">
-        <label for="role" class="form-label fw-semibold">Role <span class="text-danger">*</span></label>
-        <select name="role" id="role" class="form-select @error('role') is-invalid @enderror" required>
-            @foreach ($availableRoles as $roleKey => $roleLabel)
-                <option value="{{ $roleKey }}"
-                    {{ old('role', $admin->role ?? 'engineer') === $roleKey ? 'selected' : '' }}>{{ $roleLabel }}
-                </option>
-            @endforeach
-        </select>
-        @error('role')
-            <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
-    </div>
-
-    <div class="col-md-6">
         <label for="password" class="form-label fw-semibold">
             Password @isset($admin)
             <small class="text-muted">(leave blank to keep current)</small>@else<span class="text-danger">*</span>
@@ -68,6 +54,20 @@
         </label>
         <input type="password" name="password_confirmation" id="password_confirmation" class="form-control"
             placeholder="Re-enter password" @unless (isset($admin)) required @endunless>
+    </div>
+
+    <div class="col-md-6">
+        <label for="role" class="form-label fw-semibold">Role <span class="text-danger">*</span></label>
+        <select name="role" id="role" class="form-select @error('role') is-invalid @enderror" required>
+            @foreach ($availableRoles as $roleKey => $roleLabel)
+                <option value="{{ $roleKey }}"
+                    {{ old('role', $admin->role ?? 'engineer') === $roleKey ? 'selected' : '' }}>{{ $roleLabel }}
+                </option>
+            @endforeach
+        </select>
+        @error('role')
+            <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
     </div>
 
     <div class="col-12" id="privileges-section">
@@ -130,6 +130,12 @@
             const privilegesNote = document.getElementById('privileges-note');
             const superAdminNote = document.getElementById('super-admin-note');
 
+            @isset($admin)
+            // Store the initial role value for edit mode
+            let currentRole = roleSelect.value;
+            let pendingRole = null;
+            @endisset
+
             const toggleAll = (checked) => {
                 privilegeCheckboxes.forEach(checkbox => {
                     checkbox.checked = checked;
@@ -169,36 +175,139 @@
                     return;
                 }
 
-                const isSuperAdmin = roleSelect.value === 'super_admin';
+                const isAdminOrAbove = ['super_admin', 'admin'].includes(roleSelect.value);
 
                 privilegeCheckboxes.forEach(checkbox => {
-                    checkbox.disabled = isSuperAdmin;
-                    if (isSuperAdmin) {
+                    checkbox.disabled = isAdminOrAbove;
+                    if (isAdminOrAbove) {
                         checkbox.checked = false;
                     }
                 });
 
                 if (selectAllBtn) {
-                    selectAllBtn.disabled = isSuperAdmin;
+                    selectAllBtn.disabled = isAdminOrAbove;
                 }
                 if (clearBtn) {
-                    clearBtn.disabled = isSuperAdmin;
+                    clearBtn.disabled = isAdminOrAbove;
                 }
 
-                privilegesSection.classList.toggle('opacity-50', isSuperAdmin);
+                privilegesSection.classList.toggle('opacity-50', isAdminOrAbove);
                 if (privilegesNote) {
-                    privilegesNote.style.display = isSuperAdmin ? 'none' : 'block';
+                    privilegesNote.style.display = isAdminOrAbove ? 'none' : 'block';
                 }
                 if (superAdminNote) {
-                    superAdminNote.style.display = isSuperAdmin ? 'block' : 'none';
+                    superAdminNote.style.display = isAdminOrAbove ? 'block' : 'none';
+                    superAdminNote.textContent = roleSelect.value === 'admin'
+                        ? 'Admins automatically receive full access; privilege options are disabled.'
+                        : 'Super Admins automatically receive full access; privilege options are disabled.';
                 }
             };
 
-            syncPrivilegesForRole();
+            @isset($admin)
+            // Handle role change confirmation in edit mode
+            if (roleSelect) {
+                roleSelect.addEventListener('change', function(e) {
+                    const newRole = this.value;
 
+                    // If role actually changed from the original
+                    if (newRole !== currentRole) {
+                        pendingRole = newRole;
+
+                        // Get role labels
+                        const roleLabels = {
+                            'engineer': 'Engineer',
+                            'admin': 'Admin',
+                            'super_admin': 'Super Admin'
+                        };
+
+                        const oldRoleLabel = roleLabels[currentRole] || currentRole;
+                        const newRoleLabel = roleLabels[newRole] || newRole;
+
+                        // Show confirmation modal
+                        const modalHtml = `
+                            <div class="modal fade" id="roleChangeModal" tabindex="-1" aria-labelledby="roleChangeModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header border-0 pb-0">
+                                            <h5 class="modal-title" id="roleChangeModalLabel">
+                                                <i class="bi bi-exclamation-triangle text-warning me-2"></i>Confirm Role Change
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p class="mb-2">You are about to change the user role from:</p>
+                                            <div class="d-flex align-items-center gap-3 my-3">
+                                                <span class="badge bg-secondary fs-6">${oldRoleLabel}</span>
+                                                <i class="bi bi-arrow-right text-muted"></i>
+                                                <span class="badge bg-primary fs-6">${newRoleLabel}</span>
+                                            </div>
+                                            <p class="text-muted small mb-0">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                This change will take effect when you click "Update User".
+                                            </p>
+                                        </div>
+                                        <div class="modal-footer border-0">
+                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal" id="cancelRoleChange">Cancel</button>
+                                            <button type="button" class="btn btn-orange" id="confirmRoleChange">Confirm Change</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+
+                        // Remove any existing modal
+                        const existingModal = document.getElementById('roleChangeModal');
+                        if (existingModal) {
+                            existingModal.remove();
+                        }
+
+                        // Add modal to body
+                        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+                        // Get modal element
+                        const modalElement = document.getElementById('roleChangeModal');
+
+                        // Create Bootstrap/Boosted Modal instance
+                        const bsModal = new boosted.Modal(modalElement);
+
+                        // Handle confirm
+                        document.getElementById('confirmRoleChange').addEventListener('click', function() {
+                            currentRole = pendingRole;
+                            bsModal.hide();
+                            syncPrivilegesForRole();
+                        });
+
+                        // Handle cancel
+                        document.getElementById('cancelRoleChange').addEventListener('click', function() {
+                            roleSelect.value = currentRole;
+                            pendingRole = null;
+                            bsModal.hide();
+                        });
+
+                        // Handle modal close (X button or backdrop)
+                        modalElement.addEventListener('hidden.bs.modal', function() {
+                            if (pendingRole !== null && roleSelect.value !== currentRole) {
+                                roleSelect.value = currentRole;
+                                pendingRole = null;
+                            }
+                            modalElement.remove();
+                        });
+
+                        // Show modal
+                        bsModal.show();
+                    } else {
+                        syncPrivilegesForRole();
+                    }
+                });
+            }
+            @else
+            // For create mode, just sync privileges without confirmation
             if (roleSelect) {
                 roleSelect.addEventListener('change', syncPrivilegesForRole);
             }
+            @endisset
+
+            syncPrivilegesForRole();
         });
     </script>
 @endpush

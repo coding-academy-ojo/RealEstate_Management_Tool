@@ -58,11 +58,28 @@ class User extends Authenticatable
     }
 
     /**
+     * Determine if the user is an admin (has admin role).
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Determine if the user is a super admin or admin.
+     */
+    public function isAdminOrAbove(): bool
+    {
+        return in_array($this->role, ['super_admin', 'admin'], true);
+    }
+
+    /**
      * Check if the user has the given privilege.
      */
     public function hasPrivilege(string $privilege): bool
     {
-        if ($this->isSuperAdmin()) {
+        // Super admin and admin have all privileges
+        if ($this->isSuperAdmin() || $this->isAdmin()) {
             return true;
         }
 

@@ -42,10 +42,18 @@
                         @forelse ($admins as $admin)
                             @php
                                 $isSuperAdmin = $admin->role === 'super_admin';
-                                $roleLabel = $isSuperAdmin ? 'Super Admin' : 'Engineer';
+                                $isAdmin = $admin->role === 'admin';
+                                $isAdminOrAbove = $isSuperAdmin || $isAdmin;
+
+                                $roleLabel = match($admin->role) {
+                                    'super_admin' => 'Super Admin',
+                                    'admin' => 'Admin',
+                                    default => 'Engineer',
+                                };
+
                                 $privilegeText = '';
 
-                                if ($isSuperAdmin) {
+                                if ($isAdminOrAbove) {
                                     $privilegeText = 'Full Access';
                                 } elseif (!empty($admin->privileges)) {
                                     $privilegeText = collect($admin->privileges)
@@ -59,7 +67,11 @@
                             <tr>
                                 <td class="fw-semibold">{{ $admin->name }}</td>
                                 <td>{{ $admin->email }}</td>
-                                <td>{{ $roleLabel }}</td>
+                                <td>
+                                    <span class="badge {{ $isSuperAdmin ? 'bg-danger' : ($isAdmin ? 'bg-primary' : 'bg-secondary') }}">
+                                        {{ $roleLabel }}
+                                    </span>
+                                </td>
                                 <td>
                                     @if ($privilegeText !== '')
                                         {{ $privilegeText }}

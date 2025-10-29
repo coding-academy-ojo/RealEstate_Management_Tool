@@ -15,13 +15,23 @@ class UserSeeder extends Seeder
     {
         $password = Hash::make('password');
 
-        // Super administrator with full access
+        // Super administrator with full access (only one exists)
         User::create([
             'name' => 'System Administrator',
             'email' => 'admin@realstate.com',
             'email_verified_at' => now(),
             'password' => $password,
             'role' => 'super_admin',
+            'privileges' => null,
+        ]);
+
+        // Admin user with full access (except user management)
+        User::create([
+            'name' => 'General Administrator',
+            'email' => 'generaladmin@realstate.com',
+            'email_verified_at' => now(),
+            'password' => $password,
+            'role' => 'admin',
             'privileges' => null,
         ]);
 
@@ -79,6 +89,7 @@ class UserSeeder extends Seeder
 
         $this->command->info('✓ Created ' . User::count() . ' users');
         $this->command->info('  - Super Admin: admin@realstate.com');
+        $this->command->info('  - Admin: generaladmin@realstate.com');
         $this->command->info('  - Engineers:');
         foreach ($engineers as $engineer) {
             $privilegeSummary = collect($engineer['privileges'])

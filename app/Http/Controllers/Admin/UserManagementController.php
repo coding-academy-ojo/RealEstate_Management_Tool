@@ -23,7 +23,7 @@ class UserManagementController extends Controller
 
     private const ROLES = [
         'engineer' => 'Engineer',
-        'super_admin' => 'Super Admin',
+        'admin' => 'Admin',
     ];
 
     private function authorizeSuperAdmin(): void
@@ -34,14 +34,14 @@ class UserManagementController extends Controller
     }
 
     /**
-     * Display a listing of the admin users (engineers).
+     * Display a listing of the admin users (engineers and admins).
      */
     public function index()
     {
         $this->authorizeSuperAdmin();
 
-        $admins = User::whereIn('role', ['super_admin', 'engineer'])
-            ->orderByRaw("CASE WHEN role = 'super_admin' THEN 0 ELSE 1 END")
+        $admins = User::whereIn('role', ['super_admin', 'admin', 'engineer'])
+            ->orderByRaw("CASE WHEN role = 'super_admin' THEN 0 WHEN role = 'admin' THEN 1 ELSE 2 END")
             ->orderByDesc('created_at')
             ->paginate(15);
 
@@ -84,7 +84,10 @@ class UserManagementController extends Controller
         ]);
 
         $role = $data['role'];
-        $privileges = $role === 'super_admin'
+
+        // Admin role gets all privileges (stored as null like super_admin)
+        // Engineer role gets specific privileges from the form
+        $privileges = in_array($role, ['super_admin', 'admin'])
             ? null
             : $this->normalizePrivileges($data['privileges'] ?? []);
 
@@ -144,7 +147,9 @@ class UserManagementController extends Controller
             'name' => $data['name'],
             'email' => $data['email'],
             'role' => $role,
-            'privileges' => $role === 'super_admin'
+            // Admin role gets all privileges (stored as null like super_admin)
+            // Engineer role gets specific privileges from the form
+            'privileges' => in_array($role, ['super_admin', 'admin'])
                 ? null
                 : $this->normalizePrivileges($data['privileges'] ?? []),
         ];
