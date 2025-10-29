@@ -77,8 +77,8 @@ class Land extends Model
         return $this->morphOne(Image::class, 'imageable')->where('is_primary', true);
     }
 
-    public function rennovations(): MorphMany
+    public function renovations(): MorphMany
     {
-        return $this->morphMany(Rennovation::class, 'innovatable');
+        return $this->morphMany(Renovation::class, 'innovatable');
     }
 }

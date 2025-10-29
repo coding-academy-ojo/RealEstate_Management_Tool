@@ -27,7 +27,7 @@ class UserFactory extends Factory
             'sites_lands_buildings',
             'water',
             'electricity',
-            'rennovation',
+            'renovation',
         ];
 
         $selectedPrivileges = fake()->randomElements(

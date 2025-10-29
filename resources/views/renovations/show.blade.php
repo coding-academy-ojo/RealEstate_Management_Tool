@@ -1,20 +1,20 @@
 @extends('layouts.app')
 
-@section('title', 'Rennovation Details')
+@section('title', 'Renovation Details')
 
 @section('breadcrumbs')
-    <li class="breadcrumb-item"><a href="{{ route('rennovations.index') }}">Rennovations</a></li>
-    <li class="breadcrumb-item active">{{ $rennovation->name }}</li>
+    <li class="breadcrumb-item"><a href="{{ route('renovations.index') }}">Renovations</a></li>
+    <li class="breadcrumb-item active">{{ $renovation->name }}</li>
 @endsection
 
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">
             <i class="bi bi-lightbulb-fill text-warning me-2"></i>
-            {{ $rennovation->name }}
+            {{ $renovation->name }}
         </h2>
         <div class="btn-group">
-            <a href="{{ route('rennovations.edit', $rennovation) }}" class="btn btn-outline-orange">
+            <a href="{{ route('renovations.edit', $renovation) }}" class="btn btn-outline-orange">
                 <i class="bi bi-pencil me-1"></i> Edit
             </a>
             <button type="button" class="btn btn-outline-danger" onclick="openDeleteModal()">
@@ -37,25 +37,25 @@
                             <strong class="text-muted">Entity Type:</strong>
                         </div>
                         <div class="col-md-8">
-                            <span class="badge bg-info">{{ class_basename($rennovation->innovatable_type) }}</span>
+                            <span class="badge bg-info">{{ class_basename($renovation->innovatable_type) }}</span>
                         </div>
                     </div>
 
-                    @if ($rennovation->innovatable)
+                    @if ($renovation->innovatable)
                         <div class="row">
                             <div class="col-md-4">
                                 <strong class="text-muted">Entity:</strong>
                             </div>
                             <div class="col-md-8">
                                 @php
-                                    $type = class_basename($rennovation->innovatable_type);
+                                    $type = class_basename($renovation->innovatable_type);
                                     $route = strtolower($type) . 's.show';
                                 @endphp
-                                <a href="{{ route($route, $rennovation->innovatable) }}" class="text-decoration-none">
+                                <a href="{{ route($route, $renovation->innovatable) }}" class="text-decoration-none">
                                     <span class="badge bg-orange">
-                                        {{ $rennovation->innovatable->code ?? ($rennovation->innovatable->name ?? 'N/A') }}
+                                        {{ $renovation->innovatable->code ?? ($renovation->innovatable->name ?? 'N/A') }}
                                     </span>
-                                    {{ $rennovation->innovatable->name ?? ($rennovation->innovatable->plot_number ?? '') }}
+                                    {{ $renovation->innovatable->name ?? ($renovation->innovatable->plot_number ?? '') }}
                                 </a>
                             </div>
                         </div>
@@ -68,7 +68,7 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white py-3">
                     <h5 class="mb-0">
-                        <i class="bi bi-info-circle me-2 text-orange"></i>Rennovation Details
+                        <i class="bi bi-info-circle me-2 text-orange"></i>Renovation Details
                     </h5>
                 </div>
                 <div class="card-body">
@@ -77,7 +77,7 @@
                             <strong class="text-muted">Name:</strong>
                         </div>
                         <div class="col-md-8">
-                            {{ $rennovation->name }}
+                            {{ $renovation->name }}
                         </div>
                     </div>
 
@@ -86,7 +86,7 @@
                             <strong class="text-muted">Cost:</strong>
                         </div>
                         <div class="col-md-8">
-                            <span class="badge bg-success fs-6">{{ number_format($rennovation->cost, 2) }} JOD</span>
+                            <span class="badge bg-success fs-6">{{ number_format($renovation->cost, 2) }} JOD</span>
                         </div>
                     </div>
 
@@ -95,7 +95,7 @@
                             <strong class="text-muted">Date:</strong>
                         </div>
                         <div class="col-md-8">
-                            {{ $rennovation->date ? $rennovation->date->format('F d, Y') : 'N/A' }}
+                            {{ $renovation->date ? $renovation->date->format('F d, Y') : 'N/A' }}
                         </div>
                     </div>
 
@@ -104,7 +104,7 @@
                             <strong class="text-muted">Description:</strong>
                         </div>
                         <div class="col-md-8">
-                            <p class="mb-0">{{ $rennovation->description ?: 'No description provided' }}</p>
+                            <p class="mb-0">{{ $renovation->description ?: 'No description provided' }}</p>
                         </div>
                     </div>
                 </div>
@@ -119,7 +119,7 @@
                         <i class="bi bi-cash-stack me-2"></i>Total Cost
                     </h6>
                     <div class="display-5 fw-bold mb-2">
-                        {{ number_format($rennovation->cost, 2) }}
+                        {{ number_format($renovation->cost, 2) }}
                     </div>
                     <div class="text-white-50">Jordanian Dinar (JOD)</div>
                 </div>
@@ -133,22 +133,22 @@
                 </div>
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-muted small">Rennovation Date:</span>
+                        <span class="text-muted small">Renovation Date:</span>
                         <span
-                            class="small fw-bold">{{ $rennovation->date ? $rennovation->date->format('Y-m-d') : 'N/A' }}</span>
+                            class="small fw-bold">{{ $renovation->date ? $renovation->date->format('Y-m-d') : 'N/A' }}</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="text-muted small">Created:</span>
-                        <span class="small">{{ $rennovation->created_at->format('Y-m-d') }}</span>
+                        <span class="small">{{ $renovation->created_at->format('Y-m-d') }}</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="text-muted small">Updated:</span>
-                        <span class="small">{{ $rennovation->updated_at->format('Y-m-d') }}</span>
+                        <span class="small">{{ $renovation->updated_at->format('Y-m-d') }}</span>
                     </div>
                 </div>
             </div>
 
-            @if ($rennovation->innovatable && $rennovation->innovatable_type === 'App\Models\Site')
+            @if ($renovation->innovatable && $renovation->innovatable_type === 'App\Models\Site')
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white py-3">
                         <h6 class="mb-0">
@@ -156,16 +156,16 @@
                         </h6>
                     </div>
                     <div class="card-body">
-                        <p class="mb-2"><strong>Site:</strong> {{ $rennovation->innovatable->name }}</p>
+                        <p class="mb-2"><strong>Site:</strong> {{ $renovation->innovatable->name }}</p>
                         <p class="mb-2"><strong>Governorate:</strong>
-                            {{ $rennovation->innovatable->governorate_name_en }}</p>
-                        <p class="mb-0"><strong>Area:</strong> {{ number_format($rennovation->innovatable->area_m2, 2) }}
+                            {{ $renovation->innovatable->governorate_name_en }}</p>
+                        <p class="mb-0"><strong>Area:</strong> {{ number_format($renovation->innovatable->area_m2, 2) }}
                             m²</p>
                     </div>
                 </div>
             @endif
 
-            @if ($rennovation->innovatable && $rennovation->innovatable_type === 'App\Models\Building')
+            @if ($renovation->innovatable && $renovation->innovatable_type === 'App\Models\Building')
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white py-3">
                         <h6 class="mb-0">
@@ -173,15 +173,15 @@
                         </h6>
                     </div>
                     <div class="card-body">
-                        <p class="mb-2"><strong>Building:</strong> {{ $rennovation->innovatable->name }}</p>
-                        <p class="mb-2"><strong>Site:</strong> {{ $rennovation->innovatable->site->name }}</p>
-                        <p class="mb-0"><strong>Area:</strong> {{ number_format($rennovation->innovatable->area_m2, 2) }}
+                        <p class="mb-2"><strong>Building:</strong> {{ $renovation->innovatable->name }}</p>
+                        <p class="mb-2"><strong>Site:</strong> {{ $renovation->innovatable->site->name }}</p>
+                        <p class="mb-0"><strong>Area:</strong> {{ number_format($renovation->innovatable->area_m2, 2) }}
                             m²</p>
                     </div>
                 </div>
             @endif
 
-            @if ($rennovation->innovatable && $rennovation->innovatable_type === 'App\Models\Land')
+            @if ($renovation->innovatable && $renovation->innovatable_type === 'App\Models\Land')
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white py-3">
                         <h6 class="mb-0">
@@ -189,9 +189,9 @@
                         </h6>
                     </div>
                     <div class="card-body">
-                        <p class="mb-2"><strong>Plot:</strong> {{ $rennovation->innovatable->plot_number }}</p>
-                        <p class="mb-2"><strong>Basin:</strong> {{ $rennovation->innovatable->basin }}</p>
-                        <p class="mb-0"><strong>Site:</strong> {{ $rennovation->innovatable->site->name }}</p>
+                        <p class="mb-2"><strong>Plot:</strong> {{ $renovation->innovatable->plot_number }}</p>
+                        <p class="mb-2"><strong>Basin:</strong> {{ $renovation->innovatable->basin }}</p>
+                        <p class="mb-0"><strong>Site:</strong> {{ $renovation->innovatable->site->name }}</p>
                     </div>
                 </div>
             @endif
@@ -208,9 +208,9 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-2">Are you sure you want to delete this rennovation?</p>
+                    <p class="mb-2">Are you sure you want to delete this renovation?</p>
                     <div class="alert alert-warning mb-0">
-                        <strong>{{ $rennovation->name }}</strong>
+                        <strong>{{ $renovation->name }}</strong>
                     </div>
                     <p class="text-muted mt-2 mb-0">
                         <small>This action can be undone from the trash.</small>
@@ -218,7 +218,7 @@
                 </div>
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                    <form id="deleteForm" action="{{ route('rennovations.destroy', $rennovation) }}" method="POST"
+                    <form id="deleteForm" action="{{ route('renovations.destroy', $renovation) }}" method="POST"
                         class="d-inline">
                         @csrf
                         @method('DELETE')

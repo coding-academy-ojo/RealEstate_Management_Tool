@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
-@section('title', 'Create Rennovation')
+@section('title', 'Create Renovation')
 
 @section('breadcrumbs')
-    <li class="breadcrumb-item"><a href="{{ route('rennovations.index') }}">Rennovations</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('renovations.index') }}">Renovations</a></li>
     <li class="breadcrumb-item active">Create</li>
 @endsection
 
@@ -14,11 +14,11 @@
                 <div class="card-header bg-white py-3">
                     <h4 class="mb-0">
                         <i class="bi bi-lightbulb-fill me-2 text-orange"></i>
-                        Create New Rennovation
+                        Create New Renovation
                     </h4>
                 </div>
                 <div class="card-body p-4">
-                    <form action="{{ route('rennovations.store') }}" method="POST">
+                    <form action="{{ route('renovations.store') }}" method="POST">
                         @csrf
 
                         <h5 class="mb-3 text-orange">
@@ -76,13 +76,13 @@
                         <hr class="my-4">
 
                         <h5 class="mb-3 text-orange">
-                            <i class="bi bi-info-circle me-2"></i>Rennovation Details
+                            <i class="bi bi-info-circle me-2"></i>Renovation Details
                         </h5>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="name" class="form-label fw-bold">
-                                    Rennovation Name <span class="text-danger">*</span>
+                                    Renovation Name <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" name="name" id="name"
                                     class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
@@ -128,11 +128,11 @@
                         </div>
 
                         <div class="d-flex gap-2 justify-content-end mt-4">
-                            <a href="{{ route('rennovations.index') }}" class="btn btn-secondary">
+                            <a href="{{ route('renovations.index') }}" class="btn btn-secondary">
                                 <i class="bi bi-x-circle me-1"></i> Cancel
                             </a>
                             <button type="submit" class="btn btn-orange">
-                                <i class="bi bi-check-circle me-1"></i> Create Rennovation
+                                <i class="bi bi-check-circle me-1"></i> Create Renovation
                             </button>
                         </div>
                     </form>

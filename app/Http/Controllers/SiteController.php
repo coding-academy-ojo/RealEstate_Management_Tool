@@ -237,7 +237,7 @@ class SiteController extends Controller
      */
     public function show(Site $site)
     {
-        $site->load(['buildings.images', 'lands.images', 'rennovations', 'zoningStatuses', 'images']);
+        $site->load(['buildings.images', 'lands.images', 'renovations', 'zoningStatuses', 'images']);
         return view('sites.show', compact('site'));
     }
 

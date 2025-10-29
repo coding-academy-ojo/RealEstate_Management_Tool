@@ -9,7 +9,7 @@ use App\Models\Building;
 use App\Models\Land;
 use App\Models\WaterService;
 use App\Models\ElectricityService;
-use App\Models\Rennovation;
+use App\Models\Renovation;
 
 class ActivityController extends Controller
 {
@@ -237,10 +237,10 @@ class ActivityController extends Controller
             }
         }
 
-        // Rennovations
+        // Renovations
         if ($typeFilter === 'all' || $typeFilter === 'innovation') {
             if ($actionFilter === 'all' || $actionFilter === 'created') {
-                $activities = $activities->merge(Rennovation::with('innovatable')->latest('created_at')->get()->map(fn($item) => [
+                $activities = $activities->merge(Renovation::with('innovatable')->latest('created_at')->get()->map(fn($item) => [
                     'type' => 'innovation',
                     'action' => 'created',
                     'icon' => 'lightbulb-fill',
@@ -248,12 +248,12 @@ class ActivityController extends Controller
                     'title' => $item->name,
                     'subtitle' => number_format($item->cost, 2) . ' JOD',
                     'description' => class_basename($item->innovatable_type) . ': ' . ($item->innovatable->name ?? 'N/A'),
-                    'route' => route('rennovations.show', $item),
+                    'route' => route('renovations.show', $item),
                     'timestamp' => $item->created_at,
                 ]));
             }
             if ($actionFilter === 'all' || $actionFilter === 'updated') {
-                $activities = $activities->merge(Rennovation::with('innovatable')->latest('updated_at')->where('updated_at', '>', DB::raw('created_at'))->get()->map(fn($item) => [
+                $activities = $activities->merge(Renovation::with('innovatable')->latest('updated_at')->where('updated_at', '>', DB::raw('created_at'))->get()->map(fn($item) => [
                     'type' => 'innovation',
                     'action' => 'updated',
                     'icon' => 'lightbulb-fill',
@@ -261,12 +261,12 @@ class ActivityController extends Controller
                     'title' => $item->name,
                     'subtitle' => number_format($item->cost, 2) . ' JOD',
                     'description' => class_basename($item->innovatable_type) . ': ' . ($item->innovatable->name ?? 'N/A'),
-                    'route' => route('rennovations.show', $item),
+                    'route' => route('renovations.show', $item),
                     'timestamp' => $item->updated_at,
                 ]));
             }
             if ($actionFilter === 'all' || $actionFilter === 'deleted') {
-                $activities = $activities->merge(Rennovation::onlyTrashed()->latest('deleted_at')->get()->map(fn($item) => [
+                $activities = $activities->merge(Renovation::onlyTrashed()->latest('deleted_at')->get()->map(fn($item) => [
                     'type' => 'innovation',
                     'action' => 'deleted',
                     'icon' => 'trash-fill',
@@ -274,7 +274,7 @@ class ActivityController extends Controller
                     'title' => $item->name,
                     'subtitle' => number_format($item->cost, 2) . ' JOD',
                     'description' => 'Deleted',
-                    'route' => route('rennovations.deleted'),
+                    'route' => route('renovations.deleted'),
                     'timestamp' => $item->deleted_at,
                 ]));
             }

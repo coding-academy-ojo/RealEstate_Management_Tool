@@ -40,7 +40,7 @@ class UserSeeder extends Seeder
             'sites_lands_buildings' => 'Sites, Lands & Buildings',
             'water' => 'Water Services',
             'electricity' => 'Electricity Services',
-            'rennovation' => 'Rennovations',
+            'renovation' => 'Renovations',
         ];
 
         $engineers = [
@@ -55,9 +55,9 @@ class UserSeeder extends Seeder
                 'privileges' => ['electricity'],
             ],
             [
-                'name' => 'Rennovation Projects Engineer',
-                'email' => 'rennovation@realstate.com',
-                'privileges' => ['rennovation'],
+                'name' => 'Renovation Projects Engineer',
+                'email' => 'renovation@realstate.com',
+                'privileges' => ['renovation'],
             ],
             [
                 'name' => 'Utilities Lead Engineer',
@@ -67,7 +67,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Comprehensive Projects Engineer',
                 'email' => 'projects@realstate.com',
-                'privileges' => ['water', 'electricity', 'rennovation'],
+                'privileges' => ['water', 'electricity', 'renovation'],
             ],
             [
                 'name' => 'Estate Portfolio Engineer',

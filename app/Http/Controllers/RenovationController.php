@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Rennovation;
+use App\Models\Renovation;
 use Illuminate\Http\Request;
 
-class RennovationController extends Controller
+class RenovationController extends Controller
 {
   public function __construct()
   {
-    $this->middleware('privilege:rennovation')->except(['index', 'show']);
+    $this->middleware('privilege:renovation')->except(['index', 'show']);
   }
 
   /**
@@ -25,7 +25,7 @@ class RennovationController extends Controller
     $sort = $request->input('sort', 'number');
     $direction = $request->input('direction', 'asc');
 
-    $query = Rennovation::with('innovatable');
+    $query = Renovation::with('innovatable');
 
     if ($filters['search']) {
       $query->where(function ($q) use ($filters) {
@@ -64,9 +64,9 @@ class RennovationController extends Controller
       'App\\Models\\Land' => 'Land',
     ];
 
-    $rennovations = $query->paginate(15)->withQueryString();
+    $renovations = $query->paginate(15)->withQueryString();
 
-    return view('rennovations.index', compact('rennovations', 'types', 'filters', 'sort', 'direction'));
+    return view('renovations.index', compact('renovations', 'types', 'filters', 'sort', 'direction'));
   }
 
   /**
@@ -74,7 +74,7 @@ class RennovationController extends Controller
    */
   public function create()
   {
-    return view('rennovations.create');
+    return view('renovations.create');
   }
 
   /**
@@ -91,20 +91,20 @@ class RennovationController extends Controller
       'description' => 'nullable|string',
     ]);
 
-    Rennovation::create($validated);
+    Renovation::create($validated);
 
-    return redirect()->route('rennovations.index')
-      ->with('success', 'Rennovation created successfully.');
+    return redirect()->route('renovations.index')
+      ->with('success', 'Renovation created successfully.');
   }
 
   /**
    * Display the specified resource.
    */
-  public function show(Rennovation $rennovation)
+  public function show(Renovation $renovation)
   {
-    $rennovation->load('innovatable');
+    $renovation->load('innovatable');
 
-    return view('rennovations.show', compact('rennovation'));
+    return view('renovations.show', compact('renovation'));
   }
 
   /**
@@ -126,37 +126,37 @@ class RennovationController extends Controller
   /**
    * Remove the specified resource from storage.
    */
-  public function destroy(Rennovation $rennovation)
+  public function destroy(Renovation $renovation)
   {
-    $rennovation->delete();
+    $renovation->delete();
 
-    return redirect()->route('rennovations.index')
-      ->with('success', 'Rennovation deleted successfully.');
+    return redirect()->route('renovations.index')
+      ->with('success', 'Renovation deleted successfully.');
   }
 
   public function deleted()
   {
-    $rennovations = Rennovation::onlyTrashed()
+    $renovations = Renovation::onlyTrashed()
       ->with('innovatable')
       ->latest('deleted_at')
       ->paginate(15);
 
-    return view('rennovations.deleted', compact('rennovations'));
+    return view('renovations.deleted', compact('renovations'));
   }
 
   public function restore($id)
   {
-    $rennovation = Rennovation::onlyTrashed()->findOrFail($id);
-    $rennovation->restore();
+    $renovation = Renovation::onlyTrashed()->findOrFail($id);
+    $renovation->restore();
 
-    return redirect()->route('rennovations.deleted')->with('success', 'Rennovation restored successfully!');
+    return redirect()->route('renovations.deleted')->with('success', 'Renovation restored successfully!');
   }
 
   public function forceDelete($id)
   {
-    $rennovation = Rennovation::onlyTrashed()->findOrFail($id);
-    $rennovation->forceDelete();
+    $renovation = Renovation::onlyTrashed()->findOrFail($id);
+    $renovation->forceDelete();
 
-    return redirect()->route('rennovations.deleted')->with('success', 'Rennovation permanently deleted!');
+    return redirect()->route('renovations.deleted')->with('success', 'Renovation permanently deleted!');
   }
 }

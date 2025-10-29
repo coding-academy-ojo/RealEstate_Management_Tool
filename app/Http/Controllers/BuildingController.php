@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Building;
 use App\Models\ElectricityService;
-use App\Models\Rennovation;
+use App\Models\Renovation;
 use App\Models\Site;
 use App\Models\WaterService;
 use Illuminate\Http\Request;
@@ -216,7 +216,7 @@ class BuildingController extends Controller
             'lands.images',
             'waterServices' => fn($query) => $query->with('latestReading'),
             'electricityServices',
-            'rennovations',
+            'renovations',
             'images',
         ]);
         $documents = collect([
@@ -433,7 +433,7 @@ class BuildingController extends Controller
     {
         $building->waterServices()->get()->each->delete();
         $building->electricityServices()->get()->each->delete();
-        $building->rennovations()->get()->each->delete();
+        $building->renovations()->get()->each->delete();
 
         $building->delete();
 
@@ -495,14 +495,14 @@ class BuildingController extends Controller
             ->with([
                 'waterServices' => fn($query) => $query->withTrashed(),
                 'electricityServices' => fn($query) => $query->withTrashed(),
-            'rennovations' => fn($query) => $query->withTrashed(),
+            'renovations' => fn($query) => $query->withTrashed(),
             ])
             ->findOrFail($id);
 
         $building->restore();
         $building->waterServices()->withTrashed()->restore();
         $building->electricityServices()->withTrashed()->restore();
-        $building->rennovations()->withTrashed()->restore();
+        $building->renovations()->withTrashed()->restore();
 
         return redirect()->route('buildings.deleted')->with('success', 'Building restored successfully!');
     }
@@ -514,7 +514,7 @@ class BuildingController extends Controller
                 'lands' => fn($query) => $query->withTrashed(),
                 'waterServices' => fn($query) => $query->withTrashed(),
                 'electricityServices' => fn($query) => $query->withTrashed(),
-            'rennovations' => fn($query) => $query->withTrashed(),
+            'renovations' => fn($query) => $query->withTrashed(),
             ])
             ->findOrFail($id);
 
@@ -532,7 +532,7 @@ class BuildingController extends Controller
             $service->forceDelete();
         });
 
-        $building->rennovations()->withTrashed()->get()->each(function (Rennovation $innovation) {
+        $building->renovations()->withTrashed()->get()->each(function (Renovation $innovation) {
             $innovation->forceDelete();
         });
 

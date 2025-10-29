@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-    Schema::create('rennovations', function (Blueprint $table) {
+        Schema::create('renovations', function (Blueprint $table) {
             $table->id();
             // Polymorphic relationship - can belong to Site, Land, or Building
             $table->morphs('innovatable'); // Creates innovatable_id and innovatable_type
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('rennovations');
+        Schema::dropIfExists('renovations');
     }
 };

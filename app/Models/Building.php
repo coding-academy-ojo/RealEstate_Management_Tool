@@ -102,8 +102,8 @@ class Building extends Model
         return $this->hasMany(ElectricityService::class);
     }
 
-    public function rennovations(): MorphMany
+    public function renovations(): MorphMany
     {
-        return $this->morphMany(Rennovation::class, 'innovatable');
+        return $this->morphMany(Renovation::class, 'innovatable');
     }
 }

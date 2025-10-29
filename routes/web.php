@@ -29,7 +29,7 @@ Route::get('/dashboard', function () {
         'total_sites' => \App\Models\Site::count(),
         'total_buildings' => \App\Models\Building::count(),
         'total_lands' => \App\Models\Land::count(),
-        'total_innovations' => \App\Models\Rennovation::count(),
+        'total_innovations' => \App\Models\Renovation::count(),
         'total_water_services' => \App\Models\WaterService::count(),
         'total_electricity_services' => \App\Models\ElectricityService::count(),
 
@@ -175,8 +175,8 @@ Route::get('/dashboard', function () {
                 'route' => route('electricity-services.show', $item),
                 'timestamp' => $item->updated_at,
             ]))
-            // Rennovations activities
-            ->merge(\App\Models\Rennovation::with('innovatable')->latest('created_at')->take(2)->get()->map(fn($item) => [
+            // Renovations activities
+            ->merge(\App\Models\Renovation::with('innovatable')->latest('created_at')->take(2)->get()->map(fn($item) => [
                 'type' => 'innovation',
                 'action' => 'created',
                 'icon' => 'lightbulb-fill',
@@ -184,10 +184,10 @@ Route::get('/dashboard', function () {
                 'title' => $item->name,
                 'subtitle' => number_format($item->cost, 2) . ' JOD',
                 'description' => class_basename($item->innovatable_type) . ': ' . ($item->innovatable->name ?? 'N/A'),
-            'route' => route('rennovations.show', $item),
+            'route' => route('renovations.show', $item),
                 'timestamp' => $item->created_at,
             ]))
-            ->merge(\App\Models\Rennovation::with('innovatable')->latest('updated_at')->where('updated_at', '>', DB::raw('created_at'))->take(2)->get()->map(fn($item) => [
+            ->merge(\App\Models\Renovation::with('innovatable')->latest('updated_at')->where('updated_at', '>', DB::raw('created_at'))->take(2)->get()->map(fn($item) => [
                 'type' => 'innovation',
                 'action' => 'updated',
                 'icon' => 'lightbulb-fill',
@@ -195,7 +195,7 @@ Route::get('/dashboard', function () {
                 'title' => $item->name,
                 'subtitle' => number_format($item->cost, 2) . ' JOD',
                 'description' => class_basename($item->innovatable_type) . ': ' . ($item->innovatable->name ?? 'N/A'),
-            'route' => route('rennovations.show', $item),
+            'route' => route('renovations.show', $item),
                 'timestamp' => $item->updated_at,
             ]))
             // Deleted items (soft deletes)
@@ -254,7 +254,7 @@ Route::get('/dashboard', function () {
                 'route' => route('electricity-services.deleted'),
                 'timestamp' => $item->deleted_at,
             ]))
-            ->merge(\App\Models\Rennovation::onlyTrashed()->latest('deleted_at')->take(1)->get()->map(fn($item) => [
+            ->merge(\App\Models\Renovation::onlyTrashed()->latest('deleted_at')->take(1)->get()->map(fn($item) => [
                 'type' => 'innovation',
                 'action' => 'deleted',
                 'icon' => 'trash-fill',
@@ -262,7 +262,7 @@ Route::get('/dashboard', function () {
                 'title' => $item->name,
                 'subtitle' => number_format($item->cost, 2) . ' JOD',
                 'description' => 'Deleted',
-            'route' => route('rennovations.deleted'),
+            'route' => route('renovations.deleted'),
                 'timestamp' => $item->deleted_at,
             ]))
             ->sortByDesc('timestamp')
@@ -270,7 +270,7 @@ Route::get('/dashboard', function () {
             ->values(),
 
         // Innovation costs
-        'total_innovation_cost' => \App\Models\Rennovation::sum('cost'),
+        'total_innovation_cost' => \App\Models\Renovation::sum('cost'),
 
         // Buildings with permits
         'buildings_with_permit' => \App\Models\Building::where('has_building_permit', true)->count(),
@@ -364,16 +364,16 @@ Route::middleware('auth')->group(function () {
         ->name('electricity-services.force-delete');
     Route::resource('electricity-services', \App\Http\Controllers\ElectricityServiceController::class);
 
-    Route::get('rennovations/deleted/list', [\App\Http\Controllers\RennovationController::class, 'deleted'])
-        ->middleware('privilege:rennovation')
-        ->name('rennovations.deleted');
-    Route::post('rennovations/{id}/restore', [\App\Http\Controllers\RennovationController::class, 'restore'])
-        ->middleware('privilege:rennovation')
-        ->name('rennovations.restore');
-    Route::delete('rennovations/{id}/force-delete', [\App\Http\Controllers\RennovationController::class, 'forceDelete'])
-        ->middleware('privilege:rennovation')
-        ->name('rennovations.force-delete');
-    Route::resource('rennovations', \App\Http\Controllers\RennovationController::class);
+    Route::get('renovations/deleted/list', [\App\Http\Controllers\RenovationController::class, 'deleted'])
+        ->middleware('privilege:renovation')
+        ->name('renovations.deleted');
+    Route::post('renovations/{id}/restore', [\App\Http\Controllers\RenovationController::class, 'restore'])
+        ->middleware('privilege:renovation')
+        ->name('renovations.restore');
+    Route::delete('renovations/{id}/force-delete', [\App\Http\Controllers\RenovationController::class, 'forceDelete'])
+        ->middleware('privilege:renovation')
+        ->name('renovations.force-delete');
+    Route::resource('renovations', \App\Http\Controllers\RenovationController::class);
 
     // Activities route
     Route::get('activities', [\App\Http\Controllers\ActivityController::class, 'index'])->name('activities.index');

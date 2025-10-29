@@ -289,9 +289,9 @@
                         </span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Rennovations:</span>
+                        <span class="text-muted">Renovations:</span>
                         <span class="stat-chip">
-                            <i class="bi bi-lightbulb text-success"></i>{{ $building->rennovations->count() }}
+                            <i class="bi bi-lightbulb text-success"></i>{{ $building->renovations->count() }}
                         </span>
                     </div>
                 </div>
@@ -482,10 +482,10 @@ foreach ($building->images as $image) {
 
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-white py-3">
-            <h5 class="mb-0"><i class="bi bi-lightbulb me-2 text-orange"></i>Rennovations</h5>
+            <h5 class="mb-0"><i class="bi bi-lightbulb me-2 text-orange"></i>Renovations</h5>
         </div>
         <div class="card-body">
-            @forelse ($building->rennovations as $innovation)
+            @forelse ($building->renovations as $innovation)
                 <div class="border rounded-3 p-3 mb-3">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
                         <div>
@@ -501,13 +501,13 @@ foreach ($building->images as $image) {
                         <p class="mb-0 mt-2 text-muted">{{ $innovation->description }}</p>
                     @endif
                     <div class="mt-3 text-end">
-                        <a href="{{ route('rennovations.show', $innovation) }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ route('renovations.show', $innovation) }}" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-eye me-1"></i>View details
                         </a>
                     </div>
                 </div>
             @empty
-                <p class="text-muted mb-0 text-center">No rennovations recorded.</p>
+                <p class="text-muted mb-0 text-center">No renovations recorded.</p>
             @endforelse
         </div>
     </div>

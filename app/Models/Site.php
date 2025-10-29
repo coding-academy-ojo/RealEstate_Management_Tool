@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
-use App\Models\Rennovation;
+use App\Models\Renovation;
 
 class Site extends Model
 {
@@ -113,9 +113,9 @@ class Site extends Model
         return $this->hasMany(Building::class);
     }
 
-    public function rennovations(): MorphMany
+    public function renovations(): MorphMany
     {
-        return $this->morphMany(Rennovation::class, 'innovatable');
+        return $this->morphMany(Renovation::class, 'innovatable');
     }
 
     public function zoningStatuses(): BelongsToMany

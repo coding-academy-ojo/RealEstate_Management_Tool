@@ -18,7 +18,7 @@ class UserManagementController extends Controller
         'sites_lands_buildings' => 'Sites, Lands & Buildings',
         'water' => 'Water Services',
         'electricity' => 'Electricity Services',
-        'rennovation' => 'Rennovations',
+        'renovation' => 'Renovations',
     ];
 
     private const ROLES = [

@@ -196,7 +196,7 @@
                                                 'sites_lands_buildings' => 'Sites, Lands & Buildings',
                                                 'water' => 'Water Services',
                                                 'electricity' => 'Electricity Services',
-                                                'rennovation' => 'Rennovations',
+                                                'renovation' => 'Renovations',
                                             ];
                                             $userPrivileges = collect(auth()->user()->privileges)
                                                 ->map(

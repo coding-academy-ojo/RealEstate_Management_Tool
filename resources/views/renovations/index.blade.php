@@ -1,26 +1,26 @@
 @extends('layouts.app')
 
-@section('title', 'Rennovations')
+@section('title', 'Renovations')
 
 @section('breadcrumbs')
-    <li class="breadcrumb-item active">Rennovations</li>
+    <li class="breadcrumb-item active">Renovations</li>
 @endsection
 
 @section('content')
     @php
         $currentUser = auth()->user();
-        $canManageRennovations = $currentUser?->isSuperAdmin() || $currentUser?->hasPrivilege('rennovation');
+        $canManageRenovations = $currentUser?->isSuperAdmin() || $currentUser?->hasPrivilege('renovation');
     @endphp
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">Rennovations Management</h2>
-        @if ($canManageRennovations)
+        <h2 class="mb-0">Renovations Management</h2>
+        @if ($canManageRenovations)
             <div>
-                <a href="{{ route('rennovations.deleted') }}" class="btn btn-trash me-2">
-                    <i class="bi bi-trash"></i> Deleted Rennovations
+                <a href="{{ route('renovations.deleted') }}" class="btn btn-trash me-2">
+                    <i class="bi bi-trash"></i> Deleted Renovations
                 </a>
-                <a href="{{ route('rennovations.create') }}" class="btn btn-orange">
-                    <i class="bi bi-plus-circle me-1"></i> Add New Rennovation
+                <a href="{{ route('renovations.create') }}" class="btn btn-orange">
+                    <i class="bi bi-plus-circle me-1"></i> Add New Renovation
                 </a>
             </div>
         @endif
@@ -35,7 +35,7 @@
 
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
-            <form method="GET" action="{{ route('rennovations.index') }}">
+            <form method="GET" action="{{ route('renovations.index') }}">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="position-relative">
@@ -64,7 +64,7 @@
                             <button type="submit" class="btn btn-orange flex-fill" style="border-radius: 10px;">
                                 <i class="bi bi-funnel me-1"></i> Apply
                             </button>
-                            <a href="{{ route('rennovations.index') }}" class="btn btn-light flex-fill"
+                            <a href="{{ route('renovations.index') }}" class="btn btn-light flex-fill"
                                 style="border-radius: 10px;">
                                 <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
                             </a>
@@ -77,7 +77,7 @@
             </form>
 
             <div class="mt-3">
-                <small class="text-muted">{{ $rennovations->total() }} rennovation(s) found</small>
+                <small class="text-muted">{{ $renovations->total() }} renovation(s) found</small>
             </div>
         </div>
     </div>
@@ -94,7 +94,7 @@
             $params['sort'] = $column;
             $params['direction'] = $activeSort === $column && $activeDirection === 'asc' ? 'desc' : 'asc';
 
-            return route('rennovations.index', $params);
+            return route('renovations.index', $params);
         };
 
         $arrowClass = function (string $column, string $direction) use ($activeSort, $activeDirection) {
@@ -157,53 +157,53 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse ($rennovations as $index => $rennovation)
+                        @forelse ($renovations as $index => $renovation)
                             @php
                                 if ($activeSort === 'number' && $activeDirection === 'desc') {
                                     $rowNumber =
-                                        $rennovations->total() -
-                                        (($rennovations->currentPage() - 1) * $rennovations->perPage() + $index);
+                                        $renovations->total() -
+                                        (($renovations->currentPage() - 1) * $renovations->perPage() + $index);
                                 } else {
-                                    $rowNumber = ($rennovations->firstItem() ?? 0) + $index;
+                                    $rowNumber = ($renovations->firstItem() ?? 0) + $index;
                                 }
                             @endphp
                             <tr>
                                 <td class="text-center fw-bold text-muted">{{ $rowNumber }}</td>
                                 <td>
-                                    <div class="fw-semibold">{{ class_basename($rennovation->innovatable_type) }}</div>
-                                    @if ($rennovation->innovatable)
+                                    <div class="fw-semibold">{{ class_basename($renovation->innovatable_type) }}</div>
+                                    @if ($renovation->innovatable)
                                         @php
                                             $routeName =
                                                 strtolower(
-                                                    str_replace('App\\Models\\', '', $rennovation->innovatable_type),
+                                                    str_replace('App\\Models\\', '', $renovation->innovatable_type),
                                                 ) . 's.show';
                                         @endphp
-                                        <a href="{{ route($routeName, $rennovation->innovatable) }}"
+                                        <a href="{{ route($routeName, $renovation->innovatable) }}"
                                             class="text-decoration-none text-primary">
-                                            {{ $rennovation->innovatable->name ?? ($rennovation->innovatable->code ?? 'N/A') }}
+                                            {{ $renovation->innovatable->name ?? ($renovation->innovatable->code ?? 'N/A') }}
                                         </a>
                                     @else
                                         <span class="text-muted">Deleted</span>
                                     @endif
                                 </td>
-                                <td>{{ $rennovation->date ? $rennovation->date->format('Y-m-d') : 'N/A' }}</td>
-                                <td>{{ number_format($rennovation->cost, 2) }}</td>
+                                <td>{{ $renovation->date ? $renovation->date->format('Y-m-d') : 'N/A' }}</td>
+                                <td>{{ number_format($renovation->cost, 2) }}</td>
                                 <td>
                                     <span
-                                        class="text-muted small">{{ \Illuminate\Support\Str::limit($rennovation->description, 50) }}</span>
+                                        class="text-muted small">{{ \Illuminate\Support\Str::limit($renovation->description, 50) }}</span>
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a href="{{ route('rennovations.show', $rennovation) }}"
+                                        <a href="{{ route('renovations.show', $renovation) }}"
                                             class="btn btn-sm btn-outline-primary" title="View">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="{{ route('rennovations.edit', $rennovation) }}"
+                                        <a href="{{ route('renovations.edit', $renovation) }}"
                                             class="btn btn-sm btn-outline-secondary" title="Edit">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger" title="Delete"
-                                            onclick="openDeleteModal('{{ $rennovation->id }}', '{{ $rennovation->name }}', '{{ class_basename($rennovation->innovatable_type) }}')">
+                                            onclick="openDeleteModal('{{ $renovation->id }}', '{{ $renovation->name }}', '{{ class_basename($renovation->innovatable_type) }}')">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -213,7 +213,7 @@
                             <tr>
                                 <td colspan="6" class="text-center py-4">
                                     <i class="bi bi-lightbulb" style="font-size: 3rem; opacity: 0.3;"></i>
-                                    <p class="text-muted mt-2">No rennovations found.</p>
+                                    <p class="text-muted mt-2">No renovations found.</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -221,9 +221,9 @@
                 </table>
             </div>
         </div>
-        @if ($rennovations->hasPages())
+        @if ($renovations->hasPages())
             <div class="card-footer bg-white">
-                {{ $rennovations->links() }}
+                {{ $renovations->links() }}
             </div>
         @endif
     </div>
@@ -238,13 +238,13 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-2">Are you sure you want to delete this rennovation?</p>
+                    <p class="mb-2">Are you sure you want to delete this renovation?</p>
                     <div class="alert alert-warning mb-0">
-                        <strong id="deleteRennovationName"></strong> (<span id="deleteRennovationType"></span>)
+                        <strong id="deleteRenovationName"></strong> (<span id="deleteRenovationType"></span>)
                     </div>
                     <p class="text-muted mt-2 mb-0">
-                        <small>This action will move the rennovation to trash. You can restore it later from the Deleted
-                            Rennovations page.</small>
+                        <small>This action will move the renovation to trash. You can restore it later from the Deleted
+                            Renovations page.</small>
                     </p>
                 </div>
                 <div class="modal-footer border-0">
@@ -262,10 +262,10 @@
     </div>
 
     <script>
-        function openDeleteModal(rennovationId, rennovationName, rennovationType) {
-            document.getElementById('deleteRennovationName').textContent = rennovationName;
-            document.getElementById('deleteRennovationType').textContent = rennovationType;
-            document.getElementById('deleteForm').action = '/rennovations/' + rennovationId;
+        function openDeleteModal(renovationId, renovationName, renovationType) {
+            document.getElementById('deleteRenovationName').textContent = renovationName;
+            document.getElementById('deleteRenovationType').textContent = renovationType;
+            document.getElementById('deleteForm').action = '/renovations/' + renovationId;
 
             const modalElement = document.getElementById('deleteModal');
             const modal = new boosted.Modal(modalElement);

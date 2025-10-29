@@ -284,9 +284,9 @@
                         </a>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Rennovations:</span>
+                        <span class="text-muted">Renovations:</span>
                         <span class="fw-bold text-warning">
-                            {{ $land->rennovations->count() }}
+                            {{ $land->renovations->count() }}
                         </span>
                     </div>
                 </div>
@@ -308,10 +308,10 @@
                             </a>
                         @endif
 
-                        @if ($currentUser?->isSuperAdmin() || $currentUser?->hasPrivilege('rennovation'))
-                            <a href="{{ route('rennovations.create') }}?innovatable_type=Land&innovatable_id={{ $land->id }}"
+                        @if ($currentUser?->isSuperAdmin() || $currentUser?->hasPrivilege('renovation'))
+                            <a href="{{ route('renovations.create') }}?innovatable_type=Land&innovatable_id={{ $land->id }}"
                                 class="btn btn-warning btn-sm">
-                                <i class="bi bi-lightbulb-fill me-1"></i> Add Rennovation
+                                <i class="bi bi-lightbulb-fill me-1"></i> Add Renovation
                             </a>
                         @endif
                     </div>
@@ -437,22 +437,22 @@ if ($land->site) {
     </div>
     </div>
 
-    <!-- Rennovations Section -->
+    <!-- Renovations Section -->
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
-                <i class="bi bi-lightbulb me-2 text-orange"></i>Rennovations
-                <span class="text-muted">({{ $land->rennovations->count() }})</span>
+                <i class="bi bi-lightbulb me-2 text-orange"></i>Renovations
+                <span class="text-muted">({{ $land->renovations->count() }})</span>
             </h5>
-            @if ($currentUser?->isSuperAdmin() || $currentUser?->hasPrivilege('rennovation'))
-                <a href="{{ route('rennovations.create') }}?innovatable_type=Land&innovatable_id={{ $land->id }}"
+            @if ($currentUser?->isSuperAdmin() || $currentUser?->hasPrivilege('renovation'))
+                <a href="{{ route('renovations.create') }}?innovatable_type=Land&innovatable_id={{ $land->id }}"
                     class="btn btn-orange">
-                    <i class="bi bi-plus-circle me-1"></i> Add Rennovation
+                    <i class="bi bi-plus-circle me-1"></i> Add Renovation
                 </a>
             @endif
         </div>
         <div class="card-body p-0">
-            @forelse($land->rennovations as $innovation)
+            @forelse($land->renovations as $innovation)
                 @if ($loop->first)
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
@@ -472,7 +472,7 @@ if ($land->site) {
                     <td>{{ $innovation->date->format('Y-m-d') }}</td>
                     <td>
                         <div class="btn-group" role="group">
-                            <a href="{{ route('rennovations.show', $innovation) }}"
+                            <a href="{{ route('renovations.show', $innovation) }}"
                                 class="btn btn-sm btn-outline-primary" title="View">
                                 <i class="bi bi-eye"></i>
                             </a>
@@ -485,7 +485,7 @@ if ($land->site) {
         </div>
         @endif
     @empty
-    <p class="text-muted text-center mb-0 py-4">No rennovations recorded for this land.</p>
+    <p class="text-muted text-center mb-0 py-4">No renovations recorded for this land.</p>
         @endforelse
     </div>
     </div>

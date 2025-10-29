@@ -155,11 +155,11 @@
             <span>Electricity</span>
         </a>
 
-        <a href="{{ route('rennovations.index') }}"
-            class="sidebar-link {{ request()->routeIs('rennovations.*') ? 'active' : '' }}"
-            data-tooltip="Rennovations">
+        <a href="{{ route('renovations.index') }}"
+            class="sidebar-link {{ request()->routeIs('renovations.*') ? 'active' : '' }}"
+            data-tooltip="Renovations">
             <i class="bi bi-lightbulb"></i>
-            <span>Rennovations</span>
+            <span>Renovations</span>
         </a>
     </div>
 
