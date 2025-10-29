@@ -303,12 +303,12 @@ foreach ($site->lands as $land) {
                     </table>
         </div>
         @endif
-                    @if ($currentUser?->isSuperAdmin() || $currentUser?->hasPrivilege('rennovation'))
-                        <a href="{{ route('rennovations.create') }}?innovatable_type=Site&innovatable_id={{ $site->id }}"
-                            class="btn btn-warning btn-sm">
-                            <i class="bi bi-lightbulb-fill me-1"></i> Add Rennovation
-                        </a>
-                    @endif
+    @empty
+        <p class="text-muted text-center mb-0 py-4">No buildings found. Create your first building!</p>
+        @endforelse
+    </div>
+    </div>
+
     <!-- Lands Section -->
     <div class="card border-0 shadow-sm mb-4" id="lands-section">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
@@ -409,7 +409,7 @@ foreach ($site->lands as $land) {
         </div>
         @endif
     @empty
-    <p class="text-muted text-center mb-0 py-4">No rennovations recorded for this site.</p>
+        <p class="text-muted text-center mb-0 py-4">No rennovations recorded for this site.</p>
         @endforelse
     </div>
     </div>

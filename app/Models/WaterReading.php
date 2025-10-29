@@ -12,7 +12,6 @@ class WaterReading extends Model
 
   protected $fillable = [
     'water_service_id',
-    'previous_reading',
     'current_reading',
     'consumption_value',
     'bill_amount',
@@ -24,7 +23,6 @@ class WaterReading extends Model
   ];
 
   protected $casts = [
-    'previous_reading' => 'decimal:2',
     'current_reading' => 'decimal:2',
     'consumption_value' => 'decimal:2',
     'bill_amount' => 'decimal:2',

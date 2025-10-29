@@ -1,27 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Land Parcel: ' . $land->plot_key)
+@section('title', 'Create Land')
 
 @section('breadcrumbs')
     <li class="breadcrumb-item"><a href="{{ route('lands.index') }}">Lands</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('lands.show', $land) }}">{{ $land->plot_key }}</a></li>
-    <li class="breadcrumb-item active">Edit</li>
+    <li class="breadcrumb-item active">Create</li>
 @endsection
 
 @section('content')
-    @php
-        // Prepare current zoning status IDs
-        $currentZoningNames = !empty($land->zoning) ? explode(',', $land->zoning) : [];
-        $selectedZoningIds = [];
-        if (!empty($currentZoningNames)) {
-            foreach ($zoningStatuses as $status) {
-                if (in_array(trim($status->name_ar), array_map('trim', $currentZoningNames))) {
-                    $selectedZoningIds[] = $status->id;
-                }
-            }
-        }
-    @endphp
-
     <style>
         /* Zoning Wrapper - Main Container */
         .zoning-wrapper {
@@ -283,32 +269,77 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white py-3">
                     <h4 class="mb-0">
-                        <i class="bi bi-pencil-square me-2 text-orange"></i>
-                        Edit Land Parcel: <strong>{{ $land->plot_key }}</strong>
+                        <i class="bi bi-map-fill me-2 text-orange"></i>
+                        Create New Land Parcel
                     </h4>
                 </div>
                 <div class="card-body p-4">
-                    <form action="{{ route('lands.update', $land) }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('lands.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
-                        @method('PUT')
 
                         <!-- Hidden inputs for governorate and region -->
-                        <input type="hidden" name="governorate" id="governorate" value="{{ old('governorate', $land->governorate) }}">
-                        <input type="hidden" name="region" id="region" value="{{ old('region', $land->region) }}">
+                        <input type="hidden" name="governorate" id="governorate" value="{{ old('governorate') }}">
+                        <input type="hidden" name="region" id="region" value="{{ old('region') }}">
+
+                        <!-- Governorate Selection -->
+                        <div class="mb-4">
+                            <label for="governorate_filter" class="form-label fw-bold">
+                                Governorate <span class="text-danger">*</span>
+                            </label>
+                            <select id="governorate_filter" class="form-select" required>
+                                <option value="">-- Select Governorate --</option>
+                                <optgroup label="Region 1 - Capital">
+                                    <option value="AM" {{ old('governorate_filter') == 'AM' ? 'selected' : '' }}>Amman
+                                        (عمّان)</option>
+                                </optgroup>
+                                <optgroup label="Region 2 - North">
+                                    <option value="IR" {{ old('governorate_filter') == 'IR' ? 'selected' : '' }}>Irbid
+                                        (إربد)</option>
+                                    <option value="MF" {{ old('governorate_filter') == 'MF' ? 'selected' : '' }}>Mafraq
+                                        (المفرق)</option>
+                                    <option value="AJ" {{ old('governorate_filter') == 'AJ' ? 'selected' : '' }}>Ajloun
+                                        (عجلون)</option>
+                                    <option value="JA" {{ old('governorate_filter') == 'JA' ? 'selected' : '' }}>Jerash
+                                        (جرش)</option>
+                                </optgroup>
+                                <optgroup label="Region 3 - Middle">
+                                    <option value="BA" {{ old('governorate_filter') == 'BA' ? 'selected' : '' }}>Balqa
+                                        (البلقاء)</option>
+                                    <option value="ZA" {{ old('governorate_filter') == 'ZA' ? 'selected' : '' }}>Zarqa
+                                        (الزرقاء)</option>
+                                    <option value="MA" {{ old('governorate_filter') == 'MA' ? 'selected' : '' }}>Madaba
+                                        (مادبا)</option>
+                                </optgroup>
+                                <optgroup label="Region 4 - South">
+                                    <option value="AQ" {{ old('governorate_filter') == 'AQ' ? 'selected' : '' }}>Aqaba
+                                        (العقبة)</option>
+                                    <option value="KA" {{ old('governorate_filter') == 'KA' ? 'selected' : '' }}>Karak
+                                        (الكرك)</option>
+                                    <option value="TF" {{ old('governorate_filter') == 'TF' ? 'selected' : '' }}>
+                                        Tafileh (الطفيلة)</option>
+                                    <option value="MN" {{ old('governorate_filter') == 'MN' ? 'selected' : '' }}>Ma'an
+                                        (معان)</option>
+                                </optgroup>
+                            </select>
+                            <small class="text-muted">Select governorate to filter sites</small>
+                        </div>
 
                         <!-- Site Selection -->
                         <div class="mb-4">
                             <label for="site_id" class="form-label fw-bold">
                                 Site <span class="text-danger">*</span>
                             </label>
-                            <select name="site_id" id="site_id" class="form-select @error('site_id') is-invalid @enderror" required>
+                            <select name="site_id" id="site_id" class="form-select @error('site_id') is-invalid @enderror"
+                                required {{ request('site_id') ? '' : 'disabled' }}>
                                 <option value="">-- Select Site --</option>
-                                @foreach ($sites as $site)
-                                    <option value="{{ $site->id }}" {{ old('site_id', $land->site_id) == $site->id ? 'selected' : '' }}>
-                                        {{ $site->code }} - {{ $site->name }}
-                                    </option>
-                                @endforeach
                             </select>
+                            @if (request('site_id'))
+                                <small class="text-info">
+                                    <i class="bi bi-lock-fill me-1"></i>Site is locked (coming from site page)
+                                </small>
+                            @else
+                                <small class="text-muted">Select governorate first to filter sites</small>
+                            @endif
                             @error('site_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -327,7 +358,7 @@
                                 </label>
                                 <input type="text" name="directorate" id="directorate"
                                     class="form-control @error('directorate') is-invalid @enderror"
-                                    value="{{ old('directorate', $land->directorate) }}" required>
+                                    value="{{ old('directorate') }}" required>
                                 @error('directorate')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -339,7 +370,7 @@
                                 </label>
                                 <input type="text" name="directorate_number" id="directorate_number"
                                     class="form-control @error('directorate_number') is-invalid @enderror"
-                                    value="{{ old('directorate_number', $land->directorate_number) }}" required>
+                                    value="{{ old('directorate_number') }}" required>
                                 @error('directorate_number')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -353,7 +384,7 @@
                                 </label>
                                 <input type="text" name="village" id="village"
                                     class="form-control @error('village') is-invalid @enderror"
-                                    value="{{ old('village', $land->village) }}">
+                                    value="{{ old('village') }}">
                                 @error('village')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -365,7 +396,7 @@
                                 </label>
                                 <input type="text" name="village_number" id="village_number"
                                     class="form-control @error('village_number') is-invalid @enderror"
-                                    value="{{ old('village_number', $land->village_number) }}">
+                                    value="{{ old('village_number') }}">
                                 @error('village_number')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -378,7 +409,7 @@
                                     Basin (الحوض) <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" name="basin" id="basin"
-                                    class="form-control @error('basin') is-invalid @enderror" value="{{ old('basin', $land->basin) }}"
+                                    class="form-control @error('basin') is-invalid @enderror" value="{{ old('basin') }}"
                                     required>
                                 @error('basin')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -391,7 +422,7 @@
                                 </label>
                                 <input type="text" name="basin_number" id="basin_number"
                                     class="form-control @error('basin_number') is-invalid @enderror"
-                                    value="{{ old('basin_number', $land->basin_number) }}" required>
+                                    value="{{ old('basin_number') }}" required>
                                 @error('basin_number')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -405,7 +436,7 @@
                                 </label>
                                 <input type="text" name="neighborhood" id="neighborhood"
                                     class="form-control @error('neighborhood') is-invalid @enderror"
-                                    value="{{ old('neighborhood', $land->neighborhood) }}">
+                                    value="{{ old('neighborhood') }}">
                                 @error('neighborhood')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -417,7 +448,7 @@
                                 </label>
                                 <input type="text" name="neighborhood_number" id="neighborhood_number"
                                     class="form-control @error('neighborhood_number') is-invalid @enderror"
-                                    value="{{ old('neighborhood_number', $land->neighborhood_number) }}">
+                                    value="{{ old('neighborhood_number') }}">
                                 @error('neighborhood_number')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -431,7 +462,7 @@
                                 </label>
                                 <input type="text" name="plot_number" id="plot_number"
                                     class="form-control @error('plot_number') is-invalid @enderror"
-                                    value="{{ old('plot_number', $land->plot_number) }}" required>
+                                    value="{{ old('plot_number') }}" required>
                                 @error('plot_number')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -443,7 +474,7 @@
                                 </label>
                                 <input type="text" name="plot_key" id="plot_key"
                                     class="form-control @error('plot_key') is-invalid @enderror"
-                                    value="{{ old('plot_key', $land->plot_key) }}" required>
+                                    value="{{ old('plot_key') }}" required>
                                 @error('plot_key')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -457,7 +488,7 @@
                                 </label>
                                 <input type="number" step="0.01" name="area_m2" id="area_m2"
                                     class="form-control @error('area_m2') is-invalid @enderror"
-                                    value="{{ old('area_m2', $land->area_m2) }}" required min="0">
+                                    value="{{ old('area_m2') }}" required min="0">
                                 @error('area_m2')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -499,7 +530,7 @@
                                         <label class="zoning-option" data-name="{{ strtolower($status->name_ar) }}">
                                             <input type="checkbox" class="zoning-checkbox" name="zoning_statuses[]"
                                                 value="{{ $status->id }}" id="zoning_{{ $status->id }}"
-                                                {{ in_array($status->id, old('zoning_statuses', $selectedZoningIds)) ? 'checked' : '' }}>
+                                                {{ in_array($status->id, old('zoning_statuses', [])) ? 'checked' : '' }}>
                                             <span class="checkbox-custom"></span>
                                             <span class="option-text">{{ $status->name_ar }}</span>
                                         </label>
@@ -518,7 +549,7 @@
                                 </label>
                                 <input type="url" name="map_location" id="map_location"
                                     class="form-control @error('map_location') is-invalid @enderror"
-                                    value="{{ old('map_location', $land->map_location) }}"
+                                    value="{{ old('map_location') }}"
                                     placeholder="Paste Google Maps URL here (e.g., https://maps.google.com/?q=31.9539,35.9106)">
                                 @error('map_location')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -534,7 +565,7 @@
                                 </label>
                                 <input type="number" step="0.0000001" name="latitude" id="latitude"
                                     class="form-control @error('latitude') is-invalid @enderror"
-                                    value="{{ old('latitude', $land->latitude) }}" placeholder="e.g., 31.9539">
+                                    value="{{ old('latitude') }}" placeholder="e.g., 31.9539">
                                 @error('latitude')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -546,7 +577,7 @@
                                 </label>
                                 <input type="number" step="0.0000001" name="longitude" id="longitude"
                                     class="form-control @error('longitude') is-invalid @enderror"
-                                    value="{{ old('longitude', $land->longitude) }}" placeholder="e.g., 35.9106">
+                                    value="{{ old('longitude') }}" placeholder="e.g., 35.9106">
                                 @error('longitude')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -570,7 +601,10 @@
                                 @error('ownership_doc')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <small class="text-muted">JPG or PDF only (Max: 10MB)</small>@if ($land->ownership_doc)<div class="mt-2"><a href="{{ asset('storage/' . $land->ownership_doc) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> View Current Document</a></div>@endif</div><div class="col-md-4 mb-3">
+                                <small class="text-muted">JPG or PDF only (Max: 10MB)</small>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
                                 <label for="site_plan" class="form-label fw-bold">
                                     مخطط الموقع
                                 </label>
@@ -580,7 +614,10 @@
                                 @error('site_plan')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <small class="text-muted">JPG or PDF only (Max: 10MB)</small>@if ($land->ownership_doc)<div class="mt-2"><a href="{{ asset('storage/' . $land->ownership_doc) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> View Current Document</a></div>@endif</div><div class="col-md-4 mb-3">
+                                <small class="text-muted">JPG or PDF only (Max: 10MB)</small>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
                                 <label for="zoning_plan" class="form-label fw-bold">
                                     مخطط تنظيمي
                                 </label>
@@ -590,20 +627,23 @@
                                 @error('zoning_plan')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <small class="text-muted">JPG or PDF only (Max: 10MB)</small>@if ($land->site_plan)<div class="mt-2"><a href="{{ asset('storage/' . $land->site_plan) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> View Current Document</a></div>@endif</div>@if ($land->zoning_plan)<div class="mt-2"><a href="{{ asset('storage/' . $land->zoning_plan) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> View Current Document</a></div>@endif</div></div>
+                                <small class="text-muted">JPG or PDF only (Max: 10MB)</small>
+                            </div>
+                        </div>
 
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle me-2"></i>
-                            <strong>Note:</strong> Upload new documents only if you want to replace the existing ones.
+                            <strong>Note:</strong> You can upload ownership documents, site plans, and photos after creating
+                            the land.
                         </div>
 
                         <!-- Submit Buttons -->
                         <div class="d-flex gap-2 justify-content-end mt-4">
-                            <a href="{{ route('lands.show', $land) }}" class="btn btn-secondary">
+                            <a href="{{ route('lands.index') }}" class="btn btn-secondary">
                                 <i class="bi bi-x-circle me-1"></i> Cancel
                             </a>
                             <button type="submit" class="btn btn-orange">
-                                <i class="bi bi-check-circle me-1"></i> Update Land
+                                <i class="bi bi-check-circle me-1"></i> Create Land
                             </button>
                         </div>
                     </form>
@@ -650,6 +690,7 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const governorateFilter = document.getElementById('governorate_filter');
             const siteSelect = document.getElementById('site_id');
             const governorateInput = document.getElementById('governorate');
             const regionInput = document.getElementById('region');
@@ -657,7 +698,7 @@
             // All sites data from backend
             const allSites = @json($sites);
 
-            // Governorate full names mapping
+            // Governorate full names mapping (English only)
             const governorateNames = {
                 'AM': 'Amman',
                 'IR': 'Irbid',
@@ -689,6 +730,41 @@
                 'MN': 'South'
             };
 
+            // When governorate is selected, populate sites
+            governorateFilter.addEventListener('change', function() {
+                const selectedGovernorate = this.value;
+
+                // Reset sites
+                siteSelect.innerHTML = '<option value="">-- Select Site --</option>';
+                governorateInput.value = '';
+                regionInput.value = '';
+
+                if (selectedGovernorate) {
+                    // Enable site dropdown
+                    siteSelect.disabled = false;
+
+                    // Filter sites by governorate
+                    const filteredSites = allSites.filter(site => site.governorate === selectedGovernorate);
+
+                    if (filteredSites.length > 0) {
+                        filteredSites.forEach(site => {
+                            const option = document.createElement('option');
+                            option.value = site.id;
+                            option.textContent = `${site.code} - ${site.name}`;
+                            siteSelect.appendChild(option);
+                        });
+                    } else {
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'No sites available for this governorate';
+                        option.disabled = true;
+                        siteSelect.appendChild(option);
+                    }
+                } else {
+                    siteSelect.disabled = true;
+                }
+            });
+
             // When site is selected, auto-fill governorate and region
             siteSelect.addEventListener('change', function() {
                 const selectedSiteId = this.value;
@@ -696,7 +772,9 @@
                 if (selectedSiteId) {
                     const selectedSite = allSites.find(site => site.id == selectedSiteId);
                     if (selectedSite) {
-                        governorateInput.value = governorateNames[selectedSite.governorate] || selectedSite.governorate;
+                        // Use full governorate name instead of code
+                        governorateInput.value = governorateNames[selectedSite.governorate] || selectedSite
+                            .governorate;
                         regionInput.value = governorateToRegion[selectedSite.governorate] || '';
                     }
                 } else {
@@ -705,10 +783,29 @@
                 }
             });
 
-            // Trigger change on page load to set initial values
-            if (siteSelect.value) {
-                siteSelect.dispatchEvent(new Event('change'));
-            }
+            // Handle pre-selected site (from old() or request)
+            @if (old('site_id') || request('site_id'))
+                const preSelectedSiteId = {{ old('site_id', request('site_id')) }};
+                const preSelectedSite = allSites.find(site => site.id == preSelectedSiteId);
+
+                if (preSelectedSite) {
+                    // Set governorate
+                    governorateFilter.value = preSelectedSite.governorate;
+                    governorateFilter.dispatchEvent(new Event('change'));
+
+                    // Small delay to ensure site dropdown is populated
+                    setTimeout(() => {
+                        siteSelect.value = preSelectedSiteId;
+                        siteSelect.dispatchEvent(new Event('change'));
+
+                        // Lock site and governorate if coming from site page
+                        @if (request('site_id'))
+                            siteSelect.disabled = true;
+                            governorateFilter.disabled = true;
+                        @endif
+                    }, 100);
+                }
+            @endif
 
             // Google Maps URL coordinate extraction
             const mapLocationInput = document.getElementById('map_location');

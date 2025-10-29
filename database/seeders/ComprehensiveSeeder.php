@@ -390,11 +390,12 @@ class ComprehensiveSeeder extends Seeder
 
         foreach ($entries as $entry) {
             $current = round($entry['current'], 2);
-            $consumption = $previous !== null ? round($current - $previous, 2) : null;
+            $consumption = $previous !== null
+                ? max(0.0, round($current - $previous, 2))
+                : round($current, 2);
 
             WaterReading::create([
                 'water_service_id' => $service->id,
-                'previous_reading' => $previous,
                 'current_reading' => $current,
                 'consumption_value' => $consumption,
                 'bill_amount' => isset($entry['bill']) ? round($entry['bill'], 2) : null,

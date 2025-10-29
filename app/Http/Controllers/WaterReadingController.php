@@ -118,21 +118,21 @@ class WaterReadingController extends Controller
   private function recalculateReadings(WaterService $waterService): void
   {
     $readings = $waterService->readings()->orderBy('reading_date')->orderBy('id')->get();
-    $previous = null;
+    $previous = 0.0;
+    $isFirst = true;
 
     foreach ($readings as $reading) {
-      $consumption = null;
-
-      if ($previous !== null) {
-        $consumption = round($reading->current_reading - $previous, 2);
-      }
+      $current = (float) ($reading->current_reading ?? 0);
+      $consumption = $isFirst
+        ? $current
+        : max(0, round($current - $previous, 2));
 
       $reading->forceFill([
-        'previous_reading' => $previous,
         'consumption_value' => $consumption,
       ])->saveQuietly();
 
-      $previous = $reading->current_reading;
+      $previous = $current;
+      $isFirst = false;
     }
   }
 

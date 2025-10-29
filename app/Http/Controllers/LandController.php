@@ -212,7 +212,7 @@ class LandController extends Controller
 
     public function show(Land $land)
     {
-        $land->load(['site.images', 'buildings.images', 'reInnovations', 'images']);
+        $land->load(['site.images', 'buildings.images', 'rennovations', 'images']);
         return view('lands.show', compact('land'));
     }
 

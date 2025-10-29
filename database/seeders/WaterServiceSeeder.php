@@ -50,11 +50,10 @@ class WaterServiceSeeder extends Seeder
                 $readingDate = Carbon::now()->subMonths($i - 1)->startOfMonth();
                 $consumption = $previousReading !== null
                     ? round($currentReading - $previousReading, 2)
-                    : null;
+                    : round($currentReading, 2);
 
                 WaterReading::create([
                     'water_service_id' => $service->id,
-                    'previous_reading' => $previousReading,
                     'current_reading' => round($currentReading, 2),
                     'consumption_value' => $consumption,
                     'bill_amount' => $consumption ? round($consumption * 1.25, 2) : null,

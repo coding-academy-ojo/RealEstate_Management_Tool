@@ -210,14 +210,18 @@
                                             <div class="fw-semibold">{{ $reading->reading_date?->format('F d, Y') ?? '—' }}</div>
                                             <small class="text-muted">Logged {{ $reading->created_at?->diffForHumans() }}</small>
                                         </td>
+                                        @php
+                                            $computedPrevious = (float) $reading->getAttribute('computed_previous_reading');
+                                            $computedConsumption = $reading->getAttribute('computed_consumption');
+                                        @endphp
                                         <td class="text-end">
-                                            {{ is_null($reading->previous_reading) ? '—' : number_format((float) $reading->previous_reading, 2) }}
+                                            {{ number_format($computedPrevious, 2) }}
                                         </td>
                                         <td class="text-end">
                                             {{ number_format((float) $reading->current_reading, 2) }}
                                         </td>
                                         <td class="text-end">
-                                            {{ is_null($reading->consumption_value) ? '—' : number_format((float) $reading->consumption_value, 2) }}
+                                            {{ number_format((float) $computedConsumption, 2) }}
                                         </td>
                                         <td class="text-end">
                                             {{ is_null($reading->bill_amount) ? '—' : number_format((float) $reading->bill_amount, 2) }}
@@ -263,7 +267,7 @@
                                                         data-reading-paid="{{ $reading->is_paid ? 1 : 0 }}"
                                                         data-reading-date="{{ $reading->reading_date?->format('Y-m-d') }}"
                                                         data-reading-notes="{{ $reading->notes }}"
-                                                        data-reading-previous="{{ $reading->previous_reading }}"
+                                                        data-reading-previous="{{ $reading->getAttribute('computed_previous_reading') }}"
                                                         data-reading-meter-url="{{ $reading->meter_image ? route('water-services.readings.files.show', [$waterService, $reading, 'meter']) : '' }}"
                                                         data-reading-bill-url="{{ $reading->bill_image ? route('water-services.readings.files.show', [$waterService, $reading, 'bill']) : '' }}"
                                                         onclick="openReadingModalFromButton(this)">
@@ -486,7 +490,7 @@
     <script>
         const createReadingUrl = @json(route('water-services.readings.store', $waterService));
         const updateReadingUrlTemplate = @json(route('water-services.readings.update', [$waterService, '__reading__']));
-        const latestReadingValue = @json($latestReading?->current_reading);
+    const latestReadingValue = @json($latestReading?->current_reading);
 
         function openDeleteModal(serviceId, registrationNumber, companyName) {
             document.getElementById('deleteServiceRegistration').textContent = registrationNumber;
@@ -551,7 +555,7 @@
             } else {
                 modalElement.querySelector('.modal-title span').textContent = 'Add Monthly Reading';
                 document.getElementById('reading_is_paid').checked = false;
-                if (latestReadingValue) {
+                if (latestReadingValue !== null && latestReadingValue !== undefined) {
                     previousHint.textContent = `Latest recorded reading: ${parseFloat(latestReadingValue).toFixed(2)} m³`;
                 } else {
                     previousHint.textContent = 'No previous readings recorded.';

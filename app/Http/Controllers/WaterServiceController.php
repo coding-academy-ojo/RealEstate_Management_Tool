@@ -127,12 +127,53 @@ class WaterServiceController extends Controller
         $waterService->load([
             'building.site',
             'readings' => fn($query) => $query->orderByDesc('reading_date')->orderByDesc('id'),
+            'latestReading',
         ]);
 
-        $readings = $waterService->readings;
+        $sortKey = static function ($reading) {
+            $base = $reading->reading_date?->timestamp ?? $reading->created_at?->timestamp ?? 0;
+            return ($base * 1_000_000) + $reading->id;
+        };
+
+        $displayReadings = $waterService->readings
+            ->sortByDesc($sortKey)
+            ->values();
+
+        $chronological = $displayReadings
+            ->reverse()
+            ->values();
+
+        $computedById = [];
+        $previousValue = 0.0;
+
+        foreach ($chronological as $reading) {
+            $currentValue = (float) ($reading->current_reading ?? 0);
+            $consumption = max(0.0, round($currentValue - $previousValue, 2));
+
+            $computedById[$reading->id] = [
+                'previous' => round($previousValue, 2),
+                'consumption' => round($consumption, 2),
+            ];
+
+            $previousValue = round($currentValue, 2);
+        }
+
+        $readings = $displayReadings->map(function ($reading) use ($computedById) {
+            $info = $computedById[$reading->id] ?? ['previous' => 0.0, 'consumption' => 0.0];
+            $reading->setAttribute('computed_previous_reading', $info['previous']);
+            $reading->setAttribute('computed_consumption', $info['consumption']);
+            return $reading;
+        });
+
         $latestReading = $readings->first();
-        $totalConsumption = $readings->sum('consumption_value');
-        $outstandingAmount = $readings->where('is_paid', false)->sum('bill_amount');
+
+        $totalConsumption = collect($computedById)->sum('consumption');
+
+        $outstandingAmount = $readings
+            ->where('is_paid', false)
+            ->sum(function ($reading) {
+                return (float) ($reading->bill_amount ?? 0);
+            });
 
         return view('water-services.show', compact('waterService', 'readings', 'latestReading', 'totalConsumption', 'outstandingAmount'));
     }

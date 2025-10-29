@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('water_readings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('water_service_id')->constrained()->cascadeOnDelete();
-            $table->decimal('previous_reading', 10, 2)->nullable();
             $table->decimal('current_reading', 10, 2);
             $table->decimal('consumption_value', 10, 2)->nullable();
             $table->decimal('bill_amount', 10, 2)->nullable();
