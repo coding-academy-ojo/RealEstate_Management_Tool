@@ -396,7 +396,7 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const siteSelect = document.getElementById('site_id');
+            const siteSelect = document.getElementById('site_id_display');
             const landsSection = document.getElementById('lands-section');
             const landsContainer = document.getElementById('lands-container');
             const selectedLandIds = @json($selectedLandIds);
@@ -532,18 +532,13 @@
                     });
             }
 
-            if (siteSelect && siteSelect.value) {
-                loadLands(siteSelect.value);
-            }
-
-            // Initialize Choices.js for searchable site select
-            const siteSelectDisplay = document.getElementById('site_id_display');
+            // Initialize Choices.js for searchable site select (before loading initial lands)
             const hiddenSiteInput = document.getElementById('hidden_site_id');
             const originalSiteId = {{ $building->site_id }};
             let siteChoices = null;
 
-            if (siteSelectDisplay) {
-                siteChoices = new Choices(siteSelectDisplay, {
+            if (siteSelect) {
+                siteChoices = new Choices(siteSelect, {
                     searchEnabled: true,
                     searchPlaceholderValue: 'Search by site name or code...',
                     itemSelectText: 'Press to select',
@@ -554,12 +549,12 @@
                 });
 
                 // Handle site change with confirmation
-                siteSelectDisplay.addEventListener('addItem', function(e) {
+                siteSelect.addEventListener('addItem', function(e) {
                     const newSiteId = e.detail.value;
 
                     if (newSiteId && newSiteId != originalSiteId) {
                         // Get site details
-                        const selectedOption = siteSelectDisplay.querySelector(`option[value="${newSiteId}"]`);
+                        const selectedOption = siteSelect.querySelector(`option[value="${newSiteId}"]`);
                         const siteName = selectedOption ? selectedOption.dataset.name : '';
                         const siteCode = selectedOption ? selectedOption.dataset.code : '';
 
@@ -572,6 +567,11 @@
                         loadLands(newSiteId);
                     }
                 }, false);
+            }
+
+            // Load initial lands for the current site (after Choices.js is initialized)
+            if (siteSelect && siteSelect.value) {
+                loadLands(siteSelect.value);
             }
 
             // Site change confirmation modal
