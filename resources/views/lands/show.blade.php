@@ -406,7 +406,7 @@ if ($land->site) {
                                     <th>Code</th>
                                     <th>Name</th>
                                     <th>Area (m²)</th>
-                                    <th>Permit Status</th>
+                                    <th>Services</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -414,14 +414,16 @@ if ($land->site) {
                 @endif
                 <tr>
                     <td class="text-orange fw-bold">{{ $building->code }}</td>
-                    <td class="fw-semibold">{{ $building->name }}</td>
+                    <td>
+                        <div class="fw-semibold">{{ $building->name }}</div>
+                        <div class="text-muted small">{{ ucfirst($building->property_type) }}</div>
+                    </td>
                     <td>{{ number_format($building->area_m2, 2) }}</td>
                     <td>
-                        @if ($building->has_building_permit)
-                            <i class="bi bi-check-circle-fill text-success me-1"></i>Permitted
-                        @else
-                            <span class="text-muted">No Permit</span>
-                        @endif
+                        <small class="text-muted">
+                            <i class="bi bi-droplet text-info"></i> {{ $building->waterServices->count() }}
+                            <i class="bi bi-lightning text-warning ms-2"></i> {{ $building->electricityServices->count() }}
+                        </small>
                     </td>
                     <td>
                         <div class="btn-group" role="group">
@@ -429,6 +431,12 @@ if ($land->site) {
                                 title="View">
                                 <i class="bi bi-eye"></i>
                             </a>
+                            @if ($currentUser?->isSuperAdmin())
+                                <a href="{{ route('buildings.edit', $building) }}"
+                                    class="btn btn-sm btn-outline-secondary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            @endif
                         </div>
                     </td>
                 </tr>

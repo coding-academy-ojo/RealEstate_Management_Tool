@@ -269,9 +269,11 @@ foreach ($site->lands as $land) {
                 <i class="bi bi-building me-2 text-orange"></i>Buildings
                 <span class="text-muted">({{ $site->buildings->count() }})</span>
             </h5>
-            <a href="{{ route('buildings.create') }}?site_id={{ $site->id }}" class="btn btn-orange">
-                <i class="bi bi-plus-circle me-1"></i> Add Building
-            </a>
+            @if ($currentUser?->isSuperAdmin())
+                <a href="{{ route('buildings.create') }}?site_id={{ $site->id }}" class="btn btn-orange">
+                    <i class="bi bi-plus-circle me-1"></i> Add Building
+                </a>
+            @endif
         </div>
         <div class="card-body p-0">
             @forelse($site->buildings as $building)
@@ -283,7 +285,7 @@ foreach ($site->lands as $land) {
                                     <th>Code</th>
                                     <th>Name</th>
                                     <th>Area (m²)</th>
-                                    <th>Permit Status</th>
+                                    <th>Services</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -291,14 +293,16 @@ foreach ($site->lands as $land) {
                 @endif
                 <tr>
                     <td class="text-orange fw-bold">{{ $building->code }}</td>
-                    <td class="fw-semibold">{{ $building->name }}</td>
+                    <td>
+                        <div class="fw-semibold">{{ $building->name }}</div>
+                        <div class="text-muted small">{{ ucfirst($building->property_type) }}</div>
+                    </td>
                     <td>{{ number_format($building->area_m2, 2) }}</td>
                     <td>
-                        @if ($building->has_building_permit)
-                            <i class="bi bi-check-circle-fill text-success me-1"></i>Permitted
-                        @else
-                            <span class="text-muted">No Permit</span>
-                        @endif
+                        <small class="text-muted">
+                            <i class="bi bi-droplet text-info"></i> {{ $building->waterServices->count() }}
+                            <i class="bi bi-lightning text-warning ms-2"></i> {{ $building->electricityServices->count() }}
+                        </small>
                     </td>
                     <td>
                         <div class="btn-group" role="group">
@@ -306,6 +310,16 @@ foreach ($site->lands as $land) {
                                 title="View">
                                 <i class="bi bi-eye"></i>
                             </a>
+                            @if ($currentUser?->isSuperAdmin())
+                                <a href="{{ route('buildings.edit', $building) }}"
+                                    class="btn btn-sm btn-outline-secondary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" title="Delete"
+                                    onclick="openDeleteBuildingModal({{ $building->id }}, '{{ $building->code }}', '{{ $building->name }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            @endif
                         </div>
                     </td>
                 </tr>
@@ -327,9 +341,11 @@ foreach ($site->lands as $land) {
                 <i class="bi bi-map me-2 text-orange"></i>Lands
                 <span class="text-muted">({{ $site->lands->count() }})</span>
             </h5>
-            <a href="{{ route('lands.create') }}?site_id={{ $site->id }}" class="btn btn-orange">
-                <i class="bi bi-plus-circle me-1"></i> Add Land
-            </a>
+            @if ($currentUser?->isSuperAdmin())
+                <a href="{{ route('lands.create') }}?site_id={{ $site->id }}" class="btn btn-orange">
+                    <i class="bi bi-plus-circle me-1"></i> Add Land
+                </a>
+            @endif
         </div>
         <div class="card-body p-0">
             @forelse($site->lands as $land)
@@ -338,10 +354,9 @@ foreach ($site->lands as $land) {
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Code</th>
-                                    <th>Parcel Number</th>
+                                    <th>Plot Key</th>
+                                    <th>Governorate</th>
                                     <th>Area (m²)</th>
-                                    <th>Zoning</th>
                                     <th>Buildings</th>
                                     <th>Actions</th>
                                 </tr>
@@ -349,27 +364,26 @@ foreach ($site->lands as $land) {
                             <tbody>
                 @endif
                 <tr>
-                    <td class="text-info fw-bold">{{ $land->code }}</td>
-                    <td class="fw-semibold">Parcel {{ $land->parcel_no }}</td>
+                    <td class="text-info fw-bold">{{ $land->plot_key }}</td>
+                    <td>{{ $land->governorate }}</td>
                     <td>{{ number_format($land->area_m2, 2) }}</td>
-                    <td>
-                        @if($land->zoningStatuses && $land->zoningStatuses->count() > 0)
-                            <div class="d-flex flex-wrap gap-1">
-                                @foreach($land->zoningStatuses as $zoning)
-                                    <span class="badge bg-info" style="font-size: 0.75rem;">{{ $zoning->name_ar }}</span>
-                                @endforeach
-                            </div>
-                        @else
-                            <span class="text-muted small">N/A</span>
-                        @endif
-                    </td>
-                    <td>{{ $land->buildings->count() }} Buildings</td>
+                    <td>{{ $land->buildings->count() }}</td>
                     <td>
                         <div class="btn-group" role="group">
                             <a href="{{ route('lands.show', $land) }}" class="btn btn-sm btn-outline-primary"
                                 title="View">
                                 <i class="bi bi-eye"></i>
                             </a>
+                            @if ($currentUser?->isSuperAdmin())
+                                <a href="{{ route('lands.edit', $land) }}"
+                                    class="btn btn-sm btn-outline-secondary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" title="Delete"
+                                    onclick="openDeleteLandModal({{ $land->id }}, '{{ $land->plot_key }}', '{{ $land->basin }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            @endif
                         </div>
                     </td>
                 </tr>
@@ -481,6 +495,53 @@ foreach ($site->lands as $land) {
             const modalElement = document.getElementById('deleteModal');
             const modal = new boosted.Modal(modalElement);
             modal.show();
+        }
+
+        function openDeleteBuildingModal(buildingId, buildingCode, buildingName) {
+            if (confirm(`Are you sure you want to delete building ${buildingCode} - ${buildingName}?\n\nThis action will move the building to trash.`)) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/buildings/' + buildingId;
+
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = '{{ csrf_token() }}';
+
+                const methodField = document.createElement('input');
+                methodField.type = 'hidden';
+                methodField.name = '_method';
+                methodField.value = 'DELETE';
+
+                form.appendChild(csrfToken);
+                form.appendChild(methodField);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function openDeleteLandModal(landId, plotKey, basin) {
+            const basinText = basin ? ` (Basin: ${basin})` : '';
+            if (confirm(`Are you sure you want to delete land ${plotKey}${basinText}?\n\nThis action will move the land to trash.`)) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/lands/' + landId;
+
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = '{{ csrf_token() }}';
+
+                const methodField = document.createElement('input');
+                methodField.type = 'hidden';
+                methodField.name = '_method';
+                methodField.value = 'DELETE';
+
+                form.appendChild(csrfToken);
+                form.appendChild(methodField);
+                document.body.appendChild(form);
+                form.submit();
+            }
         }
     </script>
 @endsection
