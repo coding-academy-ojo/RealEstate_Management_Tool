@@ -43,7 +43,8 @@ class Image extends Model
      */
     public function getUrlAttribute()
     {
-        return Storage::url($this->path);
+        // Use the images.show route for private storage access
+        return route('images.show', $this->id);
     }
 
     /**
@@ -66,8 +67,11 @@ class Image extends Model
     protected static function booted()
     {
         static::deleting(function ($image) {
-            if (Storage::exists($image->path)) {
-                Storage::delete($image->path);
+            // Try deleting from both disks
+            foreach (['private', 'public'] as $disk) {
+                if (Storage::disk($disk)->exists($image->path)) {
+                    Storage::disk($disk)->delete($image->path);
+                }
             }
         });
     }

@@ -617,6 +617,100 @@
             background: #ff7900;
             border-radius: 10px;
         }
+
+        /* Image Upload Styles */
+        .target-btn {
+            transition: all 0.2s;
+        }
+
+        .target-btn.active {
+            background: #ff7900 !important;
+            color: white !important;
+            border-color: #ff7900 !important;
+        }
+
+        .image-preview-section {
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .image-preview-section.active {
+            display: block;
+        }
+
+        .image-preview-item {
+            position: relative;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f8f9fa;
+            transition: all 0.2s;
+        }
+
+        .image-preview-item:hover {
+            border-color: #ff7900;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 121, 0, 0.2);
+        }
+
+        .image-preview-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .image-preview-remove {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .image-preview-remove:hover {
+            background: #dc3545;
+            transform: scale(1.1);
+        }
+
+        .image-preview-name {
+            padding: 8px;
+            background: white;
+            font-size: 0.85rem;
+            color: #495057;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .image-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(255, 121, 0, 0.95);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .image-badge.land-badge {
+            background: rgba(13, 110, 253, 0.95);
+        }
     </style>
     <form action="{{ route('sites.store') }}" method="POST" id="siteForm" enctype="multipart/form-data">
         @csrf
@@ -818,6 +912,53 @@
                             <i class="bi bi-plus-circle me-2"></i>
                             Add Land
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Images Upload Section -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-images me-2 text-orange"></i>
+                            Images Gallery
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Target Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Upload images for:</label>
+                            <div class="d-flex gap-2 flex-wrap" id="imageTargetSelector">
+                                <button type="button" class="btn btn-outline-orange target-btn active" data-target="site">
+                                    <i class="bi bi-building me-1"></i> Site
+                                </button>
+                                <!-- Land buttons will be added dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Image Upload Area -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Choose Images</label>
+                            <input type="file" class="form-control" id="imageUploadInput"
+                                   accept="image/jpeg,image/png,image/jpg" multiple>
+                            <small class="text-muted">You can select multiple images (JPG, PNG). Max 5MB each.</small>
+                        </div>
+
+                        <!-- All Image Previews (No Sections) -->
+                        <div class="mb-3">
+                            <h6 class="text-muted mb-3">
+                                <i class="bi bi-images me-1"></i> All Images
+                            </h6>
+                            <div class="row g-3" id="allImagePreviews">
+                                <div class="col-12 text-center text-muted py-4" id="emptyAllMessage">
+                                    <i class="bi bi-image" style="font-size: 2rem; opacity: 0.3;"></i>
+                                    <p class="mt-2 mb-0">No images uploaded yet</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1115,6 +1256,7 @@
                 const landCard = document.createElement('div');
                 landCard.className = 'land-card';
                 landCard.setAttribute('data-land-id', landCounter);
+                landCard.setAttribute('data-form-key', landCounter);
 
                 landCard.innerHTML = `
                     <div class="land-card-header">
@@ -1406,7 +1548,324 @@
 
             // Initialize count
             updateLandCount();
+
+            // ============ Image Upload Management ============
+            setupImageUpload();
         });
+
+        function setupImageUpload() {
+            const imageTargetSelector = document.getElementById('imageTargetSelector');
+            const imageUploadInput = document.getElementById('imageUploadInput');
+            const allImagePreviews = document.getElementById('allImagePreviews');
+            const emptyAllMessage = document.getElementById('emptyAllMessage');
+
+            let currentTarget = 'site';
+            let allImages = [];
+
+            // Update target buttons when lands are added/removed
+            function updateImageTargetButtons() {
+                const landCards = document.querySelectorAll('.land-card');
+                const existingButtons = imageTargetSelector.querySelectorAll('[data-target^="land-"]');
+
+                // Remove buttons for deleted lands
+                existingButtons.forEach(btn => {
+                    const landId = btn.getAttribute('data-target').replace('land-', '');
+                    const landExists = Array.from(landCards).some(card =>
+                        card.getAttribute('data-land-id') === landId
+                    );
+                    if (!landExists) {
+                        btn.remove();
+                        // Remove images for deleted land
+                        allImages = allImages.filter(img => img.target !== `land-${landId}`);
+                        renderAllImages();
+                    }
+                });
+
+                // Add buttons for new lands
+                landCards.forEach((card, index) => {
+                    const landId = card.getAttribute('data-land-id');
+                    const targetKey = `land-${landId}`;
+
+                    const existingBtn = imageTargetSelector.querySelector(`[data-target="${targetKey}"]`);
+                    if (!existingBtn) {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'btn btn-outline-orange target-btn';
+                        btn.setAttribute('data-target', targetKey);
+                        btn.innerHTML = `<i class="bi bi-map me-1"></i> Land ${index + 1}`;
+                        imageTargetSelector.appendChild(btn);
+                    }
+                });
+
+                // Update land numbers in existing buttons
+                landCards.forEach((card, index) => {
+                    const landId = card.getAttribute('data-land-id');
+                    const btn = imageTargetSelector.querySelector(`[data-target="land-${landId}"]`);
+                    if (btn) {
+                        btn.innerHTML = `<i class="bi bi-map me-1"></i> Land ${index + 1}`;
+                    }
+
+                    // Update badges in previews
+                    allImages.forEach(img => {
+                        if (img.target === `land-${landId}`) {
+                            img.displayName = `Land ${index + 1}`;
+                        }
+                    });
+                });
+
+                renderAllImages();
+            }
+
+            // Target button click handler
+            imageTargetSelector.addEventListener('click', function(e) {
+                const btn = e.target.closest('.target-btn');
+                if (!btn) return;
+
+                const target = btn.getAttribute('data-target');
+                if (!target) return;
+
+                currentTarget = target;
+
+                // Update active button
+                imageTargetSelector.querySelectorAll('.target-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+
+            // Handle file selection
+            imageUploadInput.addEventListener('change', function(e) {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+
+                files.forEach(file => {
+                    if (!file.type.match('image/(jpeg|jpg|png)')) {
+                        alert('Only JPG and PNG images are allowed');
+                        return;
+                    }
+
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert(`File ${file.name} is too large. Max 5MB`);
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const landCards = document.querySelectorAll('.land-card');
+                        let displayName = 'Site';
+
+                        if (currentTarget.startsWith('land-')) {
+                            const landId = currentTarget.replace('land-', '');
+                            const landIndex = Array.from(landCards).findIndex(card =>
+                                card.getAttribute('data-land-id') === landId
+                            );
+                            displayName = `Land ${landIndex + 1}`;
+                        }
+
+                        allImages.push({
+                            file: file,
+                            dataUrl: event.target.result,
+                            name: file.name,
+                            target: currentTarget,
+                            displayName: displayName
+                        });
+                        renderAllImages();
+                    };
+                    reader.readAsDataURL(file);
+                });
+
+                // Clear input
+                e.target.value = '';
+            });
+
+            // Render all images
+            function renderAllImages() {
+                if (allImages.length === 0) {
+                    emptyAllMessage.style.display = 'block';
+                    return;
+                }
+
+                emptyAllMessage.style.display = 'none';
+
+                // Clear existing previews
+                const existingPreviews = allImagePreviews.querySelectorAll('.image-preview-col');
+                existingPreviews.forEach(item => item.remove());
+
+                // Render all images
+                allImages.forEach((img, index) => {
+                    const col = document.createElement('div');
+                    col.className = 'col-md-3 col-sm-4 col-6 image-preview-col';
+                    const badgeClass = img.target === 'site' ? '' : 'land-badge';
+                    const badgeIcon = img.target === 'site' ? 'building' : 'map';
+
+                    col.innerHTML = `
+                        <div class="image-preview-item">
+                            <div class="image-badge ${badgeClass}">
+                                <i class="bi bi-${badgeIcon}"></i>
+                                ${img.displayName}
+                            </div>
+                            <img src="${img.dataUrl}" alt="${img.name}">
+                            <button type="button" class="image-preview-remove" data-index="${index}">
+                                <i class="bi bi-x"></i>
+                            </button>
+                            <div class="image-preview-name" title="${img.name}">
+                                ${img.name}
+                            </div>
+                        </div>
+                    `;
+                    allImagePreviews.appendChild(col);
+                });
+
+                // Add remove handlers
+                allImagePreviews.querySelectorAll('.image-preview-remove').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        allImages.splice(index, 1);
+                        renderAllImages();
+                    });
+                });
+            }
+
+            // Form submission - append images as FormData
+            const siteForm = document.getElementById('siteForm');
+            const originalAction = siteForm.action;
+
+            siteForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(siteForm);
+
+                // Group images by target
+                const siteImages = allImages.filter(img => img.target === 'site');
+                const landImagesMap = {};
+
+                // Map each land card to its form key (matches lands[...] index)
+                const landCards = document.querySelectorAll('.land-card');
+                const landIdToFormKey = {};
+                landCards.forEach(card => {
+                    const targetKey = card.getAttribute('data-land-id');
+                    const formKey = card.getAttribute('data-form-key') ?? targetKey;
+                    if (targetKey && formKey) {
+                        landIdToFormKey[targetKey] = formKey;
+                    }
+                });
+
+                allImages.forEach(img => {
+                    if (img.target.startsWith('land-')) {
+                        const tempId = img.target.replace('land-', '');
+                        const formKey = landIdToFormKey[tempId];
+                        if (formKey !== undefined) {
+                            if (!landImagesMap[formKey]) {
+                                landImagesMap[formKey] = [];
+                            }
+                            landImagesMap[formKey].push(img);
+                        }
+                    }
+                });
+
+                // Add site images
+                siteImages.forEach((img) => {
+                    formData.append('site_images[]', img.file);
+                });
+
+                // Add land images by index
+                Object.keys(landImagesMap).forEach(landKey => {
+                    landImagesMap[landKey].forEach((img) => {
+                        formData.append(`land_images[${landKey}][]`, img.file);
+                    });
+                });
+
+                // Debug logging
+                console.log('Site images:', siteImages.length);
+                console.log('Land images map:', landImagesMap);
+                console.log('Land ID to Form key mapping:', landIdToFormKey);
+
+                // Debug FormData contents
+                console.log('=== FormData Contents ===');
+                for (let pair of formData.entries()) {
+                    if (pair[0].includes('image')) {
+                        console.log(pair[0] + ':', pair[1] instanceof File ? pair[1].name : pair[1]);
+                    }
+                }
+
+                // Submit form normally (let Laravel handle redirect)
+                fetch(originalAction, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return;
+                    }
+                    return response.json().then(data => {
+                        if (data.redirect) {
+                            window.location.href = data.redirect;
+                        } else if (response.ok) {
+                            window.location.href = '{{ route("sites.index") }}';
+                        } else {
+                            throw new Error(data.message || 'Error submitting form');
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Try regular form submission as fallback
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = originalAction;
+                    form.style.display = 'none';
+
+                    // Add CSRF token
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_token';
+                    csrfInput.value = document.querySelector('input[name="_token"]').value;
+                    form.appendChild(csrfInput);
+
+                    // Add all form data
+                    for (let pair of formData.entries()) {
+                        if (pair[1] instanceof File) {
+                            // Handle files
+                            const fileInput = document.createElement('input');
+                            fileInput.type = 'file';
+                            fileInput.name = pair[0];
+                            fileInput.files = new DataTransfer().files;
+                        } else {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = pair[0];
+                            input.value = pair[1];
+                            form.appendChild(input);
+                        }
+                    }
+
+                    document.body.appendChild(form);
+                    form.submit();
+                });
+
+                return false;
+            });
+
+            // Watch for land additions/removals
+            const observer = new MutationObserver(function(mutations) {
+                updateImageTargetButtons();
+            });
+
+            const landsContainer = document.getElementById('landsContainer');
+            if (landsContainer) {
+                observer.observe(landsContainer, {
+                    childList: true,
+                    subtree: false
+                });
+            }
+
+            // Initial update
+            updateImageTargetButtons();
+        }
 
         // Other Documents Management
         document.addEventListener('DOMContentLoaded', function() {

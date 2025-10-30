@@ -6,6 +6,7 @@ use App\Models\Site;
 use App\Models\ZoningStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class SiteController extends Controller
 {
@@ -127,6 +128,34 @@ class SiteController extends Controller
      */
     public function store(Request $request)
     {
+        // TEMPORARY DEBUG - Remove after testing
+        Log::info('=== RAW REQUEST DEBUG ===');
+        Log::info('All input keys: ' . json_encode(array_keys($request->all())));
+        Log::info('All file keys: ' . json_encode(array_keys($request->allFiles())));
+
+        if ($request->has('land_images')) {
+            $landImages = $request->input('land_images');
+            Log::info('land_images input type: ' . gettype($landImages));
+            if (is_array($landImages)) {
+                Log::info('land_images keys: ' . json_encode(array_keys($landImages)));
+            }
+        }
+
+        $landImagesFiles = $request->file('land_images');
+        if ($landImagesFiles) {
+            Log::info('land_images FILE type: ' . gettype($landImagesFiles));
+            if (is_array($landImagesFiles)) {
+                Log::info('land_images FILE keys: ' . json_encode(array_keys($landImagesFiles)));
+                foreach ($landImagesFiles as $idx => $files) {
+                    Log::info("  land_images[{$idx}] type: " . gettype($files));
+                    if (is_array($files)) {
+                        Log::info("  land_images[{$idx}] count: " . count($files));
+                    }
+                }
+            }
+        }
+        // END DEBUG
+
         $validated = $request->validate([
             'cluster_no' => 'required|integer|min:1',
             'governorate' => 'required|string|max:3',
@@ -156,6 +185,9 @@ class SiteController extends Controller
             'lands.*.ownership_doc' => 'nullable|file|mimes:pdf,jpg,jpeg|max:10240',
             'lands.*.site_plan' => 'nullable|file|mimes:pdf,jpg,jpeg|max:10240',
             'lands.*.zoning_plan' => 'nullable|file|mimes:pdf,jpg,jpeg|max:10240',
+            // Image uploads
+            'site_images.*' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
+            'land_images.*.*' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
         ]);
 
         // Auto-determine region based on governorate
@@ -180,6 +212,39 @@ class SiteController extends Controller
         $validated['other_documents'] = $otherDocuments;
 
         $site = Site::create($validated);
+
+        // DEBUG: Check what we're receiving
+        Log::info('=== SITE CREATION DEBUG ===');
+        Log::info('Site images count: ' . ($request->hasFile('site_images') ? count($request->file('site_images')) : 0));
+        Log::info('Request file keys: ' . json_encode(array_keys($request->allFiles())));
+
+        $landImagesFromRequest = $request->file('land_images', []);
+        Log::info('Land images received: ' . json_encode(array_keys($landImagesFromRequest)));
+        foreach ($landImagesFromRequest as $idx => $imgs) {
+            Log::info("  Index {$idx}: " . (is_array($imgs) ? count($imgs) . ' images' : 'not array'));
+        }
+
+        // Handle site images
+        if ($request->hasFile('site_images')) {
+            Log::info('Site images found: ' . count($request->file('site_images')));
+            foreach ($request->file('site_images') as $imageFile) {
+                $path = $imageFile->store('sites/images', 'private');
+                $site->images()->create([
+                    'filename' => basename($path),
+                    'original_name' => $imageFile->getClientOriginalName(),
+                    'path' => $path,
+                    'mime_type' => $imageFile->getMimeType(),
+                    'size' => $imageFile->getSize(),
+                ]);
+            }
+        }
+
+        // Debug log for land images
+        Log::info('Request has land_images: ' . ($request->has('land_images') ? 'YES' : 'NO'));
+        Log::info('All files in request: ' . json_encode(array_keys($request->allFiles())));
+        if ($request->has('land_images')) {
+            Log::info('Land images structure: ' . json_encode(array_keys($request->input('land_images', []))));
+        }
 
         // Create lands if provided and collect zoning statuses
         $allZoningIds = [];
@@ -207,6 +272,35 @@ class SiteController extends Controller
 
                 // Create the land
                 $land = $site->lands()->create($landData);
+
+                // Handle land images for this specific land index
+                Log::info("Checking for land images at index {$index}");
+
+                // Check if land_images exists in the request and has this index
+                $allLandImages = $request->file('land_images', []);
+                Log::info("land_images array keys: " . json_encode(array_keys($allLandImages)));
+
+                if (isset($allLandImages[$index]) && is_array($allLandImages[$index])) {
+                    $landImages = $allLandImages[$index];
+                    Log::info("Found " . count($landImages) . " images for land index {$index}");
+
+                    foreach ($landImages as $imageFile) {
+                        if ($imageFile && $imageFile->isValid()) {
+                            $path = $imageFile->store('lands/images', 'private');
+                            Log::info("Stored land image at: {$path}");
+
+                            $land->images()->create([
+                                'filename' => basename($path),
+                                'original_name' => $imageFile->getClientOriginalName(),
+                                'path' => $path,
+                                'mime_type' => $imageFile->getMimeType(),
+                                'size' => $imageFile->getSize(),
+                            ]);
+                        }
+                    }
+                } else {
+                    Log::info("No images found for land index {$index}");
+                }
 
                 // Attach zoning statuses to this land
                 if (!empty($landZoningIds)) {
@@ -283,6 +377,20 @@ class SiteController extends Controller
      */
     public function update(Request $request, Site $site)
     {
+        // TEMPORARY DEBUG - Remove after testing
+        Log::info('=== UPDATE REQUEST DEBUG ===');
+        Log::info('All input keys: ' . json_encode(array_keys($request->all())));
+        Log::info('All file keys: ' . json_encode(array_keys($request->allFiles())));
+
+        $landImagesFiles = $request->file('land_images');
+        if ($landImagesFiles) {
+            Log::info('land_images FILE keys: ' . json_encode(array_keys($landImagesFiles)));
+            foreach ($landImagesFiles as $idx => $files) {
+                Log::info("  land_images[{$idx}] count: " . (is_array($files) ? count($files) : 'not array'));
+            }
+        }
+        // END DEBUG
+
         $validated = $request->validate([
             'cluster_no' => 'required|integer|min:1',
             'governorate' => 'required|string|max:3',
@@ -317,6 +425,13 @@ class SiteController extends Controller
             'lands.*.zoning_plan' => 'nullable|file|mimes:pdf,jpg,jpeg|max:10240',
             'delete_lands' => 'nullable|array',
             'delete_lands.*' => 'exists:lands,id',
+            // Image uploads and removals
+            'site_images.*' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
+            'land_images.*.*' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
+            'remove_site_images' => 'nullable|array',
+            'remove_site_images.*' => 'nullable|exists:images,id',
+            'remove_land_images' => 'nullable|array',
+            'remove_land_images.*.*' => 'nullable|exists:images,id',
         ]);
 
         // Handle other documents
@@ -350,6 +465,51 @@ class SiteController extends Controller
         $validated['other_documents'] = $currentDocuments;
 
         $site->update($validated);
+
+        // Handle site image removals
+        if (!empty($validated['remove_site_images'])) {
+            foreach ($validated['remove_site_images'] as $imageId) {
+                if ($imageId) {
+                    $image = $site->images()->find($imageId);
+                    if ($image) {
+                        $this->deleteStoredPath($image->path);
+                        $image->delete();
+                    }
+                }
+            }
+        }
+
+        // Handle land image removals
+        if (!empty($validated['remove_land_images'])) {
+            foreach ($validated['remove_land_images'] as $landId => $imageIds) {
+                $land = $site->lands()->find($landId);
+                if ($land) {
+                    foreach ($imageIds as $imageId) {
+                        if ($imageId) {
+                            $image = $land->images()->find($imageId);
+                            if ($image) {
+                                $this->deleteStoredPath($image->path);
+                                $image->delete();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Handle new site images
+        if ($request->hasFile('site_images')) {
+            foreach ($request->file('site_images') as $imageFile) {
+                $path = $imageFile->store('sites/images', 'private');
+                $site->images()->create([
+                    'filename' => basename($path),
+                    'original_name' => $imageFile->getClientOriginalName(),
+                    'path' => $path,
+                    'mime_type' => $imageFile->getMimeType(),
+                    'size' => $imageFile->getSize(),
+                ]);
+            }
+        }
 
         // Handle lands deletion
         if (!empty($validated['delete_lands'])) {
@@ -409,6 +569,32 @@ class SiteController extends Controller
                     $existingLand->update($landData);
                     // Sync zoning statuses for this land
                     $existingLand->zoningStatuses()->sync($landZoningIds);
+
+                    // Handle new images for existing land using land ID
+                    Log::info("Checking for images for existing land ID {$existingLand->id}");
+                    $allLandImages = $request->file('land_images', []);
+
+                    if (isset($allLandImages[$existingLand->id]) && is_array($allLandImages[$existingLand->id])) {
+                        $landImages = $allLandImages[$existingLand->id];
+                        Log::info("Found " . count($landImages) . " images for existing land {$existingLand->id}");
+
+                        foreach ($landImages as $imageFile) {
+                            if ($imageFile && $imageFile->isValid()) {
+                                $path = $imageFile->store('lands/images', 'private');
+                                Log::info("Stored land image at: {$path}");
+
+                                $existingLand->images()->create([
+                                    'filename' => basename($path),
+                                    'original_name' => $imageFile->getClientOriginalName(),
+                                    'path' => $path,
+                                    'mime_type' => $imageFile->getMimeType(),
+                                    'size' => $imageFile->getSize(),
+                                ]);
+                            }
+                        }
+                    } else {
+                        Log::info("No new images for existing land {$existingLand->id}");
+                    }
                 } else {
                     // Create new land
                     $land = $site->lands()->create($landData);
@@ -416,6 +602,10 @@ class SiteController extends Controller
                     if (!empty($landZoningIds)) {
                         $land->zoningStatuses()->attach($landZoningIds);
                     }
+
+                    // For new lands created during edit, we need to use a temporary ID approach
+                    // This is a limitation - recommend adding lands first, then images
+                    Log::info("New land created during edit - images should be added separately");
                 }
             }
 

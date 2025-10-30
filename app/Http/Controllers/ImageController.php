@@ -34,7 +34,8 @@ class ImageController extends Controller
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $index => $file) {
                 $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs("images/{$type}s/{$id}", $filename, 'public');
+                // Changed to private disk for consistency
+                $path = $file->storeAs("images/{$type}s/{$id}", $filename, 'private');
 
                 // Get the next order number
                 $nextOrder = $model->images()->max('order') + 1;
@@ -153,10 +154,26 @@ class ImageController extends Controller
      */
     public function show(Image $image)
     {
-        if (!Storage::exists($image->path)) {
-            abort(404);
+        $path = $image->path;
+
+        // Try to find the file in private disk first, then public
+        $disk = null;
+        if (Storage::disk('private')->exists($path)) {
+            $disk = 'private';
+        } elseif (Storage::disk('public')->exists($path)) {
+            $disk = 'public';
         }
 
-        return Storage::response($image->path);
+        if (!$disk) {
+            abort(404, 'Image not found');
+        }
+
+        $absolutePath = Storage::disk($disk)->path($path);
+        $mimeType = $image->mime_type ?: mime_content_type($absolutePath);
+
+        return response()->file($absolutePath, [
+            'Content-Type' => $mimeType,
+            'Cache-Control' => 'public, max-age=31536000',
+        ]);
     }
 }

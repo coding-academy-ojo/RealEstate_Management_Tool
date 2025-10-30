@@ -366,6 +366,100 @@
             background: #ff7900;
             border-radius: 10px;
         }
+
+        /* Image Upload Styles */
+        .target-btn {
+            transition: all 0.2s;
+        }
+
+        .target-btn.active {
+            background: #ff7900 !important;
+            color: white !important;
+            border-color: #ff7900 !important;
+        }
+
+        .image-preview-section {
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .image-preview-section.active {
+            display: block;
+        }
+
+        .image-preview-item {
+            position: relative;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f8f9fa;
+            transition: all 0.2s;
+        }
+
+        .image-preview-item:hover {
+            border-color: #ff7900;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 121, 0, 0.2);
+        }
+
+        .image-preview-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .image-preview-remove {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .image-preview-remove:hover {
+            background: #dc3545;
+            transform: scale(1.1);
+        }
+
+        .image-preview-name {
+            padding: 8px;
+            background: white;
+            font-size: 0.85rem;
+            color: #495057;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .image-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(255, 121, 0, 0.95);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .image-badge.land-badge {
+            background: rgba(13, 110, 253, 0.95);
+        }
     </style>
     <form action="{{ route('sites.update', $site) }}" method="POST" id="siteForm" enctype="multipart/form-data">
         @csrf
@@ -623,9 +717,105 @@
                 </div>
             </div>
         </div>
+
+        <!-- Images Upload Section -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-images me-2 text-orange"></i>
+                            Images Gallery
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Target Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Upload images for:</label>
+                            <div class="d-flex gap-2 flex-wrap" id="imageTargetSelector">
+                                <button type="button" class="btn btn-outline-orange target-btn active" data-target="site">
+                                    <i class="bi bi-building me-1"></i> Site
+                                </button>
+                                @foreach($site->lands as $index => $land)
+                                    <button type="button" class="btn btn-outline-orange target-btn" data-target="land-{{ $land->id }}">
+                                        <i class="bi bi-map me-1"></i> Land {{ $index + 1 }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- Image Upload Area -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Choose Images</label>
+                            <input type="file" class="form-control" id="imageUploadInput"
+                                   accept="image/jpeg,image/png,image/jpg" multiple>
+                            <small class="text-muted">You can select multiple images (JPG, PNG). Max 5MB each.</small>
+                        </div>
+
+                        <!-- All Image Previews -->
+                        <div class="mb-3">
+                            <h6 class="text-muted mb-3">
+                                <i class="bi bi-images me-1"></i> All Images
+                            </h6>
+                            <div class="row g-3" id="allImagePreviews">
+                                @php
+                                    $hasImages = false;
+                                @endphp
+
+                                @foreach($site->images as $image)
+                                    @php $hasImages = true; @endphp
+                                    <div class="col-md-3 col-sm-4 col-6 image-preview-col" data-existing-id="{{ $image->id }}">
+                                        <div class="image-preview-item">
+                                            <div class="image-badge">
+                                                <i class="bi bi-building"></i> Site
+                                            </div>
+                                            <img src="{{ route('images.show', $image->id) }}" alt="Site image">
+                                            <button type="button" class="image-preview-remove" data-existing-id="{{ $image->id }}">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                            <div class="image-preview-name" title="{{ basename($image->path) }}">
+                                                {{ basename($image->path) }}
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="remove_site_images[]" value="" class="remove-marker" data-image-id="{{ $image->id }}">
+                                    </div>
+                                @endforeach
+
+                                @foreach($site->lands as $index => $land)
+                                    @foreach($land->images as $image)
+                                        @php $hasImages = true; @endphp
+                                        <div class="col-md-3 col-sm-4 col-6 image-preview-col" data-existing-id="{{ $image->id }}">
+                                            <div class="image-preview-item">
+                                                <div class="image-badge land-badge">
+                                                    <i class="bi bi-map"></i> Land {{ $index + 1 }}
+                                                </div>
+                                                <img src="{{ route('images.show', $image->id) }}" alt="Land image">
+                                                <button type="button" class="image-preview-remove" data-existing-id="{{ $image->id }}" data-land="{{ $land->id }}">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                                <div class="image-preview-name" title="{{ basename($image->path) }}">
+                                                    {{ basename($image->path) }}
+                                                </div>
+                                            </div>
+                                            <input type="hidden" name="remove_land_images[{{ $land->id }}][]" value="" class="remove-marker" data-image-id="{{ $image->id }}">
+                                        </div>
+                                    @endforeach
+                                @endforeach
+
+                                @if(!$hasImages)
+                                    <div class="col-12 text-center text-muted py-4" id="emptyAllMessage">
+                                        <i class="bi bi-image" style="font-size: 2rem; opacity: 0.3;"></i>
+                                        <p class="mt-2 mb-0">No images uploaded yet</p>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </form>
 
-    <!-- Modal for Adding New Zoning Status -->
     <div class="modal fade" id="addZoningModal" tabindex="-1" aria-labelledby="addZoningModalLabel"
         aria-hidden="true">
         <div class="modal-dialog">
@@ -705,16 +895,19 @@
                         const allLandScrollAreas = document.querySelectorAll('.land-zoning-scroll');
                         allLandScrollAreas.forEach((scrollArea) => {
                             const landCard = scrollArea.closest('.land-card');
-                            const landId = landCard.getAttribute('data-land-id');
+                            const formKey = landCard.getAttribute('data-form-key');
+                            if (!formKey) {
+                                return;
+                            }
 
                             const newOption = document.createElement('label');
                             newOption.className = 'zoning-option zoning-item';
                             newOption.setAttribute('data-name', data.name_ar.toLowerCase());
                             newOption.innerHTML = `
                                 <input type="checkbox" class="land-zoning-checkbox"
-                                    name="lands[${landId}][zoning_statuses][]"
+                                    name="lands[${formKey}][zoning_statuses][]"
                                     value="${data.id}"
-                                    id="land_${landId}_zoning_${data.id}">
+                                    id="land_${formKey}_zoning_${data.id}">
                                 <span class="checkbox-custom"></span>
                                 <span class="option-text">${data.name_ar}</span>
                             `;
@@ -855,7 +1048,7 @@
             const addLandBtn = document.getElementById('addLandBtn');
             const emptyLandsMessage = document.getElementById('emptyLandsMessage');
             const siteForm = document.getElementById('siteForm');
-            let landCounter = {{ $site->lands->count() }};
+            let landCounter = 0;
             let displayCounter = 0;
 
             // Helper function to update badges for a specific land card
@@ -969,7 +1162,14 @@
                 displayCounter++;
                 const landCard = document.createElement('div');
                 landCard.className = 'land-card';
-                landCard.setAttribute('data-land-id', landCounter);
+                const formKey = landCounter;
+                const existingId = landData?.id ? String(landData.id) : null;
+                const targetKey = isExisting && existingId ? existingId : `temp-${formKey}`;
+                landCard.setAttribute('data-land-id', targetKey);
+                landCard.setAttribute('data-form-key', formKey);
+                if (existingId) {
+                    landCard.setAttribute('data-existing-id', existingId);
+                }
 
                 const landId = landData?.id || '';
                 const directorate = landData?.directorate || '';
@@ -1363,6 +1563,334 @@
 
             // Initialize count
             updateLandCount();
+
+            // ============ Image Upload Management ============
+            setupImageUpload();
         });
+
+        function setupImageUpload() {
+            const imageTargetSelector = document.getElementById('imageTargetSelector');
+            const imageUploadInput = document.getElementById('imageUploadInput');
+            const allImagePreviews = document.getElementById('allImagePreviews');
+            const emptyAllMessage = document.getElementById('emptyAllMessage');
+
+            let currentTarget = 'site';
+            let allImages = [];
+
+            // Handle existing image removal
+            document.querySelectorAll('.image-preview-remove[data-existing-id]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const imageId = this.getAttribute('data-existing-id');
+                    const container = this.closest('.image-preview-col');
+
+                    if (confirm('Are you sure you want to remove this image?')) {
+                        const marker = container.querySelector('.remove-marker');
+                        if (marker) {
+                            marker.value = imageId;
+                        }
+                        container.remove();
+
+                        // Show empty message if no images left
+                        const remainingImages = allImagePreviews.querySelectorAll('.image-preview-col').length;
+                        if (remainingImages === 0 && emptyAllMessage) {
+                            emptyAllMessage.style.display = 'block';
+                        }
+                    }
+                });
+            });
+
+            // Update target buttons when lands are added/removed
+            function updateImageTargetButtons() {
+                const landCards = document.querySelectorAll('.land-card');
+                const existingButtons = imageTargetSelector.querySelectorAll('[data-target^="land-"]');
+
+                // Track which land IDs exist
+                const existingLandIds = Array.from(landCards).map(card => card.getAttribute('data-land-id'));
+
+                // Remove buttons for deleted lands (only non-existing ones)
+                existingButtons.forEach(btn => {
+                    const landId = btn.getAttribute('data-target').replace('land-', '');
+
+                    // Check if this is a saved land (has existing images or is in the initial lands)
+                    const isSavedLand = document.querySelector(`.image-preview-col[data-existing-id] .image-preview-remove[data-land="${landId}"]`) !== null;
+
+                    if (!existingLandIds.includes(landId) && !isSavedLand) {
+                        btn.remove();
+                        // Remove images for this land
+                        allImages = allImages.filter(img => img.target !== `land-${landId}`);
+                        renderNewImages();
+                    }
+                });
+
+                // Add buttons for new lands
+                landCards.forEach((card, index) => {
+                    const landId = card.getAttribute('data-land-id');
+                    const targetKey = `land-${landId}`;
+
+                    const existingBtn = imageTargetSelector.querySelector(`[data-target="${targetKey}"]`);
+                    if (!existingBtn) {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'btn btn-outline-orange target-btn';
+                        btn.setAttribute('data-target', targetKey);
+                        btn.innerHTML = `<i class="bi bi-map me-1"></i> Land ${index + 1}`;
+                        imageTargetSelector.appendChild(btn);
+                    }
+                });
+
+                // Update land numbers in all buttons and badges
+                landCards.forEach((card, index) => {
+                    const landId = card.getAttribute('data-land-id');
+                    const btn = imageTargetSelector.querySelector(`[data-target="land-${landId}"]`);
+                    if (btn) {
+                        btn.innerHTML = `<i class="bi bi-map me-1"></i> Land ${index + 1}`;
+                    }
+
+                    // Update existing image badges
+                    const existingBadges = document.querySelectorAll(`.image-preview-remove[data-land="${landId}"]`);
+                    existingBadges.forEach(removeBtn => {
+                        const badge = removeBtn.closest('.image-preview-item').querySelector('.image-badge');
+                        if (badge) {
+                            badge.innerHTML = `<i class="bi bi-map"></i> Land ${index + 1}`;
+                        }
+                    });
+
+                    // Update new image data
+                    allImages.forEach(img => {
+                        if (img.target === `land-${landId}`) {
+                            img.displayName = `Land ${index + 1}`;
+                        }
+                    });
+                });
+
+                renderNewImages();
+            }
+
+            // Target button click handler
+            imageTargetSelector.addEventListener('click', function(e) {
+                const btn = e.target.closest('.target-btn');
+                if (!btn) return;
+
+                const target = btn.getAttribute('data-target');
+                if (!target) return;
+
+                currentTarget = target;
+
+                // Update active button
+                imageTargetSelector.querySelectorAll('.target-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+
+            // Handle file selection
+            imageUploadInput.addEventListener('change', function(e) {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+
+                files.forEach(file => {
+                    if (!file.type.match('image/(jpeg|jpg|png)')) {
+                        alert('Only JPG and PNG images are allowed');
+                        return;
+                    }
+
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert(`File ${file.name} is too large. Max 5MB`);
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const landCards = document.querySelectorAll('.land-card');
+                        let displayName = 'Site';
+
+                        if (currentTarget.startsWith('land-')) {
+                            const landId = currentTarget.replace('land-', '');
+                            const landIndex = Array.from(landCards).findIndex(card =>
+                                card.getAttribute('data-land-id') === landId
+                            );
+                            displayName = `Land ${landIndex + 1}`;
+                        }
+
+                        allImages.push({
+                            file: file,
+                            dataUrl: event.target.result,
+                            name: file.name,
+                            target: currentTarget,
+                            displayName: displayName
+                        });
+                        renderNewImages();
+                    };
+                    reader.readAsDataURL(file);
+                });
+
+                // Clear input
+                e.target.value = '';
+            });
+
+            // Render new images only (existing ones are already in DOM)
+            function renderNewImages() {
+                if (emptyAllMessage) {
+                    const hasAnyImages = allImagePreviews.querySelectorAll('.image-preview-col').length > 0 || allImages.length > 0;
+                    emptyAllMessage.style.display = hasAnyImages ? 'none' : 'block';
+                }
+
+                // Remove old new image previews
+                const newPreviews = allImagePreviews.querySelectorAll('.image-preview-col:not([data-existing-id])');
+                newPreviews.forEach(item => item.remove());
+
+                // Render all new images
+                allImages.forEach((img, index) => {
+                    const col = document.createElement('div');
+                    col.className = 'col-md-3 col-sm-4 col-6 image-preview-col';
+                    const badgeClass = img.target === 'site' ? '' : 'land-badge';
+                    const badgeIcon = img.target === 'site' ? 'building' : 'map';
+
+                    col.innerHTML = `
+                        <div class="image-preview-item">
+                            <div class="image-badge ${badgeClass}">
+                                <i class="bi bi-${badgeIcon}"></i>
+                                ${img.displayName}
+                            </div>
+                            <img src="${img.dataUrl}" alt="${img.name}">
+                            <button type="button" class="image-preview-remove" data-index="${index}">
+                                <i class="bi bi-x"></i>
+                            </button>
+                            <div class="image-preview-name" title="${img.name}">
+                                ${img.name}
+                            </div>
+                        </div>
+                    `;
+                    allImagePreviews.appendChild(col);
+                });
+
+                // Add remove handlers for new images
+                allImagePreviews.querySelectorAll('.image-preview-remove[data-index]').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        allImages.splice(index, 1);
+                        renderNewImages();
+                    });
+                });
+            }
+
+            // Form submission
+            const siteForm = document.getElementById('siteForm');
+            const originalAction = siteForm.action;
+
+            siteForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(siteForm);
+
+                // Group new images by target
+                const siteImages = allImages.filter(img => img.target === 'site');
+                const existingLandImagesMap = {};
+                const pendingNewLandImages = {};
+                const landTargetMeta = {};
+
+                document.querySelectorAll('.land-card').forEach(card => {
+                    const targetKey = card.getAttribute('data-land-id');
+                    if (!targetKey) {
+                        return;
+                    }
+                    const formKey = card.getAttribute('data-form-key');
+                    const existingId = card.getAttribute('data-existing-id');
+                    landTargetMeta[targetKey] = {
+                        formKey,
+                        existingId
+                    };
+                });
+
+                allImages.forEach(img => {
+                    if (img.target.startsWith('land-')) {
+                        const landId = img.target.replace('land-', '');
+                        const meta = landTargetMeta[landId];
+                        if (!meta) {
+                            return;
+                        }
+
+                        if (meta.existingId) {
+                            if (!existingLandImagesMap[meta.existingId]) {
+                                existingLandImagesMap[meta.existingId] = [];
+                            }
+                            existingLandImagesMap[meta.existingId].push(img);
+                        } else if (meta.formKey) {
+                            if (!pendingNewLandImages[meta.formKey]) {
+                                pendingNewLandImages[meta.formKey] = [];
+                            }
+                            pendingNewLandImages[meta.formKey].push(img);
+                        }
+                    }
+                });
+
+                // Add site images
+                siteImages.forEach((img) => {
+                    formData.append('site_images[]', img.file);
+                });
+
+                // Add land images
+                Object.keys(existingLandImagesMap).forEach(landKey => {
+                    existingLandImagesMap[landKey].forEach((img) => {
+                        formData.append(`land_images[${landKey}][]`, img.file);
+                    });
+                });
+
+                if (Object.keys(pendingNewLandImages).length > 0) {
+                    console.warn('Images selected for newly added lands during edit cannot be uploaded until the land is saved. Skipping these images for now.', pendingNewLandImages);
+                }
+
+                console.log('Site images (new uploads):', siteImages.length);
+                console.log('Existing land images map (new uploads):', existingLandImagesMap);
+                console.log('Land target metadata:', landTargetMeta);
+
+                // Submit form
+                fetch(originalAction, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return;
+                    }
+                    return response.json().then(data => {
+                        if (data.redirect) {
+                            window.location.href = data.redirect;
+                        } else if (response.ok) {
+                            window.location.href = '{{ route("sites.index") }}';
+                        } else {
+                            throw new Error(data.message || 'Error submitting form');
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Try regular form submission as fallback
+                    siteForm.submit();
+                });
+
+                return false;
+            });
+
+            // Watch for land additions/removals
+            const observer = new MutationObserver(function(mutations) {
+                updateImageTargetButtons();
+            });
+
+            const landsContainer = document.getElementById('landsContainer');
+            if (landsContainer) {
+                observer.observe(landsContainer, {
+                    childList: true,
+                    subtree: false
+                });
+            }
+
+            // Initial update
+            updateImageTargetButtons();
+        }
     </script>
 @endpush
