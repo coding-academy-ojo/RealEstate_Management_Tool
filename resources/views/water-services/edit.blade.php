@@ -122,7 +122,7 @@
 
                         <div class="mb-3">
                             <label for="initial_meter_image" class="form-label fw-bold">
-                                Reference Meter Image
+                                Reference Image
                             </label>
                             @if ($waterService->initial_meter_image)
                                 <div class="mb-2">

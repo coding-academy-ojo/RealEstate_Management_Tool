@@ -137,12 +137,12 @@
 
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <strong class="text-muted">Reference Meter Image:</strong>
+                            <strong class="text-muted">Reference Image:</strong>
                         </div>
                         <div class="col-md-8">
                             @if ($waterService->initial_meter_image)
                                 <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3">
-                                    <img src="{{ route('water-services.files.show', [$waterService, 'reference-meter']) }}" alt="Reference meter image"
+                                    <img src="{{ route('water-services.files.show', [$waterService, 'reference-meter']) }}" alt="Reference image"
                                         class="rounded border" style="max-width: 160px; max-height: 160px; object-fit: cover;">
                                     <a href="{{ route('water-services.files.show', [$waterService, 'reference-meter']) }}" target="_blank"
                                         class="btn btn-outline-primary btn-sm">

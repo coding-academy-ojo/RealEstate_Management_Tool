@@ -119,7 +119,7 @@
 
                         <div class="mb-3">
                             <label for="initial_meter_image" class="form-label fw-bold">
-                                Reference Meter Image
+                                Reference Image
                             </label>
                             <input type="file" name="initial_meter_image" id="initial_meter_image"
                                 class="form-control @error('initial_meter_image') is-invalid @enderror"
