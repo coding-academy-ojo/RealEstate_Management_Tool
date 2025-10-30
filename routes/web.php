@@ -327,6 +327,12 @@ Route::middleware('auth')->group(function () {
     Route::get('buildings/{building}/files/{document}', [\App\Http\Controllers\BuildingController::class, 'file'])
         ->name('buildings.files.show');
 
+    Route::get('sites/{site}/documents/{document}', [\App\Http\Controllers\SiteController::class, 'document'])
+        ->name('sites.documents.show');
+
+    Route::get('lands/{land}/documents/{document}', [\App\Http\Controllers\LandController::class, 'document'])
+        ->name('lands.documents.show');
+
     Route::get('water-services/deleted/list', [\App\Http\Controllers\WaterServiceController::class, 'deleted'])
         ->middleware('privilege:water')
         ->name('water-services.deleted');
@@ -336,6 +342,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('water-services/{id}/force-delete', [\App\Http\Controllers\WaterServiceController::class, 'forceDelete'])
         ->middleware('privilege:water')
         ->name('water-services.force-delete');
+    Route::get('water-services/{waterService}/files/{document}', [\App\Http\Controllers\WaterServiceController::class, 'file'])
+        ->middleware('privilege:water')
+        ->name('water-services.files.show');
     Route::get('water-services/{waterService}/readings/{waterReading}/files/{document}', [\App\Http\Controllers\WaterReadingController::class, 'file'])
         ->middleware('privilege:water')
         ->name('water-services.readings.files.show');

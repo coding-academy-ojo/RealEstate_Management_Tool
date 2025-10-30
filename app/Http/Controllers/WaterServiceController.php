@@ -112,7 +112,7 @@ class WaterServiceController extends Controller
         ]);
 
         if ($request->hasFile('initial_meter_image')) {
-            $validated['initial_meter_image'] = $request->file('initial_meter_image')->store('water-services/reference-meters', 'public');
+            $validated['initial_meter_image'] = $request->file('initial_meter_image')->store('water-services/reference-meters', 'private');
         }
 
         WaterService::create($validated);
@@ -204,7 +204,7 @@ class WaterServiceController extends Controller
 
         if ($request->hasFile('initial_meter_image')) {
             $this->deleteStoredFile($waterService->initial_meter_image);
-            $validated['initial_meter_image'] = $request->file('initial_meter_image')->store('water-services/reference-meters', 'public');
+            $validated['initial_meter_image'] = $request->file('initial_meter_image')->store('water-services/reference-meters', 'private');
         }
 
         $waterService->update($validated);
@@ -262,14 +262,59 @@ class WaterServiceController extends Controller
         return redirect()->route('water-services.deleted')->with('success', 'Water service permanently deleted!');
     }
 
-    private function deleteStoredFile(?string $path): void
+    public function file(WaterService $waterService, string $document)
     {
-        if (!$path) {
-            return;
+        abort_unless($document === 'reference-meter', 404);
+
+        $path = $waterService->initial_meter_image;
+        $disk = $this->resolveDiskForPath($path);
+
+        if (!$path || !$disk) {
+            abort(404, 'File not found.');
         }
 
-        if (Storage::disk('public')->exists($path)) {
-            Storage::disk('public')->delete($path);
+        $absolutePath = Storage::disk($disk)->path($path);
+
+        if (request()->boolean('download')) {
+            return response()->download($absolutePath, basename($path));
         }
+
+        $mime = mime_content_type($absolutePath) ?: 'application/octet-stream';
+
+        return response()->file($absolutePath, [
+            'Content-Type' => $mime,
+        ]);
+    }
+
+    private function deleteStoredFile(?string $path): void
+    {
+        $disk = $this->resolveDiskForPath($path);
+
+        if ($disk) {
+            try {
+                Storage::disk($disk)->delete($path);
+            } catch (\Throwable $exception) {
+                // Ignore disk errors during cleanup
+            }
+        }
+    }
+
+    private function resolveDiskForPath(?string $path): ?string
+    {
+        if (!$path) {
+            return null;
+        }
+
+        foreach (['private', 'public'] as $disk) {
+            try {
+                if (Storage::disk($disk)->exists($path)) {
+                    return $disk;
+                }
+            } catch (\Throwable $exception) {
+                // Skip disks that are not configured
+            }
+        }
+
+        return null;
     }
 }

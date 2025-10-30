@@ -15,7 +15,7 @@ class BuildingController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('privilege:sites_lands_buildings')->except(['index', 'show', 'file']);
+        $this->middleware('privilege:sites_lands_buildings')->except(['index', 'show']);
     }
 
     public function index(Request $request)
@@ -173,30 +173,30 @@ class BuildingController extends Controller
 
         // Handle file uploads
         if ($request->hasFile('building_permit_file')) {
-            $path = $request->file('building_permit_file')->store('permits/buildings', 'public');
+            $path = $request->file('building_permit_file')->store('permits/buildings', 'private');
             $building->building_permit_file = $path;
         }
 
         if ($request->hasFile('occupancy_permit_file')) {
-            $path = $request->file('occupancy_permit_file')->store('permits/occupancy', 'public');
+            $path = $request->file('occupancy_permit_file')->store('permits/occupancy', 'private');
             $building->occupancy_permit_file = $path;
         }
 
         if ($request->hasFile('profession_permit_file')) {
-            $path = $request->file('profession_permit_file')->store('permits/profession', 'public');
+            $path = $request->file('profession_permit_file')->store('permits/profession', 'private');
             $building->profession_permit_file = $path;
         }
 
         if ($request->hasFile('as_built_drawing_pdf')) {
-            $building->as_built_drawing_pdf = $request->file('as_built_drawing_pdf')->store('drawings/as-built/pdf', 'public');
+            $building->as_built_drawing_pdf = $request->file('as_built_drawing_pdf')->store('drawings/as-built/pdf', 'private');
         }
 
         if ($request->hasFile('as_built_drawing_cad')) {
-            $building->as_built_drawing_cad = $request->file('as_built_drawing_cad')->store('drawings/as-built/cad', 'public');
+            $building->as_built_drawing_cad = $request->file('as_built_drawing_cad')->store('drawings/as-built/cad', 'private');
         }
 
         if ($tenureType === 'rental' && $request->hasFile('contract_file')) {
-            $building->contract_file = $request->file('contract_file')->store('contracts/buildings', 'public');
+            $building->contract_file = $request->file('contract_file')->store('contracts/buildings', 'private');
         }
 
         $building->save();
@@ -258,7 +258,8 @@ class BuildingController extends Controller
             ],
         ])->map(function (array $config, string $slug) use ($building) {
             $path = $building->{$config['attribute']} ?? null;
-            $exists = $path && Storage::disk('public')->exists($path);
+            $disk = $this->resolveDiskForPath($path);
+            $exists = (bool) $disk;
             $extension = $exists ? strtolower(pathinfo($path, PATHINFO_EXTENSION)) : null;
             $inlineUrl = $exists ? route('buildings.files.show', [$building, $slug]) : null;
 
@@ -357,65 +358,47 @@ class BuildingController extends Controller
 
         // Handle building permit file
         if ($request->hasFile('building_permit_file')) {
-            if ($building->building_permit_file && Storage::disk('public')->exists($building->building_permit_file)) {
-                Storage::disk('public')->delete($building->building_permit_file);
-            }
-            $building->building_permit_file = $request->file('building_permit_file')->store('permits/buildings', 'public');
+            $this->deleteFileIfExists($building->building_permit_file);
+            $building->building_permit_file = $request->file('building_permit_file')->store('permits/buildings', 'private');
         } elseif (!$request->boolean('has_building_permit')) {
             // If checkbox is unchecked, clear the file
-            if ($building->building_permit_file && Storage::disk('public')->exists($building->building_permit_file)) {
-                Storage::disk('public')->delete($building->building_permit_file);
-            }
+            $this->deleteFileIfExists($building->building_permit_file);
             $building->building_permit_file = null;
         }
 
         // Handle occupancy permit file
         if ($request->hasFile('occupancy_permit_file')) {
-            if ($building->occupancy_permit_file && Storage::disk('public')->exists($building->occupancy_permit_file)) {
-                Storage::disk('public')->delete($building->occupancy_permit_file);
-            }
-            $building->occupancy_permit_file = $request->file('occupancy_permit_file')->store('permits/occupancy', 'public');
+            $this->deleteFileIfExists($building->occupancy_permit_file);
+            $building->occupancy_permit_file = $request->file('occupancy_permit_file')->store('permits/occupancy', 'private');
         } elseif (!$request->boolean('has_occupancy_permit')) {
             // If checkbox is unchecked, clear the file
-            if ($building->occupancy_permit_file && Storage::disk('public')->exists($building->occupancy_permit_file)) {
-                Storage::disk('public')->delete($building->occupancy_permit_file);
-            }
+            $this->deleteFileIfExists($building->occupancy_permit_file);
             $building->occupancy_permit_file = null;
         }
 
         // Handle profession permit file
         if ($request->hasFile('profession_permit_file')) {
-            if ($building->profession_permit_file && Storage::disk('public')->exists($building->profession_permit_file)) {
-                Storage::disk('public')->delete($building->profession_permit_file);
-            }
-            $building->profession_permit_file = $request->file('profession_permit_file')->store('permits/profession', 'public');
+            $this->deleteFileIfExists($building->profession_permit_file);
+            $building->profession_permit_file = $request->file('profession_permit_file')->store('permits/profession', 'private');
         } elseif (!$request->boolean('has_profession_permit')) {
             // If checkbox is unchecked, clear the file
-            if ($building->profession_permit_file && Storage::disk('public')->exists($building->profession_permit_file)) {
-                Storage::disk('public')->delete($building->profession_permit_file);
-            }
+            $this->deleteFileIfExists($building->profession_permit_file);
             $building->profession_permit_file = null;
         }
 
         if ($request->hasFile('as_built_drawing_pdf')) {
-            if ($building->as_built_drawing_pdf && Storage::disk('public')->exists($building->as_built_drawing_pdf)) {
-                Storage::disk('public')->delete($building->as_built_drawing_pdf);
-            }
-            $building->as_built_drawing_pdf = $request->file('as_built_drawing_pdf')->store('drawings/as-built/pdf', 'public');
+            $this->deleteFileIfExists($building->as_built_drawing_pdf);
+            $building->as_built_drawing_pdf = $request->file('as_built_drawing_pdf')->store('drawings/as-built/pdf', 'private');
         }
 
         if ($request->hasFile('as_built_drawing_cad')) {
-            if ($building->as_built_drawing_cad && Storage::disk('public')->exists($building->as_built_drawing_cad)) {
-                Storage::disk('public')->delete($building->as_built_drawing_cad);
-            }
-            $building->as_built_drawing_cad = $request->file('as_built_drawing_cad')->store('drawings/as-built/cad', 'public');
+            $this->deleteFileIfExists($building->as_built_drawing_cad);
+            $building->as_built_drawing_cad = $request->file('as_built_drawing_cad')->store('drawings/as-built/cad', 'private');
         }
 
         if ($tenureType === 'rental' && $request->hasFile('contract_file')) {
-            if ($building->contract_file && Storage::disk('public')->exists($building->contract_file)) {
-                Storage::disk('public')->delete($building->contract_file);
-            }
-            $building->contract_file = $request->file('contract_file')->store('contracts/buildings', 'public');
+            $this->deleteFileIfExists($building->contract_file);
+            $building->contract_file = $request->file('contract_file')->store('contracts/buildings', 'private');
         }
 
         $building->save();
@@ -457,12 +440,13 @@ class BuildingController extends Controller
 
         $attribute = $documentMap[$document];
         $path = $building->{$attribute};
+        $disk = $this->resolveDiskForPath($path);
 
-        if (!$path || !Storage::disk('public')->exists($path)) {
+        if (!$path || !$disk) {
             abort(404, 'File not found.');
         }
 
-        $absolutePath = Storage::disk('public')->path($path);
+        $absolutePath = Storage::disk($disk)->path($path);
 
         if (request()->boolean('download')) {
             return response()->download($absolutePath, basename($path));
@@ -545,8 +529,14 @@ class BuildingController extends Controller
 
     protected function deleteFileIfExists(?string $path): void
     {
-        if ($path && Storage::disk('public')->exists($path)) {
-            Storage::disk('public')->delete($path);
+        $disk = $this->resolveDiskForPath($path);
+
+        if ($disk) {
+            try {
+                Storage::disk($disk)->delete($path);
+            } catch (\Throwable $exception) {
+                // Ignore disk errors during cleanup
+            }
         }
     }
 
@@ -565,5 +555,24 @@ class BuildingController extends Controller
     protected function purgeElectricityServiceMedia(ElectricityService $service): void
     {
         $this->deleteFileIfExists($service->reset_file);
+    }
+
+    protected function resolveDiskForPath(?string $path): ?string
+    {
+        if (!$path) {
+            return null;
+        }
+
+        foreach (['private', 'public'] as $disk) {
+            try {
+                if (Storage::disk($disk)->exists($path)) {
+                    return $disk;
+                }
+            } catch (\Throwable $exception) {
+                // Skip disks that are not configured
+            }
+        }
+
+        return null;
     }
 }

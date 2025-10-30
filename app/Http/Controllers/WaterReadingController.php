@@ -21,11 +21,11 @@ class WaterReadingController extends Controller
     $data['is_paid'] = $request->boolean('is_paid');
 
     if ($request->hasFile('meter_image')) {
-      $data['meter_image'] = $request->file('meter_image')->store('water-services/readings/meters', 'public');
+      $data['meter_image'] = $request->file('meter_image')->store('water-services/readings/meters', 'private');
     }
 
     if ($request->hasFile('bill_image')) {
-      $data['bill_image'] = $request->file('bill_image')->store('water-services/readings/bills', 'public');
+      $data['bill_image'] = $request->file('bill_image')->store('water-services/readings/bills', 'private');
     }
 
     WaterReading::create($data);
@@ -44,12 +44,12 @@ class WaterReadingController extends Controller
 
     if ($request->hasFile('meter_image')) {
       $this->deleteStoredFile($waterReading->meter_image);
-      $data['meter_image'] = $request->file('meter_image')->store('water-services/readings/meters', 'public');
+      $data['meter_image'] = $request->file('meter_image')->store('water-services/readings/meters', 'private');
     }
 
     if ($request->hasFile('bill_image')) {
       $this->deleteStoredFile($waterReading->bill_image);
-      $data['bill_image'] = $request->file('bill_image')->store('water-services/readings/bills', 'public');
+      $data['bill_image'] = $request->file('bill_image')->store('water-services/readings/bills', 'private');
     }
 
     $waterReading->update($data);
@@ -84,12 +84,13 @@ class WaterReadingController extends Controller
     };
 
     $path = $waterReading->{$attribute};
+    $disk = $this->resolveDiskForPath($path);
 
-    if (!$path || !Storage::disk('public')->exists($path)) {
+    if (!$path || !$disk) {
       abort(404, 'File not found.');
     }
 
-    $absolutePath = Storage::disk('public')->path($path);
+    $absolutePath = Storage::disk($disk)->path($path);
 
     if (request()->boolean('download')) {
       return response()->download($absolutePath, basename($path));
@@ -145,12 +146,33 @@ class WaterReadingController extends Controller
 
   private function deleteStoredFile(?string $path): void
   {
+    $disk = $this->resolveDiskForPath($path);
+
+    if ($disk) {
+      try {
+        Storage::disk($disk)->delete($path);
+      } catch (\Throwable $exception) {
+        // Ignore disk errors during cleanup
+      }
+    }
+  }
+
+  private function resolveDiskForPath(?string $path): ?string
+  {
     if (!$path) {
-      return;
+      return null;
     }
 
-    if (Storage::disk('public')->exists($path)) {
-      Storage::disk('public')->delete($path);
+    foreach (['private', 'public'] as $disk) {
+      try {
+        if (Storage::disk($disk)->exists($path)) {
+          return $disk;
+        }
+      } catch (\Throwable $exception) {
+        // Skip disks that are not configured
+      }
     }
+
+    return null;
   }
 }

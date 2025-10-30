@@ -132,13 +132,13 @@ class SiteController extends Controller
             'governorate' => 'required|string|max:3',
             'name' => 'required|string|max:255',
             'area_m2' => 'required|numeric|min:0',
-            'zoning_statuses' => 'nullable|array',
-            'zoning_statuses.*' => 'exists:zoning_statuses,id',
             'notes' => 'nullable|string',
             'other_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
             'document_names.*' => 'nullable|string|max:255',
             // Lands validation
             'lands' => 'nullable|array',
+            'lands.*.zoning_statuses' => 'nullable|array',
+            'lands.*.zoning_statuses.*' => 'exists:zoning_statuses,id',
             'lands.*.directorate' => 'required_with:lands|string|max:255',
             'lands.*.directorate_number' => 'required_with:lands|string|max:255',
             'lands.*.village' => 'nullable|string|max:255',
@@ -153,6 +153,9 @@ class SiteController extends Controller
             'lands.*.map_location' => 'nullable|url',
             'lands.*.latitude' => 'nullable|numeric|between:-90,90',
             'lands.*.longitude' => 'nullable|numeric|between:-180,180',
+            'lands.*.ownership_doc' => 'nullable|file|mimes:pdf,jpg,jpeg|max:10240',
+            'lands.*.site_plan' => 'nullable|file|mimes:pdf,jpg,jpeg|max:10240',
+            'lands.*.zoning_plan' => 'nullable|file|mimes:pdf,jpg,jpeg|max:10240',
         ]);
 
         // Auto-determine region based on governorate
@@ -166,7 +169,7 @@ class SiteController extends Controller
         if ($request->hasFile('other_documents')) {
             $documentNames = $request->input('document_names', []);
             foreach ($request->file('other_documents') as $index => $file) {
-                $path = $file->store('sites/other_documents', 'public');
+                $path = $file->store('sites/other_documents', 'private');
                 $otherDocuments[] = [
                     'name' => $documentNames[$index] ?? 'Document ' . ($index + 1),
                     'path' => $path,
@@ -178,21 +181,38 @@ class SiteController extends Controller
 
         $site = Site::create($validated);
 
-        // Attach zoning statuses if provided
-        if (!empty($validated['zoning_statuses'])) {
-            $site->zoningStatuses()->attach($validated['zoning_statuses']);
-        }
-
-        // Create lands if provided
+        // Create lands if provided and collect zoning statuses
+        $allZoningIds = [];
         if (!empty($validated['lands'])) {
-            foreach ($validated['lands'] as $landData) {
+            foreach ($validated['lands'] as $index => $landData) {
+                // Extract zoning statuses for this land
+                $landZoningIds = $landData['zoning_statuses'] ?? [];
+                unset($landData['zoning_statuses']);
+
+                // Handle document uploads for this land
+                if ($request->hasFile("lands.{$index}.ownership_doc")) {
+                    $landData['ownership_doc'] = $request->file("lands.{$index}.ownership_doc")->store('lands/ownership_docs', 'private');
+                }
+                if ($request->hasFile("lands.{$index}.site_plan")) {
+                    $landData['site_plan'] = $request->file("lands.{$index}.site_plan")->store('lands/site_plans', 'private');
+                }
+                if ($request->hasFile("lands.{$index}.zoning_plan")) {
+                    $landData['zoning_plan'] = $request->file("lands.{$index}.zoning_plan")->store('lands/zoning_plans', 'private');
+                }
+
                 // Add site_id and governorate/region to each land
                 $landData['site_id'] = $site->id;
                 $landData['governorate'] = $validated['governorate'];
                 $landData['region'] = $validated['region'];
 
                 // Create the land
-                $site->lands()->create($landData);
+                $land = $site->lands()->create($landData);
+
+                // Attach zoning statuses to this land
+                if (!empty($landZoningIds)) {
+                    $land->zoningStatuses()->attach($landZoningIds);
+                    $allZoningIds = array_merge($allZoningIds, $landZoningIds);
+                }
             }
 
             // Update site total area based on lands
@@ -200,6 +220,12 @@ class SiteController extends Controller
             if ($totalLandArea > 0) {
                 $site->update(['area_m2' => $totalLandArea]);
             }
+        }
+
+        // Aggregate all unique zoning statuses from lands and assign to site
+        if (!empty($allZoningIds)) {
+            $uniqueZoningIds = array_unique($allZoningIds);
+            $site->zoningStatuses()->sync($uniqueZoningIds);
         }
 
         return redirect()->route('sites.index')->with('success', 'Site created successfully with ' . count($validated['lands'] ?? []) . ' land(s)!');
@@ -246,6 +272,8 @@ class SiteController extends Controller
      */
     public function edit(Site $site)
     {
+        // Eager load lands with their zoning statuses
+        $site->load('lands.zoningStatuses');
         $zoningStatuses = ZoningStatus::active()->orderBy('name_ar')->get();
         return view('sites.edit', compact('site', 'zoningStatuses'));
     }
@@ -260,8 +288,6 @@ class SiteController extends Controller
             'governorate' => 'required|string|max:3',
             'name' => 'required|string|max:255',
             'area_m2' => 'required|numeric|min:0',
-            'zoning_statuses' => 'nullable|array',
-            'zoning_statuses.*' => 'exists:zoning_statuses,id',
             'notes' => 'nullable|string',
             'other_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
             'document_names.*' => 'nullable|string|max:255',
@@ -269,6 +295,8 @@ class SiteController extends Controller
             // Lands validation
             'lands' => 'nullable|array',
             'lands.*.id' => 'nullable|exists:lands,id',
+            'lands.*.zoning_statuses' => 'nullable|array',
+            'lands.*.zoning_statuses.*' => 'exists:zoning_statuses,id',
             'lands.*._action' => 'nullable|in:create,update',
             'lands.*.directorate' => 'required_with:lands|string|max:255',
             'lands.*.directorate_number' => 'required_with:lands|string|max:255',
@@ -284,6 +312,9 @@ class SiteController extends Controller
             'lands.*.map_location' => 'nullable|url',
             'lands.*.latitude' => 'nullable|numeric|between:-90,90',
             'lands.*.longitude' => 'nullable|numeric|between:-180,180',
+            'lands.*.ownership_doc' => 'nullable|file|mimes:pdf,jpg,jpeg|max:10240',
+            'lands.*.site_plan' => 'nullable|file|mimes:pdf,jpg,jpeg|max:10240',
+            'lands.*.zoning_plan' => 'nullable|file|mimes:pdf,jpg,jpeg|max:10240',
             'delete_lands' => 'nullable|array',
             'delete_lands.*' => 'exists:lands,id',
         ]);
@@ -295,8 +326,7 @@ class SiteController extends Controller
         if (!empty($validated['remove_documents'])) {
             foreach ($validated['remove_documents'] as $index) {
                 if (isset($currentDocuments[$index]) && isset($currentDocuments[$index]['path'])) {
-                    // Delete file from storage
-                    Storage::disk('public')->delete($currentDocuments[$index]['path']);
+                    $this->deleteStoredPath($currentDocuments[$index]['path']);
                     unset($currentDocuments[$index]);
                 }
             }
@@ -308,7 +338,7 @@ class SiteController extends Controller
         if ($request->hasFile('other_documents')) {
             $documentNames = $request->input('document_names', []);
             foreach ($request->file('other_documents') as $index => $file) {
-                $path = $file->store('sites/other_documents', 'public');
+                $path = $file->store('sites/other_documents', 'private');
                 $currentDocuments[] = [
                     'name' => $documentNames[$index] ?? 'Document ' . ($index + 1),
                     'path' => $path,
@@ -321,13 +351,6 @@ class SiteController extends Controller
 
         $site->update($validated);
 
-        // Sync zoning statuses
-        if (isset($validated['zoning_statuses'])) {
-            $site->zoningStatuses()->sync($validated['zoning_statuses']);
-        } else {
-            $site->zoningStatuses()->detach();
-        }
-
         // Handle lands deletion
         if (!empty($validated['delete_lands'])) {
             foreach ($validated['delete_lands'] as $landId) {
@@ -338,30 +361,61 @@ class SiteController extends Controller
             }
         }
 
-        // Handle lands update/creation
+        // Handle lands update/creation and collect all zoning statuses
         if (!empty($validated['lands'])) {
-            foreach ($validated['lands'] as $landData) {
+            foreach ($validated['lands'] as $index => $landData) {
                 $action = $landData['_action'] ?? 'create';
                 $landId = $landData['id'] ?? null;
+                $existingLand = null;
+                if ($action === 'update' && $landId) {
+                    $existingLand = $site->lands()->find($landId);
+                }
+
+                // Extract zoning statuses for this land
+                $landZoningIds = $landData['zoning_statuses'] ?? [];
+                unset($landData['zoning_statuses']);
 
                 // Remove action field from data
                 unset($landData['_action']);
                 unset($landData['id']);
+
+                // Handle document uploads for this land
+                if ($request->hasFile("lands.{$index}.ownership_doc")) {
+                    if ($existingLand) {
+                        $this->deleteStoredPath($existingLand->ownership_doc);
+                    }
+                    $landData['ownership_doc'] = $request->file("lands.{$index}.ownership_doc")->store('lands/ownership_docs', 'private');
+                }
+                if ($request->hasFile("lands.{$index}.site_plan")) {
+                    if ($existingLand) {
+                        $this->deleteStoredPath($existingLand->site_plan);
+                    }
+                    $landData['site_plan'] = $request->file("lands.{$index}.site_plan")->store('lands/site_plans', 'private');
+                }
+                if ($request->hasFile("lands.{$index}.zoning_plan")) {
+                    if ($existingLand) {
+                        $this->deleteStoredPath($existingLand->zoning_plan);
+                    }
+                    $landData['zoning_plan'] = $request->file("lands.{$index}.zoning_plan")->store('lands/zoning_plans', 'private');
+                }
 
                 // Add site_id and governorate/region to each land
                 $landData['site_id'] = $site->id;
                 $landData['governorate'] = $validated['governorate'];
                 $landData['region'] = $this->getRegionFromGovernorate($validated['governorate']);
 
-                if ($action === 'update' && $landId) {
+                if ($action === 'update' && $existingLand) {
                     // Update existing land
-                    $land = $site->lands()->find($landId);
-                    if ($land) {
-                        $land->update($landData);
-                    }
+                    $existingLand->update($landData);
+                    // Sync zoning statuses for this land
+                    $existingLand->zoningStatuses()->sync($landZoningIds);
                 } else {
                     // Create new land
-                    $site->lands()->create($landData);
+                    $land = $site->lands()->create($landData);
+                    // Attach zoning statuses to new land
+                    if (!empty($landZoningIds)) {
+                        $land->zoningStatuses()->attach($landZoningIds);
+                    }
                 }
             }
 
@@ -372,7 +426,54 @@ class SiteController extends Controller
             }
         }
 
+        // Aggregate all unique zoning statuses from all site's lands and sync to site
+        // Reload lands to ensure we have the latest data including newly created ones
+        $site->load('lands.zoningStatuses');
+
+        $allLandZoningIds = [];
+        foreach ($site->lands as $land) {
+            $landZonings = $land->zoningStatuses->pluck('id')->toArray();
+            $allLandZoningIds = array_merge($allLandZoningIds, $landZonings);
+        }
+        $uniqueZoningIds = array_unique($allLandZoningIds);
+        $site->zoningStatuses()->sync($uniqueZoningIds);
+
         return redirect()->route('sites.index')->with('success', 'Site updated successfully!');
+    }
+
+    public function document(Site $site, int $document)
+    {
+        $documents = $site->other_documents ?? [];
+
+        if (!isset($documents[$document])) {
+            abort(404);
+        }
+
+        $entry = $documents[$document];
+        $path = $entry['path'] ?? null;
+
+        if (!$path) {
+            abort(404, 'File not found.');
+        }
+
+        $disk = $this->resolveDiskForPath($path);
+
+        if (!$disk || !Storage::disk($disk)->exists($path)) {
+            abort(404, 'File not found.');
+        }
+
+        $absolutePath = Storage::disk($disk)->path($path);
+        $downloadName = $entry['original_name'] ?? basename($path);
+
+        if (request()->boolean('download')) {
+            return response()->download($absolutePath, $downloadName);
+        }
+
+        $mime = mime_content_type($absolutePath) ?: 'application/octet-stream';
+
+        return response()->file($absolutePath, [
+            'Content-Type' => $mime,
+        ]);
     }
 
     /**
@@ -412,7 +513,47 @@ class SiteController extends Controller
     public function forceDestroy($id)
     {
         $site = Site::onlyTrashed()->findOrFail($id);
+
+        $documents = $site->other_documents ?? [];
+        foreach ($documents as $document) {
+            if (!empty($document['path'])) {
+                $this->deleteStoredPath($document['path']);
+            }
+        }
+
         $site->forceDelete();
         return redirect()->route('sites.deleted')->with('success', 'Site permanently deleted!');
+    }
+
+    private function deleteStoredPath(?string $path): void
+    {
+        if (!$path) {
+            return;
+        }
+
+        foreach (['private', 'public'] as $disk) {
+            try {
+                if (Storage::disk($disk)->exists($path)) {
+                    Storage::disk($disk)->delete($path);
+                }
+            } catch (\Throwable $exception) {
+                // Ignore disk errors to avoid interrupting user flow
+            }
+        }
+    }
+
+    private function resolveDiskForPath(string $path): ?string
+    {
+        foreach (['private', 'public'] as $disk) {
+            try {
+                if (Storage::disk($disk)->exists($path)) {
+                    return $disk;
+                }
+            } catch (\Throwable $exception) {
+                // Ignore disk errors; try next disk
+            }
+        }
+
+        return null;
     }
 }

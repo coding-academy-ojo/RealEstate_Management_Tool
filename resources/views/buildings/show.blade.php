@@ -27,7 +27,7 @@
                 <i class="bi bi-arrow-left me-1"></i> Back
             </a>
             @if ($currentUser?->isSuperAdmin())
-                <a href="{{ route('buildings.edit', $building) }}" class="btn btn-orange">
+                                        <a href="{{ route('water-services.files.show', [$service, 'reference-meter']) }}" target="_blank"
                     <i class="bi bi-pencil me-1"></i> Edit
                 </a>
                 <form action="{{ route('buildings.destroy', $building) }}" method="POST" class="d-inline"
@@ -83,7 +83,7 @@
                                     {{ $building->site->code }} — {{ $building->site->name }}
                                 </a>
                             </div>
-                        </div>
+                                            <a href="{{ route('electricity-services.files.show', [$electricityService, 'reset']) }}" target="_blank"
                         <div class="col-md-6">
                             <div class="text-muted text-uppercase small fw-semibold">Remarks</div>
                             <div>{{ $building->remarks ?: 'No remarks provided.' }}</div>
@@ -375,7 +375,7 @@ foreach ($building->images as $image) {
                                 </td>
                                 <td>
                                     @if ($service->initial_meter_image)
-                                        <a href="{{ asset('storage/' . $service->initial_meter_image) }}" target="_blank"
+                                        <a href="{{ route('water-services.files.show', [$service, 'reference-meter']) }}" target="_blank"
                                             class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-camera"></i> View
                                         </a>

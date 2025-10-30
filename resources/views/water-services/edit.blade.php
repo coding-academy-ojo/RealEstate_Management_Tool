@@ -126,7 +126,7 @@
                             </label>
                             @if ($waterService->initial_meter_image)
                                 <div class="mb-2">
-                                    <a href="{{ asset('storage/' . $waterService->initial_meter_image) }}" target="_blank"
+                                    <a href="{{ route('water-services.files.show', [$waterService, 'reference-meter']) }}" target="_blank"
                                         class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-eye me-1"></i> View current image
                                     </a>

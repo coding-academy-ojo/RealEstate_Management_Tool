@@ -194,15 +194,15 @@ class LandController extends Controller
 
         // Handle file uploads
         if ($request->hasFile('ownership_doc')) {
-            $validated['ownership_doc'] = $request->file('ownership_doc')->store('lands/ownership_docs', 'public');
+            $validated['ownership_doc'] = $request->file('ownership_doc')->store('lands/ownership_docs', 'private');
         }
 
         if ($request->hasFile('site_plan')) {
-            $validated['site_plan'] = $request->file('site_plan')->store('lands/site_plans', 'public');
+            $validated['site_plan'] = $request->file('site_plan')->store('lands/site_plans', 'private');
         }
 
         if ($request->hasFile('zoning_plan')) {
-            $validated['zoning_plan'] = $request->file('zoning_plan')->store('lands/zoning_plans', 'public');
+            $validated['zoning_plan'] = $request->file('zoning_plan')->store('lands/zoning_plans', 'private');
         }
 
         Land::create($validated);
@@ -258,31 +258,55 @@ class LandController extends Controller
 
         // Handle file uploads
         if ($request->hasFile('ownership_doc')) {
-            // Delete old file if exists
-            if ($land->ownership_doc && Storage::disk('public')->exists($land->ownership_doc)) {
-                Storage::disk('public')->delete($land->ownership_doc);
-            }
-            $validated['ownership_doc'] = $request->file('ownership_doc')->store('lands/ownership_docs', 'public');
+            $this->deletePath($land->ownership_doc);
+            $validated['ownership_doc'] = $request->file('ownership_doc')->store('lands/ownership_docs', 'private');
         }
 
         if ($request->hasFile('site_plan')) {
-            // Delete old file if exists
-            if ($land->site_plan && Storage::disk('public')->exists($land->site_plan)) {
-                Storage::disk('public')->delete($land->site_plan);
-            }
-            $validated['site_plan'] = $request->file('site_plan')->store('lands/site_plans', 'public');
+            $this->deletePath($land->site_plan);
+            $validated['site_plan'] = $request->file('site_plan')->store('lands/site_plans', 'private');
         }
 
         if ($request->hasFile('zoning_plan')) {
-            // Delete old file if exists
-            if ($land->zoning_plan && Storage::disk('public')->exists($land->zoning_plan)) {
-                Storage::disk('public')->delete($land->zoning_plan);
-            }
-            $validated['zoning_plan'] = $request->file('zoning_plan')->store('lands/zoning_plans', 'public');
+            $this->deletePath($land->zoning_plan);
+            $validated['zoning_plan'] = $request->file('zoning_plan')->store('lands/zoning_plans', 'private');
         }
 
         $land->update($validated);
         return redirect()->route('lands.show', $land)->with('success', 'Land updated successfully!');
+    }
+
+    public function document(Land $land, string $document)
+    {
+        $attributeMap = [
+            'ownership' => 'ownership_doc',
+            'site-plan' => 'site_plan',
+            'zoning-plan' => 'zoning_plan',
+        ];
+
+        if (!array_key_exists($document, $attributeMap)) {
+            abort(404);
+        }
+
+        $attribute = $attributeMap[$document];
+        $path = $land->{$attribute};
+
+        if (!$path || !Storage::disk('private')->exists($path)) {
+            abort(404, 'File not found.');
+        }
+
+        $absolutePath = Storage::disk('private')->path($path);
+        $downloadName = basename($path);
+
+        if (request()->boolean('download')) {
+            return response()->download($absolutePath, $downloadName);
+        }
+
+        $mime = mime_content_type($absolutePath) ?: 'application/octet-stream';
+
+        return response()->file($absolutePath, [
+            'Content-Type' => $mime,
+        ]);
     }
 
     public function destroy(Land $land)
@@ -319,9 +343,7 @@ class LandController extends Controller
 
         foreach ($documentAttributes as $attribute) {
             $path = $land->{$attribute};
-            if ($path && Storage::disk('public')->exists($path)) {
-                Storage::disk('public')->delete($path);
-            }
+            $this->deletePath($path);
         }
 
         if ($land->photos) {
@@ -337,9 +359,24 @@ class LandController extends Controller
             $photoPaths = is_array($photos) ? $photos : [$photos];
 
             foreach ($photoPaths as $photoPath) {
-                if ($photoPath && Storage::disk('public')->exists($photoPath)) {
-                    Storage::disk('public')->delete($photoPath);
+                $this->deletePath($photoPath);
+            }
+        }
+    }
+
+    private function deletePath(?string $path): void
+    {
+        if (!$path) {
+            return;
+        }
+
+        foreach (['private', 'public'] as $disk) {
+            try {
+                if (Storage::disk($disk)->exists($path)) {
+                    Storage::disk($disk)->delete($path);
                 }
+            } catch (\Throwable $exception) {
+                // Ignore disk errors to avoid breaking flow if disk is not configured
             }
         }
     }

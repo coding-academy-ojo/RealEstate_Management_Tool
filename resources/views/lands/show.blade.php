@@ -223,7 +223,7 @@
                         </div>
                         <div class="col-md-8">
                             @if ($land->ownership_doc)
-                                <a href="{{ asset('storage/' . $land->ownership_doc) }}" target="_blank"
+                                <a href="{{ route('lands.documents.show', [$land, 'ownership']) }}" target="_blank"
                                     class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-file-earmark-pdf me-1"></i> View Document
                                 </a>
@@ -239,7 +239,7 @@
                         </div>
                         <div class="col-md-8">
                             @if ($land->site_plan)
-                                <a href="{{ asset('storage/' . $land->site_plan) }}" target="_blank"
+                                <a href="{{ route('lands.documents.show', [$land, 'site-plan']) }}" target="_blank"
                                     class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-file-earmark-pdf me-1"></i> View Document
                                 </a>
@@ -255,7 +255,7 @@
                         </div>
                         <div class="col-md-8">
                             @if ($land->zoning_plan)
-                                <a href="{{ asset('storage/' . $land->zoning_plan) }}" target="_blank"
+                                <a href="{{ route('lands.documents.show', [$land, 'zoning-plan']) }}" target="_blank"
                                     class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-file-earmark-pdf me-1"></i> View Document
                                 </a>

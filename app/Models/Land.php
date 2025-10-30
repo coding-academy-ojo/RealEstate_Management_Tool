@@ -29,7 +29,6 @@ class Land extends Model
         // Area and other details
         'area_m2',              // مساحة القطعة
         'region',               // REGION
-        'zoning',               // التنظيم
         'land_directorate',     // مديرية الأراضي
         // Documents and media
         'ownership_doc',        // سند الملكية (PDF, JPG)
@@ -80,5 +79,14 @@ class Land extends Model
     public function renovations(): MorphMany
     {
         return $this->morphMany(Renovation::class, 'innovatable');
+    }
+
+    /**
+     * Zoning statuses assigned to this land
+     */
+    public function zoningStatuses(): BelongsToMany
+    {
+        return $this->belongsToMany(ZoningStatus::class, 'land_zoning_status')
+            ->withTimestamps();
     }
 }

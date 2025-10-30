@@ -142,9 +142,9 @@
                         <div class="col-md-8">
                             @if ($waterService->initial_meter_image)
                                 <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3">
-                                    <img src="{{ asset('storage/' . $waterService->initial_meter_image) }}" alt="Reference meter image"
+                                    <img src="{{ route('water-services.files.show', [$waterService, 'reference-meter']) }}" alt="Reference meter image"
                                         class="rounded border" style="max-width: 160px; max-height: 160px; object-fit: cover;">
-                                    <a href="{{ asset('storage/' . $waterService->initial_meter_image) }}" target="_blank"
+                                    <a href="{{ route('water-services.files.show', [$waterService, 'reference-meter']) }}" target="_blank"
                                         class="btn btn-outline-primary btn-sm">
                                         <i class="bi bi-eye me-1"></i> View full image
                                     </a>

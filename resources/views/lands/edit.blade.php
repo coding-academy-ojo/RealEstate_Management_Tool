@@ -570,7 +570,17 @@
                                 @error('ownership_doc')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <small class="text-muted">JPG or PDF only (Max: 10MB)</small>@if ($land->ownership_doc)<div class="mt-2"><a href="{{ asset('storage/' . $land->ownership_doc) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> View Current Document</a></div>@endif</div><div class="col-md-4 mb-3">
+                                <small class="text-muted">JPG or PDF only (Max: 10MB)</small>
+                                @if ($land->ownership_doc)
+                                    <div class="mt-2">
+                                        <a href="{{ route('lands.documents.show', [$land, 'ownership']) }}" target="_blank"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View Current Document
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="col-md-4 mb-3">
                                 <label for="site_plan" class="form-label fw-bold">
                                     مخطط الموقع
                                 </label>
@@ -580,7 +590,17 @@
                                 @error('site_plan')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <small class="text-muted">JPG or PDF only (Max: 10MB)</small>@if ($land->ownership_doc)<div class="mt-2"><a href="{{ asset('storage/' . $land->ownership_doc) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> View Current Document</a></div>@endif</div><div class="col-md-4 mb-3">
+                                <small class="text-muted">JPG or PDF only (Max: 10MB)</small>
+                                @if ($land->site_plan)
+                                    <div class="mt-2">
+                                        <a href="{{ route('lands.documents.show', [$land, 'site-plan']) }}" target="_blank"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View Current Document
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="col-md-4 mb-3">
                                 <label for="zoning_plan" class="form-label fw-bold">
                                     مخطط تنظيمي
                                 </label>
@@ -590,7 +610,17 @@
                                 @error('zoning_plan')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <small class="text-muted">JPG or PDF only (Max: 10MB)</small>@if ($land->site_plan)<div class="mt-2"><a href="{{ asset('storage/' . $land->site_plan) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> View Current Document</a></div>@endif</div>@if ($land->zoning_plan)<div class="mt-2"><a href="{{ asset('storage/' . $land->zoning_plan) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> View Current Document</a></div>@endif</div></div>
+                                <small class="text-muted">JPG or PDF only (Max: 10MB)</small>
+                                @if ($land->zoning_plan)
+                                    <div class="mt-2">
+                                        <a href="{{ route('lands.documents.show', [$land, 'zoning-plan']) }}" target="_blank"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View Current Document
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
 
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle me-2"></i>

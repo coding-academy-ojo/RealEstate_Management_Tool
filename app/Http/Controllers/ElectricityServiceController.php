@@ -112,7 +112,7 @@ class ElectricityServiceController extends Controller
 
         // Handle file upload
         if ($request->hasFile('reset_file')) {
-            $validated['reset_file'] = $request->file('reset_file')->store('electricity-services/files', 'public');
+            $validated['reset_file'] = $request->file('reset_file')->store('electricity-services/files', 'private');
         }
 
         ElectricityService::create($validated);
@@ -155,7 +155,8 @@ class ElectricityServiceController extends Controller
 
         // Handle file upload
         if ($request->hasFile('reset_file')) {
-            $validated['reset_file'] = $request->file('reset_file')->store('electricity-services/files', 'public');
+            $this->deleteStoredFile($electricityService->reset_file);
+            $validated['reset_file'] = $request->file('reset_file')->store('electricity-services/files', 'private');
         }
 
         $electricityService->update($validated);
@@ -200,12 +201,65 @@ class ElectricityServiceController extends Controller
     {
         $electricityService = ElectricityService::onlyTrashed()->findOrFail($id);
 
-        // Delete file if it exists
-        if ($electricityService->reset_file && Storage::disk('public')->exists($electricityService->reset_file)) {
-            Storage::disk('public')->delete($electricityService->reset_file);
-        }
+        $this->deleteStoredFile($electricityService->reset_file);
 
         $electricityService->forceDelete();
         return redirect()->route('electricity-services.deleted')->with('success', 'Electricity service permanently deleted!');
+    }
+
+    public function file(ElectricityService $electricityService, string $document)
+    {
+        abort_unless($document === 'reset', 404);
+
+        $path = $electricityService->reset_file;
+        $disk = $this->resolveDiskForPath($path);
+
+        if (!$path || !$disk) {
+            abort(404, 'File not found.');
+        }
+
+        $absolutePath = Storage::disk($disk)->path($path);
+
+        if (request()->boolean('download')) {
+            return response()->download($absolutePath, basename($path));
+        }
+
+        $mime = mime_content_type($absolutePath) ?: 'application/octet-stream';
+
+        return response()->file($absolutePath, [
+            'Content-Type' => $mime,
+        ]);
+    }
+
+    private function deleteStoredFile(?string $path): void
+    {
+        $disk = $this->resolveDiskForPath($path);
+
+        if ($disk) {
+            try {
+                Storage::disk($disk)->delete($path);
+            } catch (\Throwable $exception) {
+                // Ignore disk errors during cleanup
+            }
+        }
+    }
+
+    private function resolveDiskForPath(?string $path): ?string
+    {
+        if (!$path) {
+            return null;
+        }
+
+        foreach (['private', 'public'] as $disk) {
+            try {
+                if (Storage::disk($disk)->exists($path)) {
+                    return $disk;
+                }
+            } catch (\Throwable $exception) {
+                // Skip disks that are not configured
+            }
+        }
+
+        return null;
     }
 }

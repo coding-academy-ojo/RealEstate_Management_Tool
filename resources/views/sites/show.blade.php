@@ -100,7 +100,18 @@
                             <strong class="text-muted">Zoning Status:</strong>
                         </div>
                         <div class="col-md-8">
-                            {{ $site->zoning_status ?: 'N/A' }}
+                            @if($site->zoningStatuses && $site->zoningStatuses->count() > 0)
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach($site->zoningStatuses as $zoning)
+                                        <span class="badge bg-info">{{ $zoning->name_ar }}</span>
+                                    @endforeach
+                                </div>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bi bi-info-circle"></i> Aggregated from all lands
+                                </small>
+                            @else
+                                <span class="text-muted">No zoning assigned</span>
+                            @endif
                         </div>
                     </div>
 
@@ -120,7 +131,7 @@
                             </div>
                             <div class="col-md-8">
                                 <div class="list-group list-group-flush">
-                                    @foreach ($site->other_documents as $doc)
+                                    @foreach ($site->other_documents as $index => $doc)
                                         <div class="list-group-item px-0 py-2 d-flex align-items-center">
                                             <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
                                             <div class="flex-grow-1">
@@ -129,11 +140,11 @@
                                                     class="text-muted">{{ $doc['original_name'] ?? basename($doc['path'] ?? $doc) }}</small>
                                             </div>
                                             <div class="ms-2">
-                                                <a href="{{ asset('storage/' . ($doc['path'] ?? $doc)) }}" target="_blank"
+                                                <a href="{{ route('sites.documents.show', [$site, $index]) }}" target="_blank"
                                                     class="btn btn-sm btn-outline-primary me-1">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
-                                                <a href="{{ asset('storage/' . ($doc['path'] ?? $doc)) }}" download
+                                                <a href="{{ route('sites.documents.show', [$site, $index]) }}?download=1"
                                                     class="btn btn-sm btn-outline-secondary">
                                                     <i class="bi bi-download"></i>
                                                 </a>
@@ -330,6 +341,7 @@ foreach ($site->lands as $land) {
                                     <th>Code</th>
                                     <th>Parcel Number</th>
                                     <th>Area (m²)</th>
+                                    <th>Zoning</th>
                                     <th>Buildings</th>
                                     <th>Actions</th>
                                 </tr>
@@ -340,6 +352,17 @@ foreach ($site->lands as $land) {
                     <td class="text-info fw-bold">{{ $land->code }}</td>
                     <td class="fw-semibold">Parcel {{ $land->parcel_no }}</td>
                     <td>{{ number_format($land->area_m2, 2) }}</td>
+                    <td>
+                        @if($land->zoningStatuses && $land->zoningStatuses->count() > 0)
+                            <div class="d-flex flex-wrap gap-1">
+                                @foreach($land->zoningStatuses as $zoning)
+                                    <span class="badge bg-info" style="font-size: 0.75rem;">{{ $zoning->name_ar }}</span>
+                                @endforeach
+                            </div>
+                        @else
+                            <span class="text-muted small">N/A</span>
+                        @endif
+                    </td>
                     <td>{{ $land->buildings->count() }} Buildings</td>
                     <td>
                         <div class="btn-group" role="group">

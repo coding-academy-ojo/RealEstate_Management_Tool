@@ -622,7 +622,7 @@
         @csrf
         <div class="row">
             <!-- Left Side: Site Form (Full Width) -->
-            <div class="col-lg-7">
+            <div class="col-lg-6">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white py-3">
                         <h4 class="mb-0">
@@ -631,6 +631,19 @@
                         </h4>
                     </div>
                     <div class="card-body p-4">
+                        <!-- Global Error Display -->
+                        @if ($errors->any())
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <h6 class="alert-heading"><i class="bi bi-exclamation-triangle-fill me-2"></i>Please fix the following errors:</h6>
+                                <ul class="mb-0">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        @endif
+
                         <div class="row">
                             <div class="col-md-12 mb-3">
                                 <label for="name" class="form-label fw-bold">
@@ -715,74 +728,6 @@
                             </div>
                         </div>
 
-                        <!-- Zoning Status Section -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Zoning Status (التنظيم)</label>
-
-                            <div class="zoning-wrapper">
-                                <!-- Search Bar -->
-                                <div class="zoning-search-box">
-                                    <i class="bi bi-search"></i>
-                                    <input type="text" id="zoningSearch" placeholder="Search zoning status...">
-                                </div>
-
-                                <!-- Selected Items Display -->
-                                <div class="zoning-selected-area">
-                                    <div class="selected-header">
-                                        <span><i class="bi bi-check-circle me-1"></i> Selected Items</span>
-                                        <button type="button" class="btn-add-zoning" data-bs-toggle="modal"
-                                            data-bs-target="#addZoningModal">
-                                            <i class="bi bi-plus-circle"></i> Add New
-                                        </button>
-                                    </div>
-                                    <div id="badgeContainer" class="selected-badges">
-                                        <em class="no-selection">No items selected</em>
-                                    </div>
-                                </div>
-
-                                <!-- Scrollable Checkbox List -->
-                                <div class="zoning-scroll-area">
-                                    @php
-                                        $noneOption = $zoningStatuses->firstWhere('name_ar', 'لا يوجد');
-                                        $otherOptions = $zoningStatuses->where('name_ar', '!=', 'لا يوجد');
-                                    @endphp
-
-                                    {{-- Show "لا يوجد" first if exists --}}
-                                    @if ($noneOption)
-                                        <label class="zoning-option zoning-item"
-                                            data-name="{{ strtolower($noneOption->name_ar) }}">
-                                            <input type="checkbox" class="zoning-checkbox" name="zoning_statuses[]"
-                                                value="{{ $noneOption->id }}" id="zoning_{{ $noneOption->id }}"
-                                                {{ in_array($noneOption->id, old('zoning_statuses', [])) ? 'checked' : '' }}>
-                                            <span class="checkbox-custom"></span>
-                                            <span class="option-text">{{ $noneOption->name_ar }}</span>
-                                        </label>
-                                    @endif
-
-                                    {{-- Show all other options --}}
-                                    @foreach ($otherOptions as $zoning)
-                                        <label class="zoning-option zoning-item"
-                                            data-name="{{ strtolower($zoning->name_ar) }}">
-                                            <input type="checkbox" class="zoning-checkbox" name="zoning_statuses[]"
-                                                value="{{ $zoning->id }}" id="zoning_{{ $zoning->id }}"
-                                                {{ in_array($zoning->id, old('zoning_statuses', [])) ? 'checked' : '' }}>
-                                            <span class="checkbox-custom"></span>
-                                            <span class="option-text">{{ $zoning->name_ar }}</span>
-                                        </label>
-                                    @endforeach
-
-                                    <div id="noResults" class="no-results-msg">
-                                        <i class="bi bi-search"></i>
-                                        <p>No results found</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            @error('zoning_statuses')
-                                <div class="text-danger small mt-2">{{ $message }}</div>
-                            @enderror
-                        </div>
-
                         <div class="mb-4">
                             <label for="notes" class="form-label fw-bold">Notes (ملاحظات)</label>
                             <textarea name="notes" id="notes" rows="3" class="form-control @error('notes') is-invalid @enderror">{{ old('notes') }}</textarea>
@@ -849,7 +794,7 @@
             </div>
 
             <!-- Right Side: Lands Section -->
-            <div class="col-lg-5">
+            <div class="col-lg-6">
                 <div class="card border-0 shadow-sm lands-sidebar">
                     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
@@ -971,80 +916,7 @@
                 getNextClusterNumber(governorateSelect.value);
             }
 
-            // Handle zoning status checkboxes and badges
-            const zoningCheckboxes = document.querySelectorAll('.zoning-checkbox');
-            const badgeContainer = document.getElementById('badgeContainer');
-
-            function updateBadges() {
-                badgeContainer.innerHTML = '';
-                const checkedBoxes = document.querySelectorAll('.zoning-checkbox:checked');
-
-                if (checkedBoxes.length === 0) {
-                    badgeContainer.innerHTML = '<em class="no-selection">No items selected</em>';
-                    return;
-                }
-
-                checkedBoxes.forEach(checkbox => {
-                    const label = checkbox.closest('.zoning-option').querySelector('.option-text')
-                        .textContent.trim();
-                    const badge = document.createElement('span');
-                    badge.className = 'badge-item';
-                    badge.innerHTML = `
-                        ${label}
-                        <i class="bi bi-x-circle" data-checkbox-id="${checkbox.id}"></i>
-                    `;
-                    badgeContainer.appendChild(badge);
-
-                    // Add click handler to remove badge
-                    badge.querySelector('i').addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        checkbox.checked = false;
-                        updateBadges();
-                    });
-                });
-            }
-
-            zoningCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', updateBadges);
-            });
-
-            // Initialize badges on page load
-            updateBadges();
-
-            // Search functionality
-            const zoningSearch = document.getElementById('zoningSearch');
-            const noResults = document.getElementById('noResults');
-
-            // Get fresh list of items on each search
-            zoningSearch.addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase().trim();
-                const zoningItems = document.querySelectorAll('.zoning-option');
-                let hasResults = false;
-
-                zoningItems.forEach((item) => {
-                    const name = item.getAttribute('data-name');
-
-                    if (searchTerm === '' || (name && name.includes(searchTerm))) {
-                        item.style.cssText = 'display: flex !important;';
-                        hasResults = true;
-                    } else {
-                        item.style.cssText = 'display: none !important;';
-                    }
-                });
-
-                // Show/hide no results message
-                if (noResults) {
-                    if (hasResults) {
-                        noResults.classList.remove('show');
-                        noResults.style.display = 'none';
-                    } else {
-                        noResults.classList.add('show');
-                        noResults.style.display = 'block';
-                    }
-                }
-            });
-
-            // Handle new zoning status creation
+            // Handle new zoning status creation (for land cards)
             const saveNewZoningBtn = document.getElementById('saveNewZoning');
             const newZoningNameInput = document.getElementById('new_zoning_name');
             const zoningError = document.getElementById('zoning_error');
@@ -1082,27 +954,36 @@
                     const data = await response.json();
 
                     if (response.ok) {
-                        // Add new checkbox to the list
-                        const scrollArea = document.querySelector('.zoning-scroll-area');
-                        const newOption = document.createElement('label');
-                        newOption.className = 'zoning-option zoning-item';
-                        newOption.setAttribute('data-name', data.name_ar.toLowerCase());
-                        newOption.innerHTML = `
-                            <input type="checkbox" class="zoning-checkbox"
-                                name="zoning_statuses[]"
-                                value="${data.id}"
-                                id="zoning_${data.id}" checked>
-                            <span class="checkbox-custom"></span>
-                            <span class="option-text">${data.name_ar}</span>
-                        `;
-                        scrollArea.insertBefore(newOption, scrollArea.firstChild);
+                        // Add new checkbox to ALL land card zoning lists
+                        const allLandScrollAreas = document.querySelectorAll('.land-zoning-scroll');
+                        allLandScrollAreas.forEach((scrollArea) => {
+                            const landCard = scrollArea.closest('.land-card');
+                            const landId = landCard.getAttribute('data-land-id');
 
-                        // Add event listener to new checkbox
-                        const newCheckbox = newOption.querySelector('.zoning-checkbox');
-                        newCheckbox.addEventListener('change', updateBadges);
+                            const newOption = document.createElement('label');
+                            newOption.className = 'zoning-option zoning-item';
+                            newOption.setAttribute('data-name', data.name_ar.toLowerCase());
+                            newOption.innerHTML = `
+                                <input type="checkbox" class="land-zoning-checkbox"
+                                    name="lands[${landId}][zoning_statuses][]"
+                                    value="${data.id}"
+                                    id="land_${landId}_zoning_${data.id}">
+                                <span class="checkbox-custom"></span>
+                                <span class="option-text">${data.name_ar}</span>
+                            `;
 
-                        // Update badges
-                        updateBadges();
+                            const noResultsNode = scrollArea.querySelector('.land-no-results');
+                            if (noResultsNode) {
+                                scrollArea.insertBefore(newOption, noResultsNode);
+                            } else {
+                                scrollArea.appendChild(newOption);
+                            }
+
+                            const newCheckbox = newOption.querySelector('.land-zoning-checkbox');
+                            newCheckbox.addEventListener('change', function() {
+                                updateLandBadges(landCard);
+                            });
+                        });
 
                         // Clear input
                         newZoningNameInput.value = '';
@@ -1140,6 +1021,83 @@
             const addLandBtn = document.getElementById('addLandBtn');
             const emptyLandsMessage = document.getElementById('emptyLandsMessage');
             const landCountBadge = document.getElementById('landCount');
+
+            // Helper function to update badges for a specific land card
+            function updateLandBadges(landCard) {
+                const badgeContainer = landCard.querySelector('.land-badge-container');
+                const checkedBoxes = landCard.querySelectorAll('.land-zoning-checkbox:checked');
+
+                badgeContainer.innerHTML = '';
+
+                if (checkedBoxes.length === 0) {
+                    badgeContainer.innerHTML = '<em class="no-selection">No items selected</em>';
+                    return;
+                }
+
+                checkedBoxes.forEach(checkbox => {
+                    const label = checkbox.closest('.zoning-option').querySelector('.option-text').textContent.trim();
+                    const badge = document.createElement('span');
+                    badge.className = 'badge-item';
+                    badge.innerHTML = `
+                        ${label}
+                        <i class="bi bi-x-circle" data-checkbox-id="${checkbox.id}"></i>
+                    `;
+                    badgeContainer.appendChild(badge);
+
+                    badge.querySelector('i').addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        checkbox.checked = false;
+                        updateLandBadges(landCard);
+                    });
+                });
+            }
+
+            // Function to setup zoning for individual land card
+            function setupLandZoning(landCard, landId) {
+                const checkboxes = landCard.querySelectorAll('.land-zoning-checkbox');
+                const searchInput = landCard.querySelector('.land-zoning-search');
+                const noResults = landCard.querySelector('.land-no-results');
+                const zoningItems = landCard.querySelectorAll('.zoning-item');
+
+                // Checkbox change event
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        updateLandBadges(landCard);
+                    });
+                });
+
+                // Search functionality
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        const searchTerm = this.value.toLowerCase().trim();
+                        let hasResults = false;
+
+                        zoningItems.forEach((item) => {
+                            const name = item.getAttribute('data-name');
+
+                            if (searchTerm === '' || (name && name.includes(searchTerm))) {
+                                item.style.cssText = 'display: flex !important;';
+                                hasResults = true;
+                            } else {
+                                item.style.cssText = 'display: none !important;';
+                            }
+                        });
+
+                        if (noResults) {
+                            if (hasResults) {
+                                noResults.classList.remove('show');
+                                noResults.style.display = 'none';
+                            } else {
+                                noResults.classList.add('show');
+                                noResults.style.display = 'block';
+                            }
+                        }
+                    });
+                }
+
+                // Initialize badges
+                updateLandBadges(landCard);
+            }
 
             function updateLandCount() {
                 const activeLands = document.querySelectorAll('.land-card').length;
@@ -1252,12 +1210,103 @@
                             </div>
                         </div>
 
+                        <!-- Zoning Status Section for Land -->
+                        <div class="mb-2">
+                            <label class="form-label fw-bold" style="font-size: 0.85rem;">Zoning Status (التنظيم)</label>
+                            <div class="zoning-wrapper">
+                                <div class="zoning-search-box">
+                                    <i class="bi bi-search"></i>
+                                    <input type="text" class="land-zoning-search" placeholder="Search zoning...">
+                                </div>
+                                <div class="zoning-selected-area">
+                                    <div class="selected-header">
+                                        <span><i class="bi bi-check-circle me-1"></i> Selected</span>
+                                        <button type="button" class="btn-add-zoning" data-bs-toggle="modal" data-bs-target="#addZoningModal">
+                                            <i class="bi bi-plus-circle"></i> Add
+                                        </button>
+                                    </div>
+                                    <div class="land-badge-container selected-badges">
+                                        <em class="no-selection">No items selected</em>
+                                    </div>
+                                </div>
+                                <div class="zoning-scroll-area land-zoning-scroll" style="height: 150px !important;">
+                                    @php
+                                        $noneOption = $zoningStatuses->firstWhere('name_ar', 'لا يوجد');
+                                        $otherOptions = $zoningStatuses->where('name_ar', '!=', 'لا يوجد');
+                                    @endphp
+                                    @if ($noneOption)
+                                        <label class="zoning-option zoning-item" data-name="{{ strtolower($noneOption->name_ar) }}">
+                                            <input type="checkbox" class="land-zoning-checkbox" name="lands[${landCounter}][zoning_statuses][]"
+                                                value="{{ $noneOption->id }}" id="land_${landCounter}_zoning_{{ $noneOption->id }}">
+                                            <span class="checkbox-custom"></span>
+                                            <span class="option-text">{{ $noneOption->name_ar }}</span>
+                                        </label>
+                                    @endif
+                                    @foreach ($otherOptions as $zoning)
+                                        <label class="zoning-option zoning-item" data-name="{{ strtolower($zoning->name_ar) }}">
+                                            <input type="checkbox" class="land-zoning-checkbox" name="lands[${landCounter}][zoning_statuses][]"
+                                                value="{{ $zoning->id }}" id="land_${landCounter}_zoning_{{ $zoning->id }}">
+                                            <span class="checkbox-custom"></span>
+                                            <span class="option-text">{{ $zoning->name_ar }}</span>
+                                        </label>
+                                    @endforeach
+                                    <div class="no-results-msg land-no-results">
+                                        <i class="bi bi-search"></i>
+                                        <p>No results found</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Documents Section for Land -->
+                        <div class="mt-3">
+                            <label class="form-label fw-bold mb-2" style="font-size: 0.85rem;">
+                                <i class="bi bi-file-earmark-text text-orange me-1"></i>Documents (Optional)
+                            </label>
+
+                            <div class="mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <label class="mb-0" style="font-size: 0.75rem; min-width: 100px;">
+                                        <i class="bi bi-file-pdf text-danger me-1"></i>سند الملكية
+                                    </label>
+                                    <input type="file" name="lands[${landCounter}][ownership_doc]"
+                                        class="form-control form-control-sm" accept=".jpg,.jpeg,.pdf" style="max-width: 250px;">
+                                    <small class="text-muted" style="font-size: 0.7rem;">JPG/PDF (Max: 10MB)</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <label class="mb-0" style="font-size: 0.75rem; min-width: 100px;">
+                                        <i class="bi bi-map text-info me-1"></i>مخطط الموقع
+                                    </label>
+                                    <input type="file" name="lands[${landCounter}][site_plan]"
+                                        class="form-control form-control-sm" accept=".jpg,.jpeg,.pdf" style="max-width: 250px;">
+                                    <small class="text-muted" style="font-size: 0.7rem;">JPG/PDF (Max: 10MB)</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <label class="mb-0" style="font-size: 0.75rem; min-width: 100px;">
+                                        <i class="bi bi-diagram-3 text-success me-1"></i>مخطط تنظيمي
+                                    </label>
+                                    <input type="file" name="lands[${landCounter}][zoning_plan]"
+                                        class="form-control form-control-sm" accept=".jpg,.jpeg,.pdf" style="max-width: 250px;">
+                                    <small class="text-muted" style="font-size: 0.7rem;">JPG/PDF (Max: 10MB)</small>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="alert alert-info py-2 px-2 mb-0" style="font-size: 0.75rem;">
                             <i class="bi bi-info-circle me-1"></i>
-                            Zoning status and documents can be added after creation
+                            New land - will be created on save
                         </div>
                     </div>
                 `;
+
+                // Setup land-specific zoning functionality
+                setupLandZoning(landCard, landCounter);
 
                 // Add event listeners
                 const toggleBtn = landCard.querySelector('.btn-toggle-land');

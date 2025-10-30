@@ -248,7 +248,7 @@
                                     <div class="alert alert-light border mt-2 small">
                                         <i class="bi bi-file-earmark-text me-1 text-orange"></i>
                                         Current file:
-                                        <a href="{{ asset('storage/' . $building->building_permit_file) }}"
+                                        <a href="{{ route('buildings.files.show', [$building, 'building-permit']) }}?download=1"
                                             target="_blank">Download</a>
                                     </div>
                                 @endif
@@ -278,7 +278,7 @@
                                     <div class="alert alert-light border mt-2 small">
                                         <i class="bi bi-file-earmark-text me-1 text-orange"></i>
                                         Current file:
-                                        <a href="{{ asset('storage/' . $building->occupancy_permit_file) }}"
+                                        <a href="{{ route('buildings.files.show', [$building, 'occupancy-permit']) }}?download=1"
                                             target="_blank">Download</a>
                                     </div>
                                 @endif
@@ -309,7 +309,7 @@
                                     <div class="alert alert-light border mt-2 small">
                                         <i class="bi bi-file-earmark-text me-1 text-orange"></i>
                                         Current file:
-                                        <a href="{{ asset('storage/' . $building->profession_permit_file) }}"
+                                        <a href="{{ route('buildings.files.show', [$building, 'profession-permit']) }}?download=1"
                                             target="_blank">Download</a>
                                     </div>
                                 @endif

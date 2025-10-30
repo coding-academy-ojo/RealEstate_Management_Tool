@@ -150,7 +150,7 @@
                         </div>
                         <div class="col-md-8">
                             @if ($electricityService->reset_file)
-                                <a href="{{ asset('storage/' . $electricityService->reset_file) }}" target="_blank"
+                                <a href="{{ route('electricity-services.files.show', [$electricityService, 'reset']) }}" target="_blank"
                                     class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-file-earmark-pdf me-1"></i> View File
                                 </a>
