@@ -7,6 +7,61 @@
     <li class="breadcrumb-item active">Create</li>
 @endsection
 
+@section('styles')
+<style>
+    .hierarchy-tree {
+        font-size: 0.95rem;
+    }
+
+    .child-node {
+        transition: all 0.2s ease;
+        background-color: #fff;
+    }
+
+    .child-node:not(.border-2):hover {
+        background-color: #f8f9fa;
+        border-color: #FF7900 !important;
+        cursor: pointer;
+    }
+
+    .entity-item {
+        transition: all 0.2s ease;
+    }
+
+    .entity-item:hover {
+        background-color: #fff3e6 !important;
+        border-left: 3px solid #FF7900;
+    }
+
+    #entityTree {
+        background-color: #fafafa;
+    }
+
+    .site-node {
+        transition: all 0.2s ease;
+    }
+
+    .site-node:not(.border-2):hover {
+        background-color: #e9ecef;
+        border-color: #FF7900 !important;
+        cursor: pointer;
+    }
+
+    /* Land display text wrapping */
+    .child-node .flex-grow-1 {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        line-height: 1.4;
+    }
+
+    #selectedEntityText {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        line-height: 1.4;
+    }
+</style>
+@endsection
+
 @section('content')
     <div class="row justify-content-center">
         <div class="col-lg-10">
@@ -25,52 +80,48 @@
                             <i class="bi bi-link-45deg me-2"></i>Related Entity
                         </h5>
 
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label for="innovatable_type" class="form-label fw-bold">
-                                    Entity Type <span class="text-danger">*</span>
-                                </label>
-                                <select name="innovatable_type" id="innovatable_type"
-                                    class="form-select @error('innovatable_type') is-invalid @enderror" required
-                                    {{ request('innovatable_type') ? 'disabled' : '' }}>
-                                    <option value="">-- Select Entity Type --</option>
-                                    <option value="Site"
-                                        {{ old('innovatable_type', request('innovatable_type')) == 'Site' ? 'selected' : '' }}>
-                                        Site</option>
-                                    <option value="Building"
-                                        {{ old('innovatable_type', request('innovatable_type')) == 'Building' ? 'selected' : '' }}>
-                                        Building</option>
-                                    <option value="Land"
-                                        {{ old('innovatable_type', request('innovatable_type')) == 'Land' ? 'selected' : '' }}>
-                                        Land</option>
-                                </select>
-                                @if (request('innovatable_type'))
-                                    <input type="hidden" name="innovatable_type" value="{{ request('innovatable_type') }}">
-                                @endif
-                                @error('innovatable_type')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                        <!-- Hidden inputs for actual form submission -->
+                        <input type="hidden" name="innovatable_type" id="innovatable_type" value="{{ old('innovatable_type', request('innovatable_type')) }}">
+                        <input type="hidden" name="innovatable_id" id="innovatable_id" value="{{ old('innovatable_id', request('innovatable_id')) }}">
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                Search & Select Entity <span class="text-danger">*</span>
+                            </label>
+
+                            <!-- Search Box -->
+                            <div class="input-group mb-3">
+                                <span class="input-group-text bg-white">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input type="text" id="entitySearch" class="form-control"
+                                    placeholder="Search for site, building, or land by code or name...">
                             </div>
 
-                            <div class="col-md-6">
-                                <label for="innovatable_id" class="form-label fw-bold">
-                                    Select Entity <span class="text-danger">*</span>
-                                </label>
-                                <select name="innovatable_id" id="innovatable_id"
-                                    class="form-select @error('innovatable_id') is-invalid @enderror" required
-                                    {{ request('innovatable_id') ? 'disabled' : '' }}>
-                                    <option value="">-- Select entity type first --</option>
-                                </select>
-                                @if (request('innovatable_id'))
-                                    <input type="hidden" name="innovatable_id" value="{{ request('innovatable_id') }}">
-                                    <small class="text-info">
-                                        <i class="bi bi-lock-fill me-1"></i>Entity is locked (coming from entity page)
-                                    </small>
-                                @endif
-                                @error('innovatable_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+            <!-- Selected Entity Display -->
+            <div id="selectedEntityDisplay" class="alert alert-info d-none mb-2">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1 me-3">
+                        <strong>Selected:</strong> <span id="selectedEntityText"></span>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-light border" id="clearSelection">
+                        <i class="bi bi-x-circle me-1"></i> Change
+                    </button>
+                </div>
+            </div>                            <!-- Entity Selection Tree -->
+                            <div id="entityTree" class="border rounded p-3" style="max-height: 400px; overflow-y: auto;">
+                                <div class="text-center text-muted py-4">
+                                    <i class="bi bi-search fs-3 d-block mb-2"></i>
+                                    <p class="mb-0">Start typing to search for sites, buildings, or lands</p>
+                                </div>
                             </div>
+
+                            @error('innovatable_type')
+                                <div class="text-danger mt-2">{{ $message }}</div>
+                            @enderror
+                            @error('innovatable_id')
+                                <div class="text-danger mt-2">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         <hr class="my-4">
@@ -144,49 +195,385 @@
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                const typeSelect = document.getElementById('innovatable_type');
-                const entitySelect = document.getElementById('innovatable_id');
+                const entitySearch = document.getElementById('entitySearch');
+                const entityTree = document.getElementById('entityTree');
+                const selectedDisplay = document.getElementById('selectedEntityDisplay');
+                const selectedText = document.getElementById('selectedEntityText');
+                const clearBtn = document.getElementById('clearSelection');
+                const typeInput = document.getElementById('innovatable_type');
+                const idInput = document.getElementById('innovatable_id');
 
-                typeSelect.addEventListener('change', function() {
-                    const type = this.value;
-                    entitySelect.innerHTML = '<option value="">Loading...</option>';
+                let allSites = [];
+                let allBuildings = [];
+                let allLands = [];
+                let selectedEntity = null;
 
-                    if (!type) {
-                        entitySelect.innerHTML = '<option value="">-- Select entity type first --</option>';
+                // Load all data
+                Promise.all([
+                    fetch('/api/sites-list').then(r => r.json()),
+                    fetch('/api/buildings-list').then(r => r.json()),
+                    fetch('/api/lands-list').then(r => r.json())
+                ]).then(([sites, buildings, lands]) => {
+                    allSites = sites;
+                    allBuildings = buildings;
+                    allLands = lands;
+
+                    // Check if coming from entity page with locked selection
+                    const preSelectedType = '{{ old('innovatable_type', request('innovatable_type')) }}';
+                    const preSelectedId = '{{ old('innovatable_id', request('innovatable_id')) }}';
+
+                    if (preSelectedType && preSelectedId) {
+                        let entity = null;
+                        if (preSelectedType === 'Site') {
+                            entity = allSites.find(s => s.id == preSelectedId);
+                            if (entity) selectEntity('Site', entity);
+                        } else if (preSelectedType === 'Building') {
+                            entity = allBuildings.find(b => b.id == preSelectedId);
+                            if (entity) selectEntity('Building', entity);
+                        } else if (preSelectedType === 'Land') {
+                            entity = allLands.find(l => l.id == preSelectedId);
+                            if (entity) selectEntity('Land', entity);
+                        }
+                    }
+                }).catch(error => {
+                    console.error('Error loading entities:', error);
+                    entityTree.innerHTML = '<div class="text-danger text-center py-3">Error loading data</div>';
+                });
+
+                // Search functionality
+                entitySearch.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase().trim();
+
+                    if (!searchTerm) {
+                        entityTree.innerHTML = `
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-search fs-3 d-block mb-2"></i>
+                                <p class="mb-0">Start typing to search for sites, buildings, or lands</p>
+                            </div>
+                        `;
                         return;
                     }
 
-                    const endpoints = {
-                        'Site': '/api/sites-list',
-                        'Building': '/api/buildings-list',
-                        'Land': '/api/lands-list'
-                    };
+                    // Search across all entities
+                    const results = [];
 
-                    fetch(endpoints[type])
-                        .then(response => response.json())
-                        .then(data => {
-                            let html = '<option value="">-- Select ' + type + ' --</option>';
-                            data.forEach(item => {
-                                const displayLabel = item.display ?? item.name ?? item.code ??
-                                    `${type} #${item.id}`;
-                                html += `<option value="${item.id}">${displayLabel}</option>`;
-                            });
-                            entitySelect.innerHTML = html;
+                    allSites.forEach(site => {
+                        const searchableText = `${site.code || ''} ${site.name || ''}`.toLowerCase();
+                        if (searchableText.includes(searchTerm)) {
+                            results.push({ type: 'Site', data: site, match: true });
+                        }
+                    });
 
-                            const oldValue = '{{ old('innovatable_id', request('innovatable_id')) }}';
-                            if (oldValue) {
-                                entitySelect.value = oldValue;
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            entitySelect.innerHTML = '<option value="">Error loading data</option>';
-                        });
+                    allBuildings.forEach(building => {
+                        const searchableText = `${building.code || ''} ${building.name || ''}`.toLowerCase();
+                        if (searchableText.includes(searchTerm)) {
+                            results.push({ type: 'Building', data: building, match: true });
+                        }
+                    });
+
+                allLands.forEach(land => {
+                    // Search by plot_key for lands
+                    const searchableText = `${land.plot_key || ''} ${land.directorate || ''} ${land.village || ''} ${land.basin || ''} ${land.neighborhood || ''}`.toLowerCase();
+                    if (searchableText.includes(searchTerm)) {
+                        results.push({ type: 'Land', data: land, match: true });
+                    }
+                });                    displayResults(results);
                 });
 
-                if (typeSelect.value) {
-                    typeSelect.dispatchEvent(new Event('change'));
+                function displayResults(results) {
+                    if (results.length === 0) {
+                        entityTree.innerHTML = `
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                <p class="mb-0">No results found</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    let html = '<div class="list-group list-group-flush">';
+
+                results.forEach(result => {
+                    const { type, data } = result;
+                    let displayName = '';
+
+                    if (type === 'Land') {
+                        // Format land display with conditional formatting to avoid empty values
+                        const parts = [];
+
+                        if (data.plot_key) parts.push(data.plot_key);
+
+                        if (data.directorate) {
+                            parts.push(data.directorate_number ?
+                                `${data.directorate}(${data.directorate_number})` :
+                                data.directorate);
+                        }
+
+                        if (data.village) {
+                            parts.push(data.village_number ?
+                                `${data.village}(${data.village_number})` :
+                                data.village);
+                        }
+
+                        if (data.basin) {
+                            parts.push(data.basin_number ?
+                                `${data.basin}(${data.basin_number})` :
+                                data.basin);
+                        }
+
+                        if (data.neighborhood) parts.push(data.neighborhood);
+
+                        if (data.plot_number) parts.push(`Plot ${data.plot_number}`);
+
+                        displayName = parts.length > 0 ? parts.join(' - ') : 'Land (No data)';
+                    } else {
+                        displayName = `${data.code || ''} - ${data.name || ''}`.trim();
+                    }
+
+                    const icon = type === 'Site' ? 'building' : (type === 'Building' ? 'house-door' : 'map');
+                    const badgeColor = type === 'Site' ? 'primary' : (type === 'Building' ? 'success' : 'warning');
+                    const siteName = data.site_name ? `<small class="text-muted ms-2">(Site: ${data.site_name})</small>` : '';
+
+                    html += `
+                        <a href="#" class="list-group-item list-group-item-action entity-item"
+                           data-type="${type}" data-id="${data.id}" data-site-id="${data.site_id || data.id}">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-${icon} me-2 text-${badgeColor}"></i>
+                                <div class="flex-grow-1">
+                                    <strong>${displayName}</strong>
+                                    ${siteName}
+                                </div>
+                                <span class="badge bg-${badgeColor}">${type}</span>
+                            </div>
+                        </a>
+                    `;
+                });                    html += '</div>';
+                    entityTree.innerHTML = html;
+
+                    // Add click handlers
+                    document.querySelectorAll('.entity-item').forEach(item => {
+                        item.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const type = this.dataset.type;
+                            const id = parseInt(this.dataset.id);
+                            const siteId = parseInt(this.dataset.siteId);
+
+                            let entity = null;
+                            if (type === 'Site') {
+                                entity = allSites.find(s => s.id === id);
+                            } else if (type === 'Building') {
+                                entity = allBuildings.find(b => b.id === id);
+                            } else if (type === 'Land') {
+                                entity = allLands.find(l => l.id === id);
+                            }
+
+                            if (entity) {
+                                selectEntity(type, entity, siteId);
+                            }
+                        });
+                    });
                 }
+
+            function selectEntity(type, entity, siteId = null) {
+                selectedEntity = { type, entity };
+
+                // Update hidden inputs
+                typeInput.value = type;
+                idInput.value = entity.id;
+
+                // Display selection
+                let displayName = '';
+                if (type === 'Land') {
+                    const parts = [];
+
+                    if (entity.plot_key) parts.push(entity.plot_key);
+
+                    if (entity.directorate) {
+                        parts.push(entity.directorate_number ?
+                            `${entity.directorate}(${entity.directorate_number})` :
+                            entity.directorate);
+                    }
+
+                    if (entity.village) {
+                        parts.push(entity.village_number ?
+                            `${entity.village}(${entity.village_number})` :
+                            entity.village);
+                    }
+
+                    if (entity.basin) {
+                        parts.push(entity.basin_number ?
+                            `${entity.basin}(${entity.basin_number})` :
+                            entity.basin);
+                    }
+
+                    if (entity.neighborhood) parts.push(entity.neighborhood);
+
+                    if (entity.plot_number) parts.push(`Plot ${entity.plot_number}`);
+
+                    displayName = parts.length > 0 ? parts.join(' - ') : 'Land (No data)';
+                } else {
+                    displayName = `${entity.code || ''} - ${entity.name || ''}`.trim();
+                }
+
+                const icon = type === 'Site' ? 'building' : (type === 'Building' ? 'house-door' : 'map');
+                const badgeColor = type === 'Site' ? 'primary' : (type === 'Building' ? 'success' : 'warning');
+
+                selectedText.innerHTML = `
+                    <i class="bi bi-${icon} me-2"></i>
+                    <span class="badge bg-${badgeColor} me-2">${type}</span>
+                    ${displayName}
+                `;
+                selectedDisplay.classList.remove('d-none');
+
+                // Show hierarchy: if building/land selected, show parent site and siblings
+                if (type === 'Building' || type === 'Land') {
+                    const actualSiteId = siteId || entity.site_id;
+                    showHierarchy(type, entity.id, actualSiteId);
+                } else if (type === 'Site') {
+                    showHierarchy('Site', entity.id);
+                }
+            }
+
+            function showHierarchy(selectedType, selectedId, siteId = null) {
+                const targetSiteId = selectedType === 'Site' ? selectedId : siteId;
+                const site = allSites.find(s => s.id === targetSiteId);
+
+                if (!site) return;
+
+                const siteBuildings = allBuildings.filter(b => b.site_id === targetSiteId);
+                const siteLands = allLands.filter(l => l.site_id === targetSiteId);
+
+                let html = '<div class="hierarchy-tree">';
+
+                // Site header (now clickable)
+                const siteSelected = selectedType === 'Site' && selectedId === site.id;
+                html += `
+                    <div class="site-node p-3 mb-2 bg-light border rounded ${siteSelected ? 'border-primary border-2' : ''}"
+                         style="cursor: ${siteSelected ? 'default' : 'pointer'};"
+                         ${!siteSelected ? `onclick="selectFromTree('Site', ${site.id})"` : ''}>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-building fs-4 me-3 text-primary"></i>
+                            <div class="flex-grow-1">
+                                <strong>${site.code} - ${site.name}</strong>
+                                <br><small class="text-muted">Site</small>
+                            </div>
+                            ${siteSelected ? '<i class="bi bi-check-circle-fill text-primary fs-4"></i>' : ''}
+                        </div>
+                    </div>
+                `;
+
+                // Buildings
+                if (siteBuildings.length > 0) {
+                    html += '<div class="ms-4 mb-3">';
+                    html += '<div class="text-muted mb-2"><small><i class="bi bi-house-door me-1"></i> Buildings</small></div>';
+                    siteBuildings.forEach(building => {
+                        const isSelected = selectedType === 'Building' && selectedId === building.id;
+                        html += `
+                            <div class="child-node p-2 mb-1 border rounded ${isSelected ? 'border-success border-2 bg-light' : ''}"
+                                 style="cursor: ${isSelected ? 'default' : 'pointer'};"
+                                 ${!isSelected ? `onclick="selectFromTree('Building', ${building.id})"` : ''}>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-house-door me-2 text-success"></i>
+                                    <div class="flex-grow-1">
+                                        ${building.code} - ${building.name}
+                                    </div>
+                                    ${isSelected ? '<i class="bi bi-check-circle-fill text-success"></i>' : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+
+                // Lands
+                if (siteLands.length > 0) {
+                    html += '<div class="ms-4">';
+                    html += '<div class="text-muted mb-2"><small><i class="bi bi-map me-1"></i> Lands</small></div>';
+                    siteLands.forEach(land => {
+                        const isSelected = selectedType === 'Land' && selectedId === land.id;
+
+                        const parts = [];
+
+                        if (land.plot_key) parts.push(land.plot_key);
+
+                        if (land.directorate) {
+                            parts.push(land.directorate_number ?
+                                `${land.directorate}(${land.directorate_number})` :
+                                land.directorate);
+                        }
+
+                        if (land.village) {
+                            parts.push(land.village_number ?
+                                `${land.village}(${land.village_number})` :
+                                land.village);
+                        }
+
+                        if (land.basin) {
+                            parts.push(land.basin_number ?
+                                `${land.basin}(${land.basin_number})` :
+                                land.basin);
+                        }
+
+                        if (land.neighborhood) parts.push(land.neighborhood);
+
+                        if (land.plot_number) parts.push(`Plot ${land.plot_number}`);
+
+                        const landDisplay = parts.length > 0 ? parts.join(' - ') : 'Land (No data)';
+
+                        html += `
+                            <div class="child-node p-2 mb-1 border rounded ${isSelected ? 'border-warning border-2 bg-light' : ''}"
+                                 style="cursor: ${isSelected ? 'default' : 'pointer'};"
+                                 ${!isSelected ? `onclick="selectFromTree('Land', ${land.id})"` : ''}>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-map me-2 text-warning"></i>
+                                    <div class="flex-grow-1">
+                                        ${landDisplay}
+                                    </div>
+                                    ${isSelected ? '<i class="bi bi-check-circle-fill text-warning"></i>' : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+
+                html += '</div>';
+                entityTree.innerHTML = html;
+            }
+
+            // Global function for tree selection
+            window.selectFromTree = function(type, id) {
+                let entity = null;
+                if (type === 'Site') {
+                    entity = allSites.find(s => s.id === id);
+                    if (entity) {
+                        selectEntity('Site', entity);
+                    }
+                } else if (type === 'Building') {
+                    entity = allBuildings.find(b => b.id === id);
+                    if (entity) {
+                        selectEntity('Building', entity, entity.site_id);
+                    }
+                } else if (type === 'Land') {
+                    entity = allLands.find(l => l.id === id);
+                    if (entity) {
+                        selectEntity('Land', entity, entity.site_id);
+                    }
+                }
+            };                // Clear selection
+                clearBtn.addEventListener('click', function() {
+                    selectedEntity = null;
+                    typeInput.value = '';
+                    idInput.value = '';
+                    selectedDisplay.classList.add('d-none');
+                    entitySearch.value = '';
+                    entityTree.innerHTML = `
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-search fs-3 d-block mb-2"></i>
+                            <p class="mb-0">Start typing to search for sites, buildings, or lands</p>
+                        </div>
+                    `;
+                });
             });
         </script>
     @endpush

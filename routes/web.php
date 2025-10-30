@@ -305,7 +305,37 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('/api/lands-list', function () {
-        return response()->json(\App\Models\Land::with('site:id,code,name')->select('id', 'plot_number', 'site_id')->get());
+        return response()->json(\App\Models\Land::with('site:id,code,name')
+            ->select(
+                'id',
+                'site_id',
+                'plot_key',
+                'directorate',
+                'directorate_number',
+                'village',
+                'village_number',
+                'basin',
+                'basin_number',
+                'neighborhood',
+                'plot_number'
+            )
+            ->get()
+            ->map(function ($land) {
+                return [
+                    'id' => $land->id,
+                    'site_id' => $land->site_id,
+                    'site_name' => $land->site->name ?? null,
+                    'plot_key' => $land->plot_key,
+                    'directorate' => $land->directorate,
+                    'directorate_number' => $land->directorate_number,
+                    'village' => $land->village,
+                    'village_number' => $land->village_number,
+                    'basin' => $land->basin,
+                    'basin_number' => $land->basin_number,
+                    'neighborhood' => $land->neighborhood,
+                    'plot_number' => $land->plot_number,
+                ];
+            }));
     });
 
     // Sites with soft delete routes

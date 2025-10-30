@@ -180,4 +180,99 @@
             </div>
         </div>
     </div>
+
+    <!-- Confirmation Modal for Changing Building -->
+    <div class="modal fade" id="changeBuildingModal" tabindex="-1" aria-labelledby="changeBuildingModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="changeBuildingModalLabel">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Confirm Building Change
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Are you sure you want to change the building for this electricity service record?</p>
+                    <p class="text-muted mb-0 mt-2"><small>This will update the building association for this electricity service.</small></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-warning" id="confirmBuildingChange">
+                        <i class="bi bi-check-circle me-1"></i> Confirm Change
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const buildingSelect = document.getElementById('building_id');
+            const originalBuildingId = '{{ old('building_id', $electricityService->building_id) }}';
+            let buildingChoices = null;
+            let pendingBuildingId = null;
+
+            if (buildingSelect) {
+                // Initialize Choices.js for searchable building dropdown
+                buildingChoices = new Choices(buildingSelect, {
+                    searchEnabled: true,
+                    searchPlaceholderValue: 'Search by building code or name...',
+                    itemSelectText: 'Press to select',
+                    noResultsText: 'No buildings found',
+                    noChoicesText: 'No buildings available',
+                    shouldSort: false,
+                    removeItemButton: false,
+                });
+
+                // Listen for building changes
+                buildingSelect.addEventListener('change', function(e) {
+                    const newBuildingId = this.value;
+
+                    // If building changed from original, show confirmation modal
+                    if (newBuildingId && newBuildingId !== originalBuildingId) {
+                        e.preventDefault();
+                        pendingBuildingId = newBuildingId;
+
+                        // Show the modal
+                        const modal = new bootstrap.Modal(document.getElementById('changeBuildingModal'));
+                        modal.show();
+                    }
+                });
+
+                // Handle confirmation
+                const confirmBtn = document.getElementById('confirmBuildingChange');
+                if (confirmBtn) {
+                    confirmBtn.addEventListener('click', function() {
+                        // Close modal
+                        const modalElement = document.getElementById('changeBuildingModal');
+                        const modal = bootstrap.Modal.getInstance(modalElement);
+                        if (modal) {
+                            modal.hide();
+                        }
+
+                        // Keep the new selection
+                        pendingBuildingId = null;
+                    });
+                }
+
+                // Handle modal cancel/close - revert to original
+                const modalElement = document.getElementById('changeBuildingModal');
+                if (modalElement) {
+                    modalElement.addEventListener('hidden.bs.modal', function() {
+                        // If user canceled, revert to original building
+                        if (pendingBuildingId !== null) {
+                            buildingChoices.setChoiceByValue(originalBuildingId);
+                            pendingBuildingId = null;
+                        }
+                    });
+                }
+            }
+        });
+    </script>
+@endpush

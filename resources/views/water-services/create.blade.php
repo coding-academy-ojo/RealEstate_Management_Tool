@@ -146,3 +146,24 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const buildingSelect = document.getElementById('building_id');
+
+            if (buildingSelect) {
+                // Initialize Choices.js for searchable building dropdown
+                const buildingChoices = new Choices(buildingSelect, {
+                    searchEnabled: true,
+                    searchPlaceholderValue: 'Search by building code or name...',
+                    itemSelectText: 'Press to select',
+                    noResultsText: 'No buildings found',
+                    noChoicesText: 'No buildings available',
+                    shouldSort: false,
+                    removeItemButton: false,
+                });
+            }
+        });
+    </script>
+@endpush

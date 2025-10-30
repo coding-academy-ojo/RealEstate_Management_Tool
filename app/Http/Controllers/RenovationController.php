@@ -84,12 +84,15 @@ class RenovationController extends Controller
   {
     $validated = $request->validate([
       'name' => 'required|string|max:255',
-      'innovatable_type' => 'required|string|in:App\\Models\\Site,App\\Models\\Building,App\\Models\\Land',
+      'innovatable_type' => 'required|string|in:Site,Building,Land',
       'innovatable_id' => 'required|integer',
       'cost' => 'required|numeric|min:0',
       'date' => 'required|date',
       'description' => 'nullable|string',
     ]);
+
+    // Convert short class name to full class name
+    $validated['innovatable_type'] = 'App\\Models\\' . $validated['innovatable_type'];
 
     Renovation::create($validated);
 
@@ -110,17 +113,32 @@ class RenovationController extends Controller
   /**
    * Show the form for editing the specified resource.
    */
-  public function edit(string $id)
+  public function edit(Renovation $renovation)
   {
-    //
+    return view('renovations.edit', compact('renovation'));
   }
 
   /**
    * Update the specified resource in storage.
    */
-  public function update(Request $request, string $id)
+  public function update(Request $request, Renovation $renovation)
   {
-    //
+    $validated = $request->validate([
+      'name' => 'required|string|max:255',
+      'innovatable_type' => 'required|string|in:Site,Building,Land',
+      'innovatable_id' => 'required|integer',
+      'cost' => 'required|numeric|min:0',
+      'date' => 'required|date',
+      'description' => 'nullable|string',
+    ]);
+
+    // Convert short class name to full class name
+    $validated['innovatable_type'] = 'App\\Models\\' . $validated['innovatable_type'];
+
+    $renovation->update($validated);
+
+    return redirect()->route('renovations.show', $renovation)
+      ->with('success', 'Renovation updated successfully.');
   }
 
   /**
