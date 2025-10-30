@@ -206,6 +206,31 @@
     </div>
 </div>
 
+<!-- Delete Image Confirmation Modal -->
+<div class="modal fade" id="deleteImageModal" tabindex="-1" aria-labelledby="deleteImageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteImageModalLabel">
+                    <i class="bi bi-exclamation-triangle text-danger me-2"></i>Delete Image
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Are you sure you want to delete this image? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteImageButton">
+                    <i class="bi bi-trash me-1"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     .image-gallery-grid {
         display: grid;
@@ -397,23 +422,95 @@
     }
 
     // Delete Image
+    let pendingDeleteImageId = null;
+
     function deleteImage(imageId, type, entityId) {
-        if (confirm('Are you sure you want to delete this image?')) {
-            fetch(`/images/${imageId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    }
-                });
+        pendingDeleteImageId = imageId;
+        const deleteModal = document.getElementById('deleteImageModal');
+
+        if (deleteModal && typeof bootstrap !== 'undefined') {
+            const modal = new bootstrap.Modal(deleteModal);
+            modal.show();
+        } else if (deleteModal && typeof boosted !== 'undefined') {
+            const modal = new boosted.Modal(deleteModal);
+            modal.show();
+        } else {
+            // Fallback to confirm if modal not available
+            if (confirm('Are you sure you want to delete this image?')) {
+                performImageDelete(imageId);
+            }
         }
     }
+
+    function performImageDelete(imageId) {
+        fetch(`/images/${imageId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+    }
+
+        // Image Preview on Upload
+    document.addEventListener('DOMContentLoaded', function() {
+        const confirmDeleteBtn = document.getElementById('confirmDeleteImageButton');
+        if (confirmDeleteBtn) {
+            confirmDeleteBtn.addEventListener('click', function() {
+                if (pendingDeleteImageId !== null) {
+                    performImageDelete(pendingDeleteImageId);
+
+                    // Hide the modal
+                    const deleteModal = document.getElementById('deleteImageModal');
+                    if (deleteModal) {
+                        const modalInstance = bootstrap.Modal.getInstance(deleteModal) ||
+                                            boosted.Modal.getInstance(deleteModal);
+                        if (modalInstance) {
+                            modalInstance.hide();
+                        }
+                    }
+
+                    pendingDeleteImageId = null;
+                }
+            });
+        }
+
+        // Reset pending ID when modal is hidden
+        const deleteModal = document.getElementById('deleteImageModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('hidden.bs.modal', function() {
+                pendingDeleteImageId = null;
+            });
+        }
+
+        document.querySelectorAll('input[type="file"][name="images[]"]').forEach(input => {
+            input.addEventListener('change', function(e) {
+                const container = this.closest('.modal-body').querySelector(
+                    '[id^="imagePreviewContainer"]');
+                container.innerHTML = '';
+
+                Array.from(this.files).forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const div = document.createElement('div');
+                            div.className = 'position-relative';
+                            div.innerHTML =
+                                `<img src="${e.target.result}" class="img-thumbnail" style="width: 100%; height: 120px; object-fit: cover;">`;
+                            container.appendChild(div);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            });
+        });
+    });
 
     // Enable Reorder Mode
     let sortableInstance = null;

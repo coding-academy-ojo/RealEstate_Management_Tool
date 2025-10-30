@@ -637,6 +637,32 @@
                             the land.
                         </div>
 
+                        <hr class="my-4">
+
+                        <!-- Images Section -->
+                        <h5 class="mb-3 text-orange">
+                            <i class="bi bi-images me-2"></i>Land Images
+                        </h5>
+
+                        <div class="mb-4">
+                            <label for="images" class="form-label fw-bold">Upload Images</label>
+                            <input type="file" name="images[]" id="images"
+                                class="form-control @error('images') is-invalid @enderror @error('images.*') is-invalid @enderror"
+                                multiple accept="image/*">
+                            @error('images')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            @error('images.*')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted">You can select multiple images. Supported formats: JPG, PNG, GIF (max 2MB each)</small>
+                        </div>
+
+                        <!-- Image Preview Container -->
+                        <div id="imagePreviewContainer" class="row g-3 mb-4" style="display: none;">
+                            <!-- Previews will be inserted here via JavaScript -->
+                        </div>
+
                         <!-- Submit Buttons -->
                         <div class="d-flex gap-2 justify-content-end mt-4">
                             <a href="{{ route('lands.index') }}" class="btn btn-secondary">
@@ -1087,6 +1113,128 @@
                 this.classList.remove('is-invalid');
                 zoningError.style.display = 'none';
             });
+
+            // Image preview functionality
+            const imageInput = document.getElementById('images');
+            const previewContainer = document.getElementById('imagePreviewContainer');
+
+            if (imageInput && previewContainer) {
+                const selectedFileEntries = [];
+
+                const ensurePreviewVisibility = () => {
+                    previewContainer.style.display = selectedFileEntries.length ? 'flex' : 'none';
+                };
+
+                const updatePreviewIndices = () => {
+                    const buttons = previewContainer.querySelectorAll('.remove-preview');
+                    buttons.forEach((button, index) => {
+                        button.dataset.entryIndex = index.toString();
+                    });
+                };
+
+                const syncInputFiles = () => {
+                    if (typeof DataTransfer === 'undefined') {
+                        console.warn('DataTransfer API is not available in this browser. Clearing selected images.');
+                        imageInput.value = '';
+                        selectedFileEntries.splice(0, selectedFileEntries.length);
+                        previewContainer.innerHTML = '';
+                        ensurePreviewVisibility();
+                        return;
+                    }
+
+                    const dataTransfer = new DataTransfer();
+                    selectedFileEntries.forEach((entry) => dataTransfer.items.add(entry.file));
+                    imageInput.files = dataTransfer.files;
+                };
+
+                const appendPreview = (entry) => {
+                    if (!entry.previewUrl || entry.isRemoved) {
+                        return;
+                    }
+
+                    const col = document.createElement('div');
+                    col.className = 'col-md-3';
+                    col.innerHTML = `
+                        <div class="card border position-relative h-100">
+                            <button type="button" class="btn btn-sm btn-light text-danger position-absolute top-0 end-0 m-1 rounded-circle remove-preview" title="Remove image">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                            <img src="${entry.previewUrl}" class="card-img-top" style="height: 150px; object-fit: cover;" alt="Preview">
+                            <div class="card-body p-2 text-center">
+                                <small class="text-muted d-block text-truncate" title="${entry.file.name}">${entry.file.name}</small>
+                            </div>
+                        </div>
+                    `;
+
+                    entry.element = col;
+                    previewContainer.appendChild(col);
+                    ensurePreviewVisibility();
+                    updatePreviewIndices();
+                };
+
+                const addFiles = (files) => {
+                    let appended = false;
+
+                    files.forEach((file) => {
+                        if (!file || !file.type || !file.type.startsWith('image/')) {
+                            return;
+                        }
+
+                        const entry = { file, previewUrl: '', element: null, isRemoved: false };
+                        selectedFileEntries.push(entry);
+
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            entry.previewUrl = event.target.result;
+                            appendPreview(entry);
+                        };
+                        reader.readAsDataURL(file);
+                        appended = true;
+                    });
+
+                    if (appended) {
+                        syncInputFiles();
+                    }
+                };
+
+                imageInput.addEventListener('change', function() {
+                    const files = this.files ? Array.from(this.files) : [];
+
+                    if (files.length === 0) {
+                        return;
+                    }
+
+                    this.value = '';
+                    addFiles(files);
+                });
+
+                previewContainer.addEventListener('click', function(event) {
+                    const button = event.target.closest('.remove-preview');
+                    if (!button) {
+                        return;
+                    }
+
+                    const index = Number(button.dataset.entryIndex);
+                    if (Number.isNaN(index)) {
+                        return;
+                    }
+
+                    const [removedEntry] = selectedFileEntries.splice(index, 1);
+                    if (removedEntry && removedEntry.element) {
+                        removedEntry.element.remove();
+                    }
+
+                    if (removedEntry) {
+                        removedEntry.isRemoved = true;
+                    }
+
+                    syncInputFiles();
+                    ensurePreviewVisibility();
+                    updatePreviewIndices();
+                });
+
+                ensurePreviewVisibility();
+            }
 
             // Note: Choices.js for site select is initialized dynamically
             // when governorate is selected (see governorate change handler above)

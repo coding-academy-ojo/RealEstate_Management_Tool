@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Image;
 use App\Models\Land;
 use App\Models\Site;
 use App\Models\ZoningStatus;
@@ -188,6 +189,8 @@ class LandController extends Controller
             'zoning_plan' => 'nullable|file|mimes:jpg,jpeg,pdf|max:10240',
             'zoning_statuses' => 'nullable|array',
             'zoning_statuses.*' => 'integer|exists:zoning_statuses,id',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,jpg,png,gif|max:2048',
         ]);
 
         // Handle file uploads
@@ -208,6 +211,27 @@ class LandController extends Controller
         $land->zoningStatuses()->sync($this->resolveZoningStatusIds($request->input('zoning_statuses', [])));
 
         $this->syncSiteZoningStatuses($land->site);
+
+        if ($request->hasFile('images')) {
+            $order = ($land->images()->max('order') ?? 0) + 1;
+
+            foreach ($request->file('images') as $imageFile) {
+                if (!$imageFile || !$imageFile->isValid()) {
+                    continue;
+                }
+
+                $path = $imageFile->store('lands/images', 'private');
+
+                $land->images()->create([
+                    'filename' => basename($path),
+                    'original_name' => $imageFile->getClientOriginalName(),
+                    'path' => $path,
+                    'mime_type' => $imageFile->getMimeType(),
+                    'size' => $imageFile->getSize(),
+                    'order' => $order++,
+                ]);
+            }
+        }
 
         return redirect()->route('lands.index')->with('success', 'Land created successfully!');
     }
@@ -252,6 +276,8 @@ class LandController extends Controller
             'zoning_plan' => 'nullable|file|mimes:jpg,jpeg,pdf|max:10240',
             'zoning_statuses' => 'nullable|array',
             'zoning_statuses.*' => 'integer|exists:zoning_statuses,id',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,jpg,png,gif|max:2048',
         ]);
 
         // Handle file uploads
@@ -274,6 +300,42 @@ class LandController extends Controller
         $land->zoningStatuses()->sync($this->resolveZoningStatusIds($request->input('zoning_statuses', [])));
 
         $this->syncSiteZoningStatuses($land->site);
+
+        $removedImages = collect(explode(',', (string) $request->input('removed_images')))
+            ->filter()
+            ->map(fn($id) => (int) $id)
+            ->unique();
+
+        if ($removedImages->isNotEmpty()) {
+            $land->images()
+                ->whereIn('id', $removedImages)
+                ->get()
+                ->each(function (Image $image) {
+                    $image->delete();
+                });
+        }
+
+        if ($request->hasFile('images')) {
+            $order = ($land->images()->max('order') ?? 0) + 1;
+
+            foreach ($request->file('images') as $imageFile) {
+                if (!$imageFile || !$imageFile->isValid()) {
+                    continue;
+                }
+
+                $path = $imageFile->store('lands/images', 'private');
+
+                $land->images()->create([
+                    'filename' => basename($path),
+                    'original_name' => $imageFile->getClientOriginalName(),
+                    'path' => $path,
+                    'mime_type' => $imageFile->getMimeType(),
+                    'size' => $imageFile->getSize(),
+                    'order' => $order++,
+                ]);
+            }
+        }
+
         return redirect()->route('lands.show', $land)->with('success', 'Land updated successfully!');
     }
 

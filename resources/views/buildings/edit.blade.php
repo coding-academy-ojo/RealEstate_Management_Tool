@@ -16,13 +16,16 @@
         $selectedLandIds = array_map('intval', $selectedLandIds);
         $hasBuildingPermit = old('has_building_permit', $building->has_building_permit);
         $hasOccupancyPermit = old('has_occupancy_permit', $building->has_occupancy_permit);
-    $hasProfessionPermit = old('has_profession_permit', $building->has_profession_permit);
-    $currentPropertyType = old('property_type', $building->property_type);
-    $contractStartValue = old('contract_start_date', optional($building->contract_start_date)->format('Y-m-d'));
-    $contractEndValue = old('contract_end_date', optional($building->contract_end_date)->format('Y-m-d'));
+        $hasProfessionPermit = old('has_profession_permit', $building->has_profession_permit);
+        $currentPropertyType = old('property_type', $building->property_type);
+        $contractStartValue = old('contract_start_date', optional($building->contract_start_date)->format('Y-m-d'));
+        $contractEndValue = old('contract_end_date', optional($building->contract_end_date)->format('Y-m-d'));
         $contractValue = old('contract_value', $building->contract_value);
         $annualIncreaseValue = old('annual_increase_rate', $building->annual_increase_rate);
-        $increaseEffectiveValue = old('increase_effective_date', optional($building->increase_effective_date)->format('Y-m-d'));
+        $increaseEffectiveValue = old(
+            'increase_effective_date',
+            optional($building->increase_effective_date)->format('Y-m-d'),
+        );
         $specialConditionsValue = old('special_conditions', $building->special_conditions);
     @endphp
 
@@ -40,20 +43,21 @@
                         @csrf
                         @method('PUT')
 
-                        <input type="hidden" name="site_id" id="hidden_site_id" value="{{ old('site_id', $building->site_id) }}">
+                        <input type="hidden" name="site_id" id="hidden_site_id"
+                            value="{{ old('site_id', $building->site_id) }}">
 
                         <!-- Site Information -->
                         <div class="mb-4">
                             <label for="site_id_display" class="form-label fw-bold">
                                 Site <span class="text-danger">*</span>
                             </label>
-                            <select name="site_id_display" id="site_id_display" class="form-select @error('site_id') is-invalid @enderror" required>
+                            <select name="site_id_display" id="site_id_display"
+                                class="form-select @error('site_id') is-invalid @enderror" required>
                                 <option value="">-- Select Site --</option>
                                 @foreach ($sites as $site)
                                     <option value="{{ $site->id }}"
                                         {{ old('site_id', $building->site_id) == $site->id ? 'selected' : '' }}
-                                        data-code="{{ $site->code }}"
-                                        data-name="{{ $site->name }}">
+                                        data-code="{{ $site->code }}" data-name="{{ $site->name }}">
                                         {{ $site->code }} - {{ $site->name }} ({{ $site->governorate_name_en }})
                                     </option>
                                 @endforeach
@@ -125,7 +129,8 @@
                                 </label>
                                 <select name="property_type" id="property_type"
                                     class="form-select @error('property_type') is-invalid @enderror" required>
-                                    <option value="owned" {{ $currentPropertyType === 'owned' ? 'selected' : '' }}>Owned</option>
+                                    <option value="owned" {{ $currentPropertyType === 'owned' ? 'selected' : '' }}>Owned
+                                    </option>
                                     <option value="rental" {{ $currentPropertyType === 'rental' ? 'selected' : '' }}>Rental
                                     </option>
                                 </select>
@@ -243,7 +248,8 @@
                                     <span class="toggle-text">رخصة بناء (Building Permit)</span>
                                 </label>
                             </div>
-                            <div id="building_permit_upload" style="display: {{ $hasBuildingPermit ? 'block' : 'none' }};">
+                            <div id="building_permit_upload"
+                                style="display: {{ $hasBuildingPermit ? 'block' : 'none' }};">
                                 <label for="building_permit_file" class="form-label">Upload Building Permit File</label>
                                 <input type="file" name="building_permit_file" id="building_permit_file"
                                     class="form-control @error('building_permit_file') is-invalid @enderror"
@@ -333,9 +339,11 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="as_built_drawing_pdf" class="form-label fw-bold">As-Built Drawing (PDF)</label>
+                                <label for="as_built_drawing_pdf" class="form-label fw-bold">As-Built Drawing
+                                    (PDF)</label>
                                 <input type="file" name="as_built_drawing_pdf" id="as_built_drawing_pdf"
-                                    class="form-control @error('as_built_drawing_pdf') is-invalid @enderror" accept=".pdf">
+                                    class="form-control @error('as_built_drawing_pdf') is-invalid @enderror"
+                                    accept=".pdf">
                                 <small class="text-muted d-block">Accepted format: PDF (Max: 50MB)</small>
                                 @if ($building->as_built_drawing_pdf)
                                     <div class="alert alert-light border mt-2 small">
@@ -350,7 +358,8 @@
                                 @enderror
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="as_built_drawing_cad" class="form-label fw-bold">As-Built Drawing (AutoCAD)</label>
+                                <label for="as_built_drawing_cad" class="form-label fw-bold">As-Built Drawing
+                                    (AutoCAD)</label>
                                 <input type="file" name="as_built_drawing_cad" id="as_built_drawing_cad"
                                     class="form-control @error('as_built_drawing_cad') is-invalid @enderror"
                                     accept=".dwg,.dxf">
@@ -377,6 +386,60 @@
                             @enderror
                         </div>
 
+                        <hr class="my-4">
+
+                        <!-- Images Section -->
+                        <h5 class="mb-3 text-orange">
+                            <i class="bi bi-images me-2"></i>Building Images
+                        </h5>
+
+                        <!-- Existing Images -->
+                        @if ($building->images && $building->images->count() > 0)
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Current Images</label>
+                                <div class="row g-3" id="existingImagesContainer">
+                                    @foreach ($building->images as $image)
+                                        <div class="col-md-3" id="existing-image-{{ $image->id }}">
+                                            <div class="card border position-relative">
+                                                <img src="{{ route('images.show', $image->id) }}" class="card-img-top"
+                                                    style="height: 150px; object-fit: cover;" alt="Building image">
+                                                <div class="card-body p-2">
+                                                    <button type="button"
+                                                        class="btn btn-danger btn-sm w-100 remove-existing-image"
+                                                        data-image-id="{{ $image->id }}"
+                                                        data-image-name="{{ $image->original_name ?? ($image->filename ?? basename($image->path)) }}">
+                                                        <i class="bi bi-trash me-1"></i> Remove
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <input type="hidden" name="removed_images" id="removedImages" value="">
+                            </div>
+                        @endif
+
+                        <!-- Upload New Images -->
+                        <div class="mb-4">
+                            <label for="images" class="form-label fw-bold">Upload New Images</label>
+                            <input type="file" name="images[]" id="images"
+                                class="form-control @error('images') is-invalid @enderror @error('images.*') is-invalid @enderror"
+                                multiple accept="image/*">
+                            @error('images')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            @error('images.*')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted">You can select multiple images. Supported formats: JPG, PNG, GIF (max
+                                2MB each)</small>
+                        </div>
+
+                        <!-- New Image Preview Container -->
+                        <div id="imagePreviewContainer" class="row g-3 mb-4" style="display: none;">
+                            <!-- Previews will be inserted here via JavaScript -->
+                        </div>
+
                         <!-- Submit Buttons -->
                         <div class="d-flex gap-2 justify-content-end">
                             <a href="{{ route('buildings.show', $building) }}" class="btn btn-light">
@@ -392,6 +455,34 @@
         </div>
     </div>
 @endsection
+
+<!-- Remove Image Confirmation Modal -->
+<div class="modal fade" id="removeImageModal" tabindex="-1" aria-labelledby="removeImageModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="removeImageModalLabel">
+                    <i class="bi bi-exclamation-triangle text-orange me-2"></i>
+                    Remove Image
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Are you sure you want to remove <span class="fw-semibold" id="removeImageName">this
+                        image</span>? It will be removed after you save the changes.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmRemoveImageButton">
+                    <i class="bi bi-trash me-1"></i> Remove
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @push('scripts')
     <script>
@@ -654,7 +745,237 @@
                             siteChoices.setChoiceByValue(originalSiteId.toString());
                         }
                     }
-                }, { once: true });
+                }, {
+                    once: true
+                });
+            }
+
+            const existingImagesContainer = document.getElementById('existingImagesContainer');
+            const removedImagesInput = document.getElementById('removedImages');
+            const removeImageModalEl = document.getElementById('removeImageModal');
+            const removeImageNameEl = document.getElementById('removeImageName');
+            const confirmRemoveImageButton = document.getElementById('confirmRemoveImageButton');
+            const removedImagesSet = new Set();
+            let pendingRemoval = {
+                id: null,
+                card: null
+            };
+
+            const updateRemovedImagesInput = () => {
+                if (removedImagesInput) {
+                    removedImagesInput.value = Array.from(removedImagesSet).join(',');
+                }
+            };
+
+            const resetPendingRemoval = () => {
+                pendingRemoval = {
+                    id: null,
+                    card: null
+                };
+            };
+
+            const showNoExistingImagesMessage = () => {
+                if (!existingImagesContainer) {
+                    return;
+                }
+
+                const hasCards = existingImagesContainer.querySelector('.col-md-3');
+                if (!hasCards) {
+                    existingImagesContainer.innerHTML = `
+                        <div class="col-12">
+                            <div class="alert alert-info mb-0 small">
+                                All selected images will be removed once you save changes.
+                            </div>
+                        </div>
+                    `;
+                }
+            };
+
+            const removeExistingButtons = document.querySelectorAll('.remove-existing-image');
+
+            if (removeImageModalEl && typeof bootstrap !== 'undefined' && removeExistingButtons.length > 0) {
+                const removeImageModal = new bootstrap.Modal(removeImageModalEl);
+
+                removeExistingButtons.forEach((button) => {
+                    button.addEventListener('click', function() {
+                        const imageId = Number(this.dataset.imageId);
+                        pendingRemoval.id = imageId;
+                        pendingRemoval.card = document.getElementById(`existing-image-${imageId}`);
+
+                        if (removeImageNameEl) {
+                            removeImageNameEl.textContent = this.dataset.imageName || 'this image';
+                        }
+
+                        removeImageModal.show();
+                    });
+                });
+
+                if (confirmRemoveImageButton) {
+                    confirmRemoveImageButton.addEventListener('click', function() {
+                        if (pendingRemoval.id === null) {
+                            return;
+                        }
+
+                        removedImagesSet.add(pendingRemoval.id);
+                        updateRemovedImagesInput();
+
+                        if (pendingRemoval.card) {
+                            pendingRemoval.card.remove();
+                        }
+
+                        showNoExistingImagesMessage();
+
+                        removeImageModal.hide();
+                        resetPendingRemoval();
+                    });
+                }
+
+                removeImageModalEl.addEventListener('hidden.bs.modal', resetPendingRemoval);
+            } else {
+                removeExistingButtons.forEach((button) => {
+                    button.addEventListener('click', function() {
+                        const imageId = Number(this.dataset.imageId);
+                        removedImagesSet.add(imageId);
+                        updateRemovedImagesInput();
+
+                        const card = document.getElementById(`existing-image-${imageId}`);
+                        if (card) {
+                            card.remove();
+                        }
+
+                        showNoExistingImagesMessage();
+                    });
+                });
+            }
+
+            // Image preview functionality for new images
+            const imageInput = document.getElementById('images');
+            const previewContainer = document.getElementById('imagePreviewContainer');
+
+            if (imageInput && previewContainer) {
+                const selectedFileEntries = [];
+
+                const ensurePreviewVisibility = () => {
+                    previewContainer.style.display = selectedFileEntries.length ? 'flex' : 'none';
+                };
+
+                const updatePreviewIndices = () => {
+                    const buttons = previewContainer.querySelectorAll('.remove-preview');
+                    buttons.forEach((button, index) => {
+                        button.dataset.entryIndex = index.toString();
+                    });
+                };
+
+                const syncInputFiles = () => {
+                    if (typeof DataTransfer === 'undefined') {
+                        console.warn(
+                            'DataTransfer API is not available in this browser. Clearing selected images.');
+                        imageInput.value = '';
+                        selectedFileEntries.splice(0, selectedFileEntries.length);
+                        previewContainer.innerHTML = '';
+                        ensurePreviewVisibility();
+                        return;
+                    }
+
+                    const dataTransfer = new DataTransfer();
+                    selectedFileEntries.forEach((entry) => dataTransfer.items.add(entry.file));
+                    imageInput.files = dataTransfer.files;
+                };
+
+                const appendPreview = (entry) => {
+                    if (!entry.previewUrl || entry.isRemoved) {
+                        return;
+                    }
+
+                    const col = document.createElement('div');
+                    col.className = 'col-md-3';
+                    col.innerHTML = `
+                        <div class="card border position-relative h-100">
+                            <button type="button" class="btn btn-sm btn-light text-danger position-absolute top-0 end-0 m-1 rounded-circle remove-preview" title="Remove image">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                            <img src="${entry.previewUrl}" class="card-img-top" style="height: 150px; object-fit: cover;" alt="Preview">
+                            <div class="card-body p-2 text-center">
+                                <small class="text-muted d-block text-truncate" title="${entry.file.name}">${entry.file.name}</small>
+                            </div>
+                        </div>
+                    `;
+
+                    entry.element = col;
+                    previewContainer.appendChild(col);
+                    ensurePreviewVisibility();
+                    updatePreviewIndices();
+                };
+
+                const addFiles = (files) => {
+                    let appended = false;
+
+                    files.forEach((file) => {
+                        if (!file || !file.type || !file.type.startsWith('image/')) {
+                            return;
+                        }
+
+                        const entry = {
+                            file,
+                            previewUrl: '',
+                            element: null,
+                            isRemoved: false
+                        };
+                        selectedFileEntries.push(entry);
+
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            entry.previewUrl = event.target.result;
+                            appendPreview(entry);
+                        };
+                        reader.readAsDataURL(file);
+                        appended = true;
+                    });
+
+                    if (appended) {
+                        syncInputFiles();
+                    }
+                };
+
+                imageInput.addEventListener('change', function() {
+                    const files = this.files ? Array.from(this.files) : [];
+
+                    if (files.length === 0) {
+                        return;
+                    }
+
+                    // Clear native selection so the same files can be picked again if needed
+                    this.value = '';
+
+                    addFiles(files);
+                });
+
+                previewContainer.addEventListener('click', function(event) {
+                    const button = event.target.closest('.remove-preview');
+                    if (!button) {
+                        return;
+                    }
+
+                    const index = Number(button.dataset.entryIndex);
+                    if (Number.isNaN(index)) {
+                        return;
+                    }
+
+                    const [removedEntry] = selectedFileEntries.splice(index, 1);
+                    if (removedEntry && removedEntry.element) {
+                        removedEntry.element.remove();
+                    }
+
+                    if (removedEntry) {
+                        removedEntry.isRemoved = true;
+                    }
+
+                    syncInputFiles();
+                    ensurePreviewVisibility();
+                    updatePreviewIndices();
+                });
+
+                ensurePreviewVisibility();
             }
         });
     </script>

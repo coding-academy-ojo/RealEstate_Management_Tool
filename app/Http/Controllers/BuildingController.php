@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Building;
+use App\Models\Image;
 use App\Models\ElectricityService;
 use App\Models\Renovation;
 use App\Models\Site;
@@ -150,6 +151,8 @@ class BuildingController extends Controller
             'as_built_drawing_pdf' => 'nullable|file|mimes:pdf|max:51200',
             'as_built_drawing_cad' => 'nullable|file|mimes:dwg,dxf|max:51200',
             'remarks' => 'nullable|string',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,jpg,png,gif|max:2048',
         ]);
 
         $propertyType = $validated['property_type'];
@@ -204,6 +207,27 @@ class BuildingController extends Controller
         // Attach selected lands to the building (if any)
         if ($request->has('lands') && is_array($request->lands)) {
             $building->lands()->attach($request->lands);
+        }
+
+        if ($request->hasFile('images')) {
+            $order = ($building->images()->max('order') ?? 0) + 1;
+
+            foreach ($request->file('images') as $imageFile) {
+                if (!$imageFile || !$imageFile->isValid()) {
+                    continue;
+                }
+
+                $path = $imageFile->store('buildings/images', 'private');
+
+                $building->images()->create([
+                    'filename' => basename($path),
+                    'original_name' => $imageFile->getClientOriginalName(),
+                    'path' => $path,
+                    'mime_type' => $imageFile->getMimeType(),
+                    'size' => $imageFile->getSize(),
+                    'order' => $order++,
+                ]);
+            }
         }
 
         return redirect()->route('buildings.index')->with('success', 'Building created successfully!');
@@ -325,6 +349,8 @@ class BuildingController extends Controller
             'as_built_drawing_pdf' => 'nullable|file|mimes:pdf|max:51200',
             'as_built_drawing_cad' => 'nullable|file|mimes:dwg,dxf|max:51200',
             'remarks' => 'nullable|string',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,jpg,png,gif|max:2048',
         ]);
 
         $propertyType = $validated['property_type'];
@@ -409,6 +435,41 @@ class BuildingController extends Controller
             $landIds = [];
         }
         $building->lands()->sync($landIds);
+
+        $removedImages = collect(explode(',', (string) $request->input('removed_images')))
+            ->filter()
+            ->map(fn($id) => (int) $id)
+            ->unique();
+
+        if ($removedImages->isNotEmpty()) {
+            $building->images()
+                ->whereIn('id', $removedImages)
+                ->get()
+                ->each(function (Image $image) {
+                    $image->delete();
+                });
+        }
+
+        if ($request->hasFile('images')) {
+            $order = ($building->images()->max('order') ?? 0) + 1;
+
+            foreach ($request->file('images') as $imageFile) {
+                if (!$imageFile || !$imageFile->isValid()) {
+                    continue;
+                }
+
+                $path = $imageFile->store('buildings/images', 'private');
+
+                $building->images()->create([
+                    'filename' => basename($path),
+                    'original_name' => $imageFile->getClientOriginalName(),
+                    'path' => $path,
+                    'mime_type' => $imageFile->getMimeType(),
+                    'size' => $imageFile->getSize(),
+                    'order' => $order++,
+                ]);
+            }
+        }
 
         return redirect()->route('buildings.index')->with('success', 'Building updated successfully!');
     }

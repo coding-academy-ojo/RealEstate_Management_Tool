@@ -618,6 +618,61 @@
                             <strong>Note:</strong> Upload new documents only if you want to replace the existing ones.
                         </div>
 
+                        <hr class="my-4">
+
+                        <!-- Images Section -->
+                        <h5 class="mb-3 text-orange">
+                            <i class="bi bi-images me-2"></i>Land Images
+                        </h5>
+
+                        <!-- Existing Images -->
+                        @if($land->images && $land->images->count() > 0)
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Current Images</label>
+                                <div class="row g-3" id="existingImagesContainer">
+                                    @foreach($land->images as $image)
+                                        <div class="col-md-3" id="existing-image-{{ $image->id }}">
+                                            <div class="card border position-relative">
+                                                <img src="{{ route('images.show', $image->id) }}"
+                                                    class="card-img-top"
+                                                    style="height: 150px; object-fit: cover;"
+                                                    alt="Land image">
+                                                <div class="card-body p-2">
+                                                    <button type="button"
+                                                        class="btn btn-danger btn-sm w-100 remove-existing-image"
+                                                        data-image-id="{{ $image->id }}"
+                                                        data-image-name="{{ $image->original_name ?? $image->filename ?? basename($image->path) }}">
+                                                        <i class="bi bi-trash me-1"></i> Remove
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <input type="hidden" name="removed_images" id="removedImages" value="">
+                            </div>
+                        @endif
+
+                        <!-- Upload New Images -->
+                        <div class="mb-4">
+                            <label for="images" class="form-label fw-bold">Upload New Images</label>
+                            <input type="file" name="images[]" id="images"
+                                class="form-control @error('images') is-invalid @enderror @error('images.*') is-invalid @enderror"
+                                multiple accept="image/*">
+                            @error('images')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            @error('images.*')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted">You can select multiple images. Supported formats: JPG, PNG, GIF (max 2MB each)</small>
+                        </div>
+
+                        <!-- New Image Preview Container -->
+                        <div id="imagePreviewContainer" class="row g-3 mb-4" style="display: none;">
+                            <!-- Previews will be inserted here via JavaScript -->
+                        </div>
+
                         <!-- Submit Buttons -->
                         <div class="d-flex gap-2 justify-content-end mt-4">
                             <a href="{{ route('lands.show', $land) }}" class="btn btn-secondary">
@@ -628,6 +683,32 @@
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Remove Image Confirmation Modal -->
+    <div class="modal fade" id="removeImageModal" tabindex="-1" aria-labelledby="removeImageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="removeImageModalLabel">
+                        <i class="bi bi-exclamation-triangle text-orange me-2"></i>
+                        Remove Image
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Are you sure you want to remove <span class="fw-semibold" id="removeImageName">this image</span>? It will be removed after you save the changes.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirmRemoveImageButton">
+                        <i class="bi bi-trash me-1"></i> Remove
+                    </button>
                 </div>
             </div>
         </div>
@@ -1110,6 +1191,220 @@
                         }
                     }
                 }, { once: true });
+            }
+
+            const existingImagesContainer = document.getElementById('existingImagesContainer');
+            const removedImagesInput = document.getElementById('removedImages');
+            const removeImageModalEl = document.getElementById('removeImageModal');
+            const removeImageNameEl = document.getElementById('removeImageName');
+            const confirmRemoveImageButton = document.getElementById('confirmRemoveImageButton');
+            const removedImagesSet = new Set();
+            let pendingRemoval = { id: null, card: null };
+
+            const updateRemovedImagesInput = () => {
+                if (removedImagesInput) {
+                    removedImagesInput.value = Array.from(removedImagesSet).join(',');
+                }
+            };
+
+            const resetPendingRemoval = () => {
+                pendingRemoval = { id: null, card: null };
+            };
+
+            const showNoExistingImagesMessage = () => {
+                if (!existingImagesContainer) {
+                    return;
+                }
+
+                const hasCards = existingImagesContainer.querySelector('.col-md-3');
+                if (!hasCards) {
+                    existingImagesContainer.innerHTML = `
+                        <div class="col-12">
+                            <div class="alert alert-info mb-0 small">
+                                All selected images will be removed once you save changes.
+                            </div>
+                        </div>
+                    `;
+                }
+            };
+
+            const removeExistingButtons = document.querySelectorAll('.remove-existing-image');
+
+            if (removeImageModalEl && typeof bootstrap !== 'undefined' && removeExistingButtons.length > 0) {
+                const removeImageModal = new bootstrap.Modal(removeImageModalEl);
+
+                removeExistingButtons.forEach((button) => {
+                    button.addEventListener('click', function() {
+                        const imageId = Number(this.dataset.imageId);
+                        pendingRemoval.id = imageId;
+                        pendingRemoval.card = document.getElementById(`existing-image-${imageId}`);
+
+                        if (removeImageNameEl) {
+                            removeImageNameEl.textContent = this.dataset.imageName || 'this image';
+                        }
+
+                        removeImageModal.show();
+                    });
+                });
+
+                if (confirmRemoveImageButton) {
+                    confirmRemoveImageButton.addEventListener('click', function() {
+                        if (pendingRemoval.id === null) {
+                            return;
+                        }
+
+                        removedImagesSet.add(pendingRemoval.id);
+                        updateRemovedImagesInput();
+
+                        if (pendingRemoval.card) {
+                            pendingRemoval.card.remove();
+                        }
+
+                        showNoExistingImagesMessage();
+
+                        removeImageModal.hide();
+                        resetPendingRemoval();
+                    });
+                }
+
+                removeImageModalEl.addEventListener('hidden.bs.modal', resetPendingRemoval);
+            } else {
+                removeExistingButtons.forEach((button) => {
+                    button.addEventListener('click', function() {
+                        const imageId = Number(this.dataset.imageId);
+                        removedImagesSet.add(imageId);
+                        updateRemovedImagesInput();
+
+                        const card = document.getElementById(`existing-image-${imageId}`);
+                        if (card) {
+                            card.remove();
+                        }
+
+                        showNoExistingImagesMessage();
+                    });
+                });
+            }
+
+            // Image preview functionality for new images
+            const imageInput = document.getElementById('images');
+            const previewContainer = document.getElementById('imagePreviewContainer');
+
+            if (imageInput && previewContainer) {
+                const selectedFileEntries = [];
+
+                const ensurePreviewVisibility = () => {
+                    previewContainer.style.display = selectedFileEntries.length ? 'flex' : 'none';
+                };
+
+                const updatePreviewIndices = () => {
+                    const buttons = previewContainer.querySelectorAll('.remove-preview');
+                    buttons.forEach((button, index) => {
+                        button.dataset.entryIndex = index.toString();
+                    });
+                };
+
+                const syncInputFiles = () => {
+                    if (typeof DataTransfer === 'undefined') {
+                        console.warn('DataTransfer API is not available in this browser. Clearing selected images.');
+                        imageInput.value = '';
+                        selectedFileEntries.splice(0, selectedFileEntries.length);
+                        previewContainer.innerHTML = '';
+                        ensurePreviewVisibility();
+                        return;
+                    }
+
+                    const dataTransfer = new DataTransfer();
+                    selectedFileEntries.forEach((entry) => dataTransfer.items.add(entry.file));
+                    imageInput.files = dataTransfer.files;
+                };
+
+                const appendPreview = (entry) => {
+                    if (!entry.previewUrl || entry.isRemoved) {
+                        return;
+                    }
+
+                    const col = document.createElement('div');
+                    col.className = 'col-md-3';
+                    col.innerHTML = `
+                        <div class="card border position-relative h-100">
+                            <button type="button" class="btn btn-sm btn-light text-danger position-absolute top-0 end-0 m-1 rounded-circle remove-preview" title="Remove image">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                            <img src="${entry.previewUrl}" class="card-img-top" style="height: 150px; object-fit: cover;" alt="Preview">
+                            <div class="card-body p-2 text-center">
+                                <small class="text-muted d-block text-truncate" title="${entry.file.name}">${entry.file.name}</small>
+                            </div>
+                        </div>
+                    `;
+
+                    entry.element = col;
+                    previewContainer.appendChild(col);
+                    ensurePreviewVisibility();
+                    updatePreviewIndices();
+                };
+
+                const addFiles = (files) => {
+                    let appended = false;
+
+                    files.forEach((file) => {
+                        if (!file || !file.type || !file.type.startsWith('image/')) {
+                            return;
+                        }
+
+                        const entry = { file, previewUrl: '', element: null, isRemoved: false };
+                        selectedFileEntries.push(entry);
+
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            entry.previewUrl = event.target.result;
+                            appendPreview(entry);
+                        };
+                        reader.readAsDataURL(file);
+                        appended = true;
+                    });
+
+                    if (appended) {
+                        syncInputFiles();
+                    }
+                };
+
+                imageInput.addEventListener('change', function() {
+                    const files = this.files ? Array.from(this.files) : [];
+
+                    if (files.length === 0) {
+                        return;
+                    }
+
+                    this.value = '';
+                    addFiles(files);
+                });
+
+                previewContainer.addEventListener('click', function(event) {
+                    const button = event.target.closest('.remove-preview');
+                    if (!button) {
+                        return;
+                    }
+
+                    const index = Number(button.dataset.entryIndex);
+                    if (Number.isNaN(index)) {
+                        return;
+                    }
+
+                    const [removedEntry] = selectedFileEntries.splice(index, 1);
+                    if (removedEntry && removedEntry.element) {
+                        removedEntry.element.remove();
+                    }
+
+                    if (removedEntry) {
+                        removedEntry.isRemoved = true;
+                    }
+
+                    syncInputFiles();
+                    ensurePreviewVisibility();
+                    updatePreviewIndices();
+                });
+
+                ensurePreviewVisibility();
             }
         });
     </script>
