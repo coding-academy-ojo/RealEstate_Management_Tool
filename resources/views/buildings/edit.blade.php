@@ -16,10 +16,10 @@
         $selectedLandIds = array_map('intval', $selectedLandIds);
         $hasBuildingPermit = old('has_building_permit', $building->has_building_permit);
         $hasOccupancyPermit = old('has_occupancy_permit', $building->has_occupancy_permit);
-        $hasProfessionPermit = old('has_profession_permit', $building->has_profession_permit);
-        $currentTenure = old('tenure_type', $building->tenure_type);
-        $leaseStartValue = old('lease_start_date', optional($building->lease_start_date)->format('Y-m-d'));
-        $leaseEndValue = old('lease_end_date', optional($building->lease_end_date)->format('Y-m-d'));
+    $hasProfessionPermit = old('has_profession_permit', $building->has_profession_permit);
+    $currentPropertyType = old('property_type', $building->property_type);
+    $contractStartValue = old('contract_start_date', optional($building->contract_start_date)->format('Y-m-d'));
+    $contractEndValue = old('contract_end_date', optional($building->contract_end_date)->format('Y-m-d'));
         $contractValue = old('contract_value', $building->contract_value);
         $annualIncreaseValue = old('annual_increase_rate', $building->annual_increase_rate);
         $increaseEffectiveValue = old('increase_effective_date', optional($building->increase_effective_date)->format('Y-m-d'));
@@ -115,48 +115,48 @@
 
                         <div class="row align-items-end">
                             <div class="col-md-4 mb-3">
-                                <label for="tenure_type" class="form-label fw-bold">
-                                    Tenure Type <span class="text-danger">*</span>
+                                <label for="property_type" class="form-label fw-bold">
+                                    Property Type <span class="text-danger">*</span>
                                 </label>
-                                <select name="tenure_type" id="tenure_type"
-                                    class="form-select @error('tenure_type') is-invalid @enderror" required>
-                                    <option value="owned" {{ $currentTenure === 'owned' ? 'selected' : '' }}>Owned</option>
-                                    <option value="rental" {{ $currentTenure === 'rental' ? 'selected' : '' }}>Rental
+                                <select name="property_type" id="property_type"
+                                    class="form-select @error('property_type') is-invalid @enderror" required>
+                                    <option value="owned" {{ $currentPropertyType === 'owned' ? 'selected' : '' }}>Owned</option>
+                                    <option value="rental" {{ $currentPropertyType === 'rental' ? 'selected' : '' }}>Rental
                                     </option>
                                 </select>
-                                <small class="text-muted">Switch to rental to manage lease details</small>
-                                @error('tenure_type')
+                                <small class="text-muted">Switch to rental to manage contract details</small>
+                                @error('property_type')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
 
                         <div id="rental-fields" class="mt-3"
-                            style="display: {{ $currentTenure === 'rental' ? 'block' : 'none' }};">
+                            style="display: {{ $currentPropertyType === 'rental' ? 'block' : 'none' }};">
                             <div class="alert alert-warning d-flex align-items-center gap-2">
                                 <i class="bi bi-info-circle-fill"></i>
-                                <span>Update lease information for rental buildings.</span>
+                                <span>Update contract information for rental buildings.</span>
                             </div>
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <label for="lease_start_date" class="form-label fw-bold">
-                                        Lease Start Date <span class="text-danger">*</span>
+                                    <label for="contract_start_date" class="form-label fw-bold">
+                                        Contract Start Date <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" name="lease_start_date" id="lease_start_date"
-                                        class="form-control @error('lease_start_date') is-invalid @enderror"
-                                        value="{{ $leaseStartValue }}" data-rental-required="true">
-                                    @error('lease_start_date')
+                                    <input type="date" name="contract_start_date" id="contract_start_date"
+                                        class="form-control @error('contract_start_date') is-invalid @enderror"
+                                        value="{{ $contractStartValue }}" data-rental-required="true">
+                                    @error('contract_start_date')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="lease_end_date" class="form-label fw-bold">
-                                        Lease End Date <span class="text-danger">*</span>
+                                    <label for="contract_end_date" class="form-label fw-bold">
+                                        Contract End Date <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" name="lease_end_date" id="lease_end_date"
-                                        class="form-control @error('lease_end_date') is-invalid @enderror"
-                                        value="{{ $leaseEndValue }}" data-rental-required="true">
-                                    @error('lease_end_date')
+                                    <input type="date" name="contract_end_date" id="contract_end_date"
+                                        class="form-control @error('contract_end_date') is-invalid @enderror"
+                                        value="{{ $contractEndValue }}" data-rental-required="true">
+                                    @error('contract_end_date')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -195,7 +195,7 @@
                                     @enderror
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="contract_file" class="form-label fw-bold">Lease Contract File</label>
+                                    <label for="contract_file" class="form-label fw-bold">Contract File</label>
                                     <input type="file" name="contract_file" id="contract_file"
                                         class="form-control @error('contract_file') is-invalid @enderror"
                                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
@@ -204,7 +204,7 @@
                                         <div class="alert alert-light border mt-2 small">
                                             <i class="bi bi-file-earmark-text me-1 text-orange"></i>
                                             Current file:
-                                            <a href="{{ route('buildings.files.show', [$building, 'lease-contract']) }}"
+                                            <a href="{{ route('buildings.files.show', [$building, 'contract-document']) }}"
                                                 target="_blank">Download</a>
                                         </div>
                                     @endif
@@ -395,7 +395,7 @@
             const landsSection = document.getElementById('lands-section');
             const landsContainer = document.getElementById('lands-container');
             const selectedLandIds = @json($selectedLandIds);
-            const tenureSelect = document.getElementById('tenure_type');
+            const propertyTypeSelect = document.getElementById('property_type');
             const rentalFields = document.getElementById('rental-fields');
 
             const buildingPermitCheck = document.getElementById('has_building_permit');
@@ -432,11 +432,11 @@
             toggleSection(professionPermitCheck, professionPermitUpload, professionPermitFile);
 
             function toggleRentalFields() {
-                if (!tenureSelect || !rentalFields) {
+                if (!propertyTypeSelect || !rentalFields) {
                     return;
                 }
 
-                const isRental = tenureSelect.value === 'rental';
+                const isRental = propertyTypeSelect.value === 'rental';
                 rentalFields.style.display = isRental ? 'block' : 'none';
 
                 const inputs = rentalFields.querySelectorAll('input, textarea, select');
@@ -452,8 +452,8 @@
                 });
             }
 
-            if (tenureSelect) {
-                tenureSelect.addEventListener('change', toggleRentalFields);
+            if (propertyTypeSelect) {
+                propertyTypeSelect.addEventListener('change', toggleRentalFields);
                 toggleRentalFields();
             }
 

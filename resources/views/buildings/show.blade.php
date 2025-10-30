@@ -12,7 +12,7 @@
     $permitDocuments = $documents->where('is_permit', true);
     $asBuiltPdfDocument = $documents->firstWhere('slug', 'as-built-drawing-pdf');
     $asBuiltCadDocument = $documents->firstWhere('slug', 'as-built-drawing-cad');
-        $leaseContractDocument = $documents->firstWhere('slug', 'lease-contract');
+        $contractDocument = $documents->firstWhere('slug', 'contract-document');
         $availableDocuments = $documents->where('has_file', true);
         $currentUser = auth()->user();
     @endphp
@@ -66,9 +66,9 @@
                             <div>{{ number_format($building->area_m2, 2) }}</div>
                         </div>
                         <div class="col-md-4">
-                            <div class="text-muted text-uppercase small fw-semibold">Tenure</div>
+                            <div class="text-muted text-uppercase small fw-semibold">Property Type</div>
                             <div>
-                                @if ($building->tenure_type === 'rental')
+                                @if ($building->property_type === 'rental')
                                     <span class="badge bg-warning-subtle text-warning fw-semibold">Rental</span>
                                 @else
                                     <span class="badge bg-success-subtle text-success fw-semibold">Owned</span>
@@ -121,20 +121,20 @@
                             @endif
                         </div>
 
-                        @if ($building->tenure_type === 'rental')
+                        @if ($building->property_type === 'rental')
                             <div class="col-12">
                                 <hr class="my-3">
                                 <h6 class="text-orange mb-3">
-                                    <i class="bi bi-file-earmark-text me-2"></i>Lease Details
+                                    <i class="bi bi-file-earmark-text me-2"></i>Contract Details
                                 </h6>
                                 <div class="row gy-3">
                                     <div class="col-md-4">
-                                        <div class="text-muted text-uppercase small fw-semibold">Lease Start</div>
-                                        <div>{{ optional($building->lease_start_date)->format('Y-m-d') ?? '—' }}</div>
+                                        <div class="text-muted text-uppercase small fw-semibold">Contract Start</div>
+                                        <div>{{ optional($building->contract_start_date)->format('Y-m-d') ?? '—' }}</div>
                                     </div>
                                     <div class="col-md-4">
-                                        <div class="text-muted text-uppercase small fw-semibold">Lease End</div>
-                                        <div>{{ optional($building->lease_end_date)->format('Y-m-d') ?? '—' }}</div>
+                                        <div class="text-muted text-uppercase small fw-semibold">Contract End</div>
+                                        <div>{{ optional($building->contract_end_date)->format('Y-m-d') ?? '—' }}</div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="text-muted text-uppercase small fw-semibold">Contract Value</div>
@@ -149,18 +149,18 @@
                                         <div>{{ optional($building->increase_effective_date)->format('Y-m-d') ?? '—' }}</div>
                                     </div>
                                     <div class="col-md-4">
-                                        <div class="text-muted text-uppercase small fw-semibold">Lease Contract</div>
-                                        @if ($leaseContractDocument && $leaseContractDocument['has_file'])
+                                        <div class="text-muted text-uppercase small fw-semibold">Contract File</div>
+                                        @if ($contractDocument && $contractDocument['has_file'])
                                             <div class="d-flex flex-wrap align-items-center gap-2">
-                                                <a href="{{ $leaseContractDocument['inline_url'] }}" target="_blank"
+                                                <a href="{{ $contractDocument['inline_url'] }}" target="_blank"
                                                     class="btn btn-sm btn-outline-primary">
                                                     <i class="bi bi-eye me-1"></i>View
                                                 </a>
-                                                <a href="{{ $leaseContractDocument['download_url'] }}"
+                                                <a href="{{ $contractDocument['download_url'] }}"
                                                     class="btn btn-sm btn-outline-secondary">
                                                     <i class="bi bi-download me-1"></i>Download
                                                 </a>
-                                                <span class="document-meta">{{ $leaseContractDocument['file_name'] }}</span>
+                                                <span class="document-meta">{{ $contractDocument['file_name'] }}</span>
                                             </div>
                                         @else
                                             <span class="text-muted">No contract uploaded</span>
@@ -255,8 +255,11 @@
                                 @if ($land->governorate)
                                     <div><i class="bi bi-building me-1"></i>{{ $land->governorate }}</div>
                                 @endif
-                                @if ($land->zoning)
-                                    <div><i class="bi bi-signpost me-1"></i>Zoning: {{ $land->zoning }}</div>
+                                @if ($land->zoningStatuses->isNotEmpty())
+                                    <div>
+                                        <i class="bi bi-signpost me-1"></i>Zoning:
+                                        {{ $land->zoningStatuses->pluck('name_ar')->implode(', ') }}
+                                    </div>
                                 @endif
                             </div>
                         </div>

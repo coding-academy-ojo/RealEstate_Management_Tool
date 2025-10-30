@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Site;
 use App\Models\Land;
 use App\Models\Building;
+use App\Models\ZoningStatus;
 use Illuminate\Database\Seeder;
 
 class SiteSeeder extends Seeder
@@ -26,7 +27,7 @@ class SiteSeeder extends Seeder
             'notes' => 'Prime business location in downtown Amman',
         ]);
 
-        $amman1_land1 = $amman1->lands()->create($this->createLandData([
+        $amman1_land1 = $this->createLandWithZoning($amman1, [
             'governorate' => 'Amman',
             'directorate' => 'Qasabat Amman',
             'directorate_number' => '1',
@@ -44,7 +45,7 @@ class SiteSeeder extends Seeder
             'land_directorate' => 'Amman Central',
             'lat' => 31.9539,
             'lng' => 35.9106,
-        ]));
+        ]);
 
         $building1 = $amman1->buildings()->create([
             'name' => 'Main Office Tower',
@@ -66,7 +67,7 @@ class SiteSeeder extends Seeder
             'notes' => 'Luxury residential area',
         ]);
 
-        $amman2_land1 = $amman2->lands()->create($this->createLandData([
+        $amman2_land1 = $this->createLandWithZoning($amman2, [
             'governorate' => 'Amman',
             'directorate' => 'Qasabat Amman',
             'directorate_number' => '2',
@@ -82,7 +83,7 @@ class SiteSeeder extends Seeder
             'land_directorate' => 'Amman North',
             'lat' => 31.9722,
             'lng' => 35.8992,
-        ]));
+        ]);
 
         $building2 = $amman2->buildings()->create([
             'name' => 'Residential Building A',
@@ -106,7 +107,7 @@ class SiteSeeder extends Seeder
             'notes' => 'IT and technology companies hub',
         ]);
 
-        $irbid1_land1 = $irbid1->lands()->create($this->createLandData([
+        $irbid1_land1 = $this->createLandWithZoning($irbid1, [
             'governorate' => 'Irbid',
             'village' => 'University District',
             'plot_number' => '234',
@@ -115,7 +116,7 @@ class SiteSeeder extends Seeder
             'land_directorate' => 'Irbid Central',
             'lat' => 32.5556,
             'lng' => 35.8469,
-        ]));
+        ]);
 
         $building3 = $irbid1->buildings()->create([
             'name' => 'Tech Center Block A',
@@ -147,7 +148,7 @@ class SiteSeeder extends Seeder
             'notes' => 'Tax-free industrial zone',
         ]);
 
-        $mafraq1_land1 = $mafraq1->lands()->create($this->createLandData([
+        $mafraq1_land1 = $this->createLandWithZoning($mafraq1, [
             'governorate' => 'Mafraq',
             'village' => 'Mafraq Industrial',
             'plot_number' => '1001',
@@ -156,16 +157,16 @@ class SiteSeeder extends Seeder
             'land_directorate' => 'Mafraq Lands',
             'lat' => 32.3406,
             'lng' => 36.2084,
-        ]));
+        ]);
 
-        $mafraq1_land2 = $mafraq1->lands()->create($this->createLandData([
+        $mafraq1_land2 = $this->createLandWithZoning($mafraq1, [
             'governorate' => 'Mafraq',
             'village' => 'Mafraq Industrial',
             'plot_number' => '1002',
             'area_m2' => 10000.00,
             'zoning' => 'Industrial',
             'land_directorate' => 'Mafraq Lands',
-        ]));
+        ]);
 
         $building5 = $mafraq1->buildings()->create([
             'name' => 'Warehouse Complex 1',
@@ -187,7 +188,7 @@ class SiteSeeder extends Seeder
             'notes' => 'Eco-tourism destination',
         ]);
 
-        $ajloun1_land1 = $ajloun1->lands()->create($this->createLandData([
+        $ajloun1_land1 = $this->createLandWithZoning($ajloun1, [
             'governorate' => 'Ajloun',
             'village' => 'Ajloun Forest',
             'plot_number' => '550',
@@ -196,7 +197,7 @@ class SiteSeeder extends Seeder
             'land_directorate' => 'Ajloun Department',
             'lat' => 32.3325,
             'lng' => 35.7517,
-        ]));
+        ]);
 
         $building6 = $ajloun1->buildings()->create([
             'name' => 'Guest Lodge',
@@ -218,7 +219,7 @@ class SiteSeeder extends Seeder
             'notes' => 'Near Roman ruins',
         ]);
 
-        $jerash1_land1 = $jerash1->lands()->create($this->createLandData([
+        $jerash1_land1 = $this->createLandWithZoning($jerash1, [
             'governorate' => 'Jerash',
             'village' => 'Jerash City',
             'basin' => '4',
@@ -229,7 +230,7 @@ class SiteSeeder extends Seeder
             'map_location' => 'https://maps.google.com/?q=32.2809,35.8911',
             'lat' => 32.2809,
             'lng' => 35.8911,
-        ]));
+        ]);
 
         $building7 = $jerash1->buildings()->create([
             'name' => 'Museum Building',
@@ -253,7 +254,7 @@ class SiteSeeder extends Seeder
             'notes' => 'Research and development facility',
         ]);
 
-        $balqa1_land1 = $balqa1->lands()->create($this->createLandData([
+        $balqa1_land1 = $this->createLandWithZoning($balqa1, [
             'governorate' => 'Balqa',
             'village' => 'Salt',
             'basin' => '9',
@@ -264,7 +265,7 @@ class SiteSeeder extends Seeder
             'map_location' => 'https://maps.google.com/?q=32.0392,35.7272',
             'lat' => 32.0392,
             'lng' => 35.7272,
-        ]));
+        ]);
 
         $building8 = $balqa1->buildings()->create([
             'name' => 'Research Laboratory',
@@ -286,7 +287,7 @@ class SiteSeeder extends Seeder
             'notes' => 'Major manufacturing hub',
         ]);
 
-        $zarqa1_land1 = $zarqa1->lands()->create($this->createLandData([
+        $zarqa1_land1 = $this->createLandWithZoning($zarqa1, [
             'governorate' => 'Zarqa',
             'village' => 'Zarqa Industrial',
             'basin' => '18',
@@ -297,7 +298,7 @@ class SiteSeeder extends Seeder
             'map_location' => 'https://maps.google.com/?q=32.0606,36.0881',
             'lat' => 32.0606,
             'lng' => 36.0881,
-        ]));
+        ]);
 
         $building9 = $zarqa1->buildings()->create([
             'name' => 'Manufacturing Plant A',
@@ -319,7 +320,7 @@ class SiteSeeder extends Seeder
             'notes' => 'Affordable housing development',
         ]);
 
-        $zarqa2_land1 = $zarqa2->lands()->create($this->createLandData([
+        $zarqa2_land1 = $this->createLandWithZoning($zarqa2, [
             'governorate' => 'Zarqa',
             'village' => 'New Zarqa',
             'basin' => '20',
@@ -329,7 +330,7 @@ class SiteSeeder extends Seeder
             'land_directorate' => 'Zarqa Department',
             'lat' => 32.0728,
             'lng' => 36.1031,
-        ]));
+        ]);
 
         $building10 = $zarqa2->buildings()->create([
             'name' => 'Residential Tower 1',
@@ -351,7 +352,7 @@ class SiteSeeder extends Seeder
             'notes' => 'Near Mount Nebo',
         ]);
 
-        $madaba1_land1 = $madaba1->lands()->create($this->createLandData([
+        $madaba1_land1 = $this->createLandWithZoning($madaba1, [
             'governorate' => 'Madaba',
             'village' => 'Madaba City',
             'basin' => '5',
@@ -362,7 +363,7 @@ class SiteSeeder extends Seeder
             'map_location' => 'https://maps.google.com/?q=31.7197,35.7925',
             'lat' => 31.7197,
             'lng' => 35.7925,
-        ]));
+        ]);
 
         $building11 = $madaba1->buildings()->create([
             'name' => 'Visitor Center',
@@ -386,7 +387,7 @@ class SiteSeeder extends Seeder
             'notes' => 'Main sea port facility',
         ]);
 
-        $aqaba1_land1 = $aqaba1->lands()->create($this->createLandData([
+        $aqaba1_land1 = $this->createLandWithZoning($aqaba1, [
             'governorate' => 'Aqaba',
             'village' => 'Aqaba Port',
             'basin' => '1',
@@ -397,7 +398,7 @@ class SiteSeeder extends Seeder
             'map_location' => 'https://maps.google.com/?q=29.5267,35.0081',
             'lat' => 29.5267,
             'lng' => 35.0081,
-        ]));
+        ]);
 
         $building12 = $aqaba1->buildings()->create([
             'name' => 'Customs Terminal',
@@ -419,7 +420,7 @@ class SiteSeeder extends Seeder
             'notes' => 'Beachfront resort',
         ]);
 
-        $aqaba2_land1 = $aqaba2->lands()->create($this->createLandData([
+        $aqaba2_land1 = $this->createLandWithZoning($aqaba2, [
             'governorate' => 'Aqaba',
             'village' => 'Aqaba South Beach',
             'basin' => '2',
@@ -430,7 +431,7 @@ class SiteSeeder extends Seeder
             'map_location' => 'https://maps.google.com/?q=29.5320,35.0063',
             'lat' => 29.5320,
             'lng' => 35.0063,
-        ]));
+        ]);
 
         $building13 = $aqaba2->buildings()->create([
             'name' => 'Hotel Main Building',
@@ -452,7 +453,7 @@ class SiteSeeder extends Seeder
             'notes' => 'Historical site',
         ]);
 
-        $karak1_land1 = $karak1->lands()->create($this->createLandData([
+        $karak1_land1 = $this->createLandWithZoning($karak1, [
             'governorate' => 'Karak',
             'village' => 'Karak City',
             'basin' => '7',
@@ -463,7 +464,7 @@ class SiteSeeder extends Seeder
             'map_location' => 'https://maps.google.com/?q=31.1853,35.7048',
             'lat' => 31.1853,
             'lng' => 35.7048,
-        ]));
+        ]);
 
         $building14 = $karak1->buildings()->create([
             'name' => 'Heritage Museum',
@@ -485,7 +486,7 @@ class SiteSeeder extends Seeder
             'notes' => 'Nature reserve headquarters',
         ]);
 
-        $tafileh1_land1 = $tafileh1->lands()->create($this->createLandData([
+        $tafileh1_land1 = $this->createLandWithZoning($tafileh1, [
             'governorate' => 'Tafileh',
             'village' => 'Dana',
             'basin' => '3',
@@ -496,7 +497,7 @@ class SiteSeeder extends Seeder
             'map_location' => 'https://maps.google.com/?q=30.6697,35.6033',
             'lat' => 30.6697,
             'lng' => 35.6033,
-        ]));
+        ]);
 
         $building15 = $tafileh1->buildings()->create([
             'name' => 'Eco Lodge',
@@ -518,7 +519,7 @@ class SiteSeeder extends Seeder
             'notes' => 'Entry point to Petra',
         ]);
 
-        $maan1_land1 = $maan1->lands()->create($this->createLandData([
+        $maan1_land1 = $this->createLandWithZoning($maan1, [
             'governorate' => 'Ma\'an',
             'village' => 'Wadi Musa',
             'basin' => '6',
@@ -529,7 +530,7 @@ class SiteSeeder extends Seeder
             'map_location' => 'https://maps.google.com/?q=30.3285,35.4444',
             'lat' => 30.3285,
             'lng' => 35.4444,
-        ]));
+        ]);
 
         $building16 = $maan1->buildings()->create([
             'name' => 'Tourism Services Center',
@@ -577,12 +578,124 @@ class SiteSeeder extends Seeder
             // Area and other details
             'area_m2' => $data['area_m2'],
             'region' => $data['region'] ?? $this->getRegion($govCode),
-            'zoning' => $data['zoning'] ?? 'General',
             'land_directorate' => $data['land_directorate'] ?? $govCode . ' Land Department',
             // Map location with extracted coordinates
             'map_location' => "https://www.google.com/maps/place/{$lat},{$lng}",
             'latitude' => $lat,
             'longitude' => $lng,
+        ];
+    }
+
+    private array $zoningStatusCache = [];
+
+    private function createLandWithZoning(Site $site, array $data): Land
+    {
+        $zoningSource = $data['zoning'] ?? ($data['zoning_statuses'] ?? []);
+
+        unset($data['zoning'], $data['zoning_statuses']);
+
+        $land = $site->lands()->create($this->createLandData($data));
+
+        $this->syncLandZoning($land, $zoningSource);
+
+        return $land;
+    }
+
+    private function syncLandZoning(Land $land, $source): void
+    {
+        $names = $this->mapZoningToStatusNames($source);
+        $ids = $this->fetchZoningStatusIds($names);
+
+        $land->zoningStatuses()->sync($ids);
+    }
+
+    private function mapZoningToStatusNames($input): array
+    {
+        $values = [];
+
+        if (is_string($input)) {
+            $values = array_filter(array_map('trim', explode(',', $input)));
+        } elseif (is_array($input)) {
+            $values = array_filter(array_map('trim', $input));
+        }
+
+        if (empty($values)) {
+            return ['لا يوجد'];
+        }
+
+        $aliasMap = $this->getZoningAliasMap();
+        $resolved = [];
+
+        foreach ($values as $value) {
+            $key = mb_strtolower($value, 'UTF-8');
+            if (isset($aliasMap[$key])) {
+                $resolved = array_merge($resolved, $aliasMap[$key]);
+            } else {
+                $resolved[] = $value;
+            }
+        }
+
+        $resolved = array_values(array_unique(array_filter($resolved)));
+
+        return !empty($resolved) ? $resolved : ['لا يوجد'];
+    }
+
+    private function fetchZoningStatusIds(array $names): array
+    {
+        $ids = [];
+        $fallbackId = $this->getZoningStatusId('لا يوجد');
+
+        foreach ($names as $name) {
+            $id = $this->getZoningStatusId($name);
+
+            if ($id) {
+                $ids[] = $id;
+            } elseif ($fallbackId) {
+                $ids[] = $fallbackId;
+            }
+        }
+
+        return array_values(array_unique(array_filter($ids)));
+    }
+
+    private function getZoningStatusId(string $name): ?int
+    {
+        if (!array_key_exists($name, $this->zoningStatusCache)) {
+            $this->zoningStatusCache[$name] = ZoningStatus::where('name_ar', $name)->value('id');
+        }
+
+        return $this->zoningStatusCache[$name];
+    }
+
+    private function getZoningAliasMap(): array
+    {
+        return [
+            'commercial' => ['تجاري'],
+            'commercial a' => ['تجاري'],
+            'commercial central' => ['تجاري مركزي'],
+            'commercial local' => ['تجاري محلي'],
+            'residential' => ['سكن'],
+            'residential a' => ['سكن ا'],
+            'residential b' => ['سكن ب'],
+            'residential c' => ['سكن ج'],
+            'residential d' => ['سكن د'],
+            'industrial' => ['صناعات متوسطة'],
+            'industrial heavy' => ['صناعات متوسطة'],
+            'industrial free zone' => ['صناعات متوسطة'],
+            'industrial/tech' => ['صناعات متوسطة'],
+            'technology park' => ['مباني متعددة الاستعمالات'],
+            'tourism' => ['تجاري وسكن'],
+            'tourism/hospitality' => ['تجاري وسكن'],
+            'tourism/commercial' => ['تجاري وسكن'],
+            'tourism resort' => ['تجاري وسكن'],
+            'cultural' => ['مباني عامة'],
+            'cultural/heritage' => ['مباني عامة'],
+            'heritage' => ['مباني عامة'],
+            'agricultural' => ['زراعي'],
+            'conservation' => ['حدائق'],
+            'mixed use' => ['مباني متعددة الاستعمالات'],
+            'general' => ['لا يوجد'],
+            'port' => ['تجاري طولي'],
         ];
     }
 

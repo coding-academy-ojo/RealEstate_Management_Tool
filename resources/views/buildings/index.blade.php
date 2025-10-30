@@ -68,10 +68,10 @@
                 </div>
 
                 <div class="col-lg-2 col-md-6">
-                    <select id="tenure" name="tenure" class="form-select" style="border-radius: 10px;">
-                        <option value="" {{ empty($filters['tenure']) ? 'selected' : '' }}>All Tenure</option>
-                        <option value="owned" {{ ($filters['tenure'] ?? '') === 'owned' ? 'selected' : '' }}>Owned</option>
-                        <option value="rental" {{ ($filters['tenure'] ?? '') === 'rental' ? 'selected' : '' }}>Rental</option>
+                    <select id="property_type" name="property_type" class="form-select" style="border-radius: 10px;">
+                        <option value="" {{ empty($filters['property_type']) ? 'selected' : '' }}>All Property Types</option>
+                        <option value="owned" {{ ($filters['property_type'] ?? '') === 'owned' ? 'selected' : '' }}>Owned</option>
+                        <option value="rental" {{ ($filters['property_type'] ?? '') === 'rental' ? 'selected' : '' }}>Rental</option>
                     </select>
                 </div>
 
@@ -210,7 +210,7 @@
                                 <td>{{ $building->code }}</td>
                                 <td class="fw-semibold">
                                     <div>{{ $building->name }}</div>
-                                    <div class="text-muted small">{{ ucfirst($building->tenure_type) }}</div>
+                                    <div class="text-muted small">{{ ucfirst($building->property_type) }}</div>
                                 </td>
                                 <td>
                                     @if ($building->site && !$building->site->trashed())

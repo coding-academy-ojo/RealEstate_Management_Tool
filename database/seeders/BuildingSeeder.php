@@ -49,24 +49,24 @@ class BuildingSeeder extends Seeder
           'Workshop',
         ];
 
-                $tenureType = rand(0, 1) ? 'rental' : 'owned';
-                $leaseStart = null;
-                $leaseEnd = null;
+                $propertyType = rand(0, 1) ? 'rental' : 'owned';
+                $contractStart = null;
+                $contractEnd = null;
                 $contractValue = null;
                 $annualIncreaseRate = null;
                 $increaseEffective = null;
                 $specialConditions = null;
 
-                if ($tenureType === 'rental') {
-                    $leaseStart = Carbon::now()->subMonths(rand(0, 24))->startOfMonth();
-                    $leaseEnd = (clone $leaseStart)->addYears(rand(1, 5))->subDay();
-                    if ($leaseEnd->lessThanOrEqualTo($leaseStart)) {
-                        $leaseEnd = (clone $leaseStart)->addYear();
+                if ($propertyType === 'rental') {
+                    $contractStart = Carbon::now()->subMonths(rand(0, 24))->startOfMonth();
+                    $contractEnd = (clone $contractStart)->addYears(rand(1, 5))->subDay();
+                    if ($contractEnd->lessThanOrEqualTo($contractStart)) {
+                        $contractEnd = (clone $contractStart)->addYear();
                     }
 
                     $contractValue = rand(25_000, 250_000) + (rand(0, 99) / 100);
                     $annualIncreaseRate = rand(10, 70) / 10; // Between 1.0% and 7.0%
-                    $increaseEffective = (clone $leaseStart)->addYear();
+                    $increaseEffective = (clone $contractStart)->addYear();
 
                     $specialOptions = [
                         'Subject to annual market review.',
@@ -81,9 +81,9 @@ class BuildingSeeder extends Seeder
                 $building = $site->buildings()->create([
           'name' => $buildingTypes[array_rand($buildingTypes)] . ' ' . chr(65 + $i),
           'area_m2' => rand(500, 10000) + (rand(0, 99) / 100),
-                    'tenure_type' => $tenureType,
-                    'lease_start_date' => $leaseStart?->toDateString(),
-                    'lease_end_date' => $leaseEnd?->toDateString(),
+                    'property_type' => $propertyType,
+                    'contract_start_date' => $contractStart?->toDateString(),
+                    'contract_end_date' => $contractEnd?->toDateString(),
                     'contract_value' => $contractValue,
                     'special_conditions' => $specialConditions,
                     'annual_increase_rate' => $annualIncreaseRate,

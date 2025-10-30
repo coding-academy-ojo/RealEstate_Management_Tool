@@ -17,9 +17,9 @@ class Building extends Model
         'site_id',
         'name',
         'area_m2',
-        'tenure_type',
-        'lease_start_date',
-        'lease_end_date',
+        'property_type',
+        'contract_start_date',
+        'contract_end_date',
         'contract_value',
         'special_conditions',
         'contract_file',
@@ -40,8 +40,8 @@ class Building extends Model
 
     protected $casts = [
         'area_m2' => 'decimal:2',
-        'lease_start_date' => 'date',
-        'lease_end_date' => 'date',
+        'contract_start_date' => 'date',
+        'contract_end_date' => 'date',
         'contract_value' => 'decimal:2',
         'annual_increase_rate' => 'decimal:2',
         'increase_effective_date' => 'date',

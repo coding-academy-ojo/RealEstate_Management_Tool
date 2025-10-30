@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Land;
 use App\Models\Site;
+use App\Models\ZoningStatus;
 use Illuminate\Database\Seeder;
 
 class LandSeeder extends Seeder
@@ -32,7 +33,7 @@ class LandSeeder extends Seeder
         $lat = 29.0 + (rand(0, 40000) / 10000);
         $lng = 35.0 + (rand(0, 10000) / 10000);
 
-        $site->lands()->create([
+        $land = $site->lands()->create([
           // Location Information (in order)
           'governorate' => $this->getGovernorateFullName($site->governorate),
           'directorate' => $this->getDirectorate($site->governorate),
@@ -48,7 +49,6 @@ class LandSeeder extends Seeder
           // Area and other details
           'area_m2' => rand(2000, 10000),
           'region' => $this->getRegion($site->governorate),
-          'zoning' => $this->getZoningType($site->zoning_status),
           'land_directorate' => $this->getGovernorateFullName($site->governorate) . ' Land Department',
           // Documents (null for seeder)
           'ownership_doc' => null,
@@ -59,11 +59,23 @@ class LandSeeder extends Seeder
           'latitude' => $lat,
           'longitude' => $lng,
         ]);
+
+        $this->attachZoningStatus($land, $this->getZoningType($site->zoning_status));
       }
     }
 
     $this->command->info('✓ Created additional lands for ' . $sitesWithExtraLands->count() . ' sites');
     $this->command->info('  Total Lands: ' . Land::count());
+  }
+
+  private array $zoningStatusCache = [];
+
+  private function attachZoningStatus(Land $land, $zoning): void
+  {
+    $names = $this->mapZoningToStatusNames($zoning);
+    $ids = $this->fetchZoningStatusIds($names);
+
+    $land->zoningStatuses()->sync($ids);
   }
 
   private function getZoningType($siteZoning): string
@@ -151,5 +163,95 @@ class LandSeeder extends Seeder
     ];
 
     return $regions[$fullName] ?? 'Capital';
+  }
+
+  private function mapZoningToStatusNames($input): array
+  {
+    $values = [];
+
+    if (is_string($input)) {
+      $values = array_filter(array_map('trim', explode(',', $input)));
+    } elseif (is_array($input)) {
+      $values = array_filter(array_map('trim', $input));
+    }
+
+    if (empty($values)) {
+      return ['لا يوجد'];
+    }
+
+    $aliasMap = $this->getZoningAliasMap();
+    $resolved = [];
+
+    foreach ($values as $value) {
+      $key = mb_strtolower($value, 'UTF-8');
+      if (isset($aliasMap[$key])) {
+        $resolved = array_merge($resolved, $aliasMap[$key]);
+      } else {
+        $resolved[] = $value;
+      }
+    }
+
+    $resolved = array_values(array_unique(array_filter($resolved)));
+
+    return !empty($resolved) ? $resolved : ['لا يوجد'];
+  }
+
+  private function fetchZoningStatusIds(array $names): array
+  {
+    $ids = [];
+    $fallbackId = $this->getZoningStatusId('لا يوجد');
+
+    foreach ($names as $name) {
+      $id = $this->getZoningStatusId($name);
+
+      if ($id) {
+        $ids[] = $id;
+      } elseif ($fallbackId) {
+        $ids[] = $fallbackId;
+      }
+    }
+
+    return array_values(array_unique(array_filter($ids)));
+  }
+
+  private function getZoningStatusId(string $name): ?int
+  {
+    if (!array_key_exists($name, $this->zoningStatusCache)) {
+      $this->zoningStatusCache[$name] = ZoningStatus::where('name_ar', $name)->value('id');
+    }
+
+    return $this->zoningStatusCache[$name];
+  }
+
+  private function getZoningAliasMap(): array
+  {
+    return [
+      'commercial' => ['تجاري'],
+      'commercial a' => ['تجاري'],
+      'commercial central' => ['تجاري مركزي'],
+      'commercial local' => ['تجاري محلي'],
+      'residential' => ['سكن'],
+      'residential a' => ['سكن ا'],
+      'residential b' => ['سكن ب'],
+      'residential c' => ['سكن ج'],
+      'residential d' => ['سكن د'],
+      'industrial' => ['صناعات متوسطة'],
+      'industrial heavy' => ['صناعات متوسطة'],
+      'industrial free zone' => ['صناعات متوسطة'],
+      'industrial/tech' => ['صناعات متوسطة'],
+      'technology park' => ['مباني متعددة الاستعمالات'],
+      'tourism' => ['تجاري وسكن'],
+      'tourism/hospitality' => ['تجاري وسكن'],
+      'tourism/commercial' => ['تجاري وسكن'],
+      'tourism resort' => ['تجاري وسكن'],
+      'cultural' => ['مباني عامة'],
+      'cultural/heritage' => ['مباني عامة'],
+      'heritage' => ['مباني عامة'],
+      'agricultural' => ['زراعي'],
+      'conservation' => ['حدائق'],
+      'mixed use' => ['مباني متعددة الاستعمالات'],
+      'general' => ['لا يوجد'],
+      'port' => ['تجاري طولي'],
+    ];
   }
 }

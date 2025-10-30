@@ -10,16 +10,7 @@
 
 @section('content')
     @php
-        // Prepare current zoning status IDs
-        $currentZoningNames = !empty($land->zoning) ? explode(',', $land->zoning) : [];
-        $selectedZoningIds = [];
-        if (!empty($currentZoningNames)) {
-            foreach ($zoningStatuses as $status) {
-                if (in_array(trim($status->name_ar), array_map('trim', $currentZoningNames))) {
-                    $selectedZoningIds[] = $status->id;
-                }
-            }
-        }
+        $selectedZoningIds = old('zoning_statuses', $land->zoningStatuses->pluck('id')->toArray());
     @endphp
 
     <style>
@@ -499,7 +490,7 @@
                                         <label class="zoning-option" data-name="{{ strtolower($status->name_ar) }}">
                                             <input type="checkbox" class="zoning-checkbox" name="zoning_statuses[]"
                                                 value="{{ $status->id }}" id="zoning_{{ $status->id }}"
-                                                {{ in_array($status->id, old('zoning_statuses', $selectedZoningIds)) ? 'checked' : '' }}>
+                                                {{ in_array($status->id, $selectedZoningIds) ? 'checked' : '' }}>
                                             <span class="checkbox-custom"></span>
                                             <span class="option-text">{{ $status->name_ar }}</span>
                                         </label>

@@ -6,6 +6,7 @@ use App\Models\Land;
 use App\Models\Site;
 use App\Models\ZoningStatus;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 
 class LandController extends Controller
@@ -33,6 +34,7 @@ class LandController extends Controller
             ->with([
                 'site' => fn($siteQuery) => $siteQuery->withTrashed(),
                 'buildings',
+            'zoningStatuses',
             ])
             ->withCount('buildings');
 
@@ -53,7 +55,9 @@ class LandController extends Controller
         }
 
         if (!empty($filters['zoning'])) {
-            $query->where('zoning', 'like', "%{$filters['zoning']}%");
+            $query->whereHas('zoningStatuses', function ($zoningQuery) use ($filters) {
+                $zoningQuery->where('name_ar', 'like', "%{$filters['zoning']}%");
+            });
         }
 
         if (!empty($filters['directorate'])) {
@@ -182,15 +186,9 @@ class LandController extends Controller
             'ownership_doc' => 'nullable|file|mimes:jpg,jpeg,pdf|max:10240',
             'site_plan' => 'nullable|file|mimes:jpg,jpeg,pdf|max:10240',
             'zoning_plan' => 'nullable|file|mimes:jpg,jpeg,pdf|max:10240',
+            'zoning_statuses' => 'nullable|array',
+            'zoning_statuses.*' => 'integer|exists:zoning_statuses,id',
         ]);
-
-        // Handle zoning statuses - convert array to comma-separated string
-        if ($request->has('zoning_statuses') && is_array($request->zoning_statuses)) {
-            $zoningNames = \App\Models\ZoningStatus::whereIn('id', $request->zoning_statuses)
-                ->pluck('name_ar')
-                ->implode(', ');
-            $validated['zoning'] = $zoningNames;
-        }
 
         // Handle file uploads
         if ($request->hasFile('ownership_doc')) {
@@ -205,14 +203,18 @@ class LandController extends Controller
             $validated['zoning_plan'] = $request->file('zoning_plan')->store('lands/zoning_plans', 'private');
         }
 
-        Land::create($validated);
+        $land = Land::create($validated);
+
+        $land->zoningStatuses()->sync($this->resolveZoningStatusIds($request->input('zoning_statuses', [])));
+
+        $this->syncSiteZoningStatuses($land->site);
 
         return redirect()->route('lands.index')->with('success', 'Land created successfully!');
     }
 
     public function show(Land $land)
     {
-        $land->load(['site.images', 'buildings.images', 'renovations', 'images']);
+        $land->load(['site.images', 'buildings.images', 'renovations', 'images', 'zoningStatuses']);
         return view('lands.show', compact('land'));
     }
 
@@ -220,6 +222,8 @@ class LandController extends Controller
     {
         $sites = Site::all();
         $zoningStatuses = ZoningStatus::orderBy('name_ar')->get();
+        $land->load('zoningStatuses');
+
         return view('lands.edit', compact('land', 'sites', 'zoningStatuses'));
     }
 
@@ -246,15 +250,9 @@ class LandController extends Controller
             'ownership_doc' => 'nullable|file|mimes:jpg,jpeg,pdf|max:10240',
             'site_plan' => 'nullable|file|mimes:jpg,jpeg,pdf|max:10240',
             'zoning_plan' => 'nullable|file|mimes:jpg,jpeg,pdf|max:10240',
+            'zoning_statuses' => 'nullable|array',
+            'zoning_statuses.*' => 'integer|exists:zoning_statuses,id',
         ]);
-
-        // Handle zoning statuses - convert array to comma-separated string
-        if ($request->has('zoning_statuses') && is_array($request->zoning_statuses)) {
-            $zoningNames = \App\Models\ZoningStatus::whereIn('id', $request->zoning_statuses)
-                ->pluck('name_ar')
-                ->implode(', ');
-            $validated['zoning'] = $zoningNames;
-        }
 
         // Handle file uploads
         if ($request->hasFile('ownership_doc')) {
@@ -273,6 +271,9 @@ class LandController extends Controller
         }
 
         $land->update($validated);
+        $land->zoningStatuses()->sync($this->resolveZoningStatusIds($request->input('zoning_statuses', [])));
+
+        $this->syncSiteZoningStatuses($land->site);
         return redirect()->route('lands.show', $land)->with('success', 'Land updated successfully!');
     }
 
@@ -311,7 +312,10 @@ class LandController extends Controller
 
     public function destroy(Land $land)
     {
+        $site = $land->site;
         $land->delete();
+
+        $this->syncSiteZoningStatuses($site);
         return redirect()->route('lands.index')->with('success', 'Land moved to trash successfully!');
     }
 
@@ -320,12 +324,15 @@ class LandController extends Controller
         $land = Land::onlyTrashed()->findOrFail($id);
         $land->restore();
 
+        $this->syncSiteZoningStatuses($land->site);
+
         return redirect()->route('lands.deleted')->with('success', 'Land restored successfully!');
     }
 
     public function forceDestroy($id)
     {
         $land = Land::withTrashed()->findOrFail($id);
+        $site = $land->site;
 
         $this->deleteLandMedia($land);
 
@@ -333,6 +340,8 @@ class LandController extends Controller
         $land->reInnovations()->withTrashed()->get()->each->forceDelete();
 
         $land->forceDelete();
+
+        $this->syncSiteZoningStatuses($site);
 
         return redirect()->route('lands.deleted')->with('success', 'Land permanently deleted successfully!');
     }
@@ -379,5 +388,42 @@ class LandController extends Controller
                 // Ignore disk errors to avoid breaking flow if disk is not configured
             }
         }
+    }
+
+    private function resolveZoningStatusIds($input): array
+    {
+        $ids = Arr::wrap($input);
+        $ids = array_filter($ids, fn($id) => is_numeric($id));
+
+        if (empty($ids)) {
+            return [];
+        }
+
+        $ids = array_map('intval', $ids);
+
+        return ZoningStatus::whereIn('id', $ids)->pluck('id')->all();
+    }
+
+    private function syncSiteZoningStatuses(?Site $site): void
+    {
+        if (!$site) {
+            return;
+        }
+
+        $freshSite = Site::with(['lands.zoningStatuses'])->find($site->id);
+
+        if (!$freshSite) {
+            return;
+        }
+
+        $zoningIds = [];
+
+        foreach ($freshSite->lands as $land) {
+            $zoningIds = array_merge($zoningIds, $land->zoningStatuses->pluck('id')->all());
+        }
+
+        $uniqueIds = array_values(array_unique($zoningIds));
+
+        $freshSite->zoningStatuses()->sync($uniqueIds);
     }
 }

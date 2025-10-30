@@ -19,9 +19,9 @@ return new class extends Migration
             $table->string('code', 24)->unique();          // 1AM00301
             $table->string('name');
             $table->decimal('area_m2', 12, 2)->nullable();
-            $table->string('tenure_type', 20)->default('owned');
-            $table->date('lease_start_date')->nullable();
-            $table->date('lease_end_date')->nullable();
+            $table->string('property_type', 20)->default('owned');
+            $table->date('contract_start_date')->nullable();
+            $table->date('contract_end_date')->nullable();
             $table->decimal('contract_value', 14, 2)->nullable();
             $table->text('special_conditions')->nullable();
             $table->string('contract_file')->nullable();
@@ -34,9 +34,6 @@ return new class extends Migration
             $table->string('occupancy_permit_file')->nullable(); // إذن إشغال
             $table->boolean('has_profession_permit')->nullable();
             $table->string('profession_permit_file')->nullable(); // رخصة مهن
-
-            $table->string('as_built_drawing_pdf')->nullable();
-            $table->string('as_built_drawing_cad')->nullable();
 
             $table->text('remarks')->nullable();
             $table->timestamps();

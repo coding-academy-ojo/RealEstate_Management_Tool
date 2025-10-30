@@ -31,7 +31,6 @@ return new class extends Migration
             // Area and other details
             $table->decimal('area_m2', 10, 2);          // مساحة القطعة
             $table->string('region')->nullable();       // REGION
-            $table->string('zoning')->nullable();       // التنظيم
             $table->string('land_directorate')->nullable(); // مديرية الأراضي
 
             // Documents and media

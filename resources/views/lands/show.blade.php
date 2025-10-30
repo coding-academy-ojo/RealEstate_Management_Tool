@@ -170,7 +170,13 @@
                             <strong class="text-muted">Zoning (التنظيم):</strong>
                         </div>
                         <div class="col-md-8">
-                            {{ $land->zoning ?: 'N/A' }}
+                            @if ($land->zoningStatuses->isNotEmpty())
+                                @foreach ($land->zoningStatuses as $status)
+                                    <span class="badge bg-orange text-white me-1">{{ $status->name_ar }}</span>
+                                @endforeach
+                            @else
+                                N/A
+                            @endif
                         </div>
                     </div>
 
