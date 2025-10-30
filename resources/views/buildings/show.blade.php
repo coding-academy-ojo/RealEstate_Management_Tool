@@ -27,7 +27,7 @@
                 <i class="bi bi-arrow-left me-1"></i> Back
             </a>
             @if ($currentUser?->isSuperAdmin())
-                                        <a href="{{ route('water-services.files.show', [$service, 'reference-meter']) }}" target="_blank"
+                <a href="{{ route('buildings.edit', $building) }}" class="btn btn-orange">
                     <i class="bi bi-pencil me-1"></i> Edit
                 </a>
                 <form action="{{ route('buildings.destroy', $building) }}" method="POST" class="d-inline"
@@ -68,11 +68,7 @@
                         <div class="col-md-4">
                             <div class="text-muted text-uppercase small fw-semibold">Property Type</div>
                             <div>
-                                @if ($building->property_type === 'rental')
-                                    <span class="badge bg-warning-subtle text-warning fw-semibold">Rental</span>
-                                @else
-                                    <span class="badge bg-success-subtle text-success fw-semibold">Owned</span>
-                                @endif
+                                {{ $building->property_type === 'rental' ? 'Rental' : 'Owned' }}
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -83,7 +79,7 @@
                                     {{ $building->site->code }} — {{ $building->site->name }}
                                 </a>
                             </div>
-                                            <a href="{{ route('electricity-services.files.show', [$electricityService, 'reset']) }}" target="_blank"
+                        </div>
                         <div class="col-md-6">
                             <div class="text-muted text-uppercase small fw-semibold">Remarks</div>
                             <div>{{ $building->remarks ?: 'No remarks provided.' }}</div>
