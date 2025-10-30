@@ -711,9 +711,7 @@
             };
 
             // When site is selected, auto-fill governorate and region
-            siteSelect.addEventListener('change', function() {
-                const selectedSiteId = this.value;
-
+            const handleSiteChange = function(selectedSiteId) {
                 if (selectedSiteId) {
                     const selectedSite = allSites.find(site => site.id == selectedSiteId);
                     if (selectedSite) {
@@ -724,11 +722,15 @@
                     governorateInput.value = '';
                     regionInput.value = '';
                 }
+            };
+
+            siteSelect.addEventListener('change', function() {
+                handleSiteChange(this.value);
             });
 
             // Trigger change on page load to set initial values
             if (siteSelect.value) {
-                siteSelect.dispatchEvent(new Event('change'));
+                handleSiteChange(siteSelect.value);
             }
 
             // Google Maps URL coordinate extraction
@@ -992,6 +994,123 @@
                 this.classList.remove('is-invalid');
                 zoningError.style.display = 'none';
             });
+
+            // Initialize Choices.js for searchable site select
+            const siteSelectElement = document.getElementById('site_id');
+            const originalSiteId = {{ $land->site_id }};
+            let siteChoices = null;
+
+            if (siteSelectElement) {
+                siteChoices = new Choices(siteSelectElement, {
+                    searchEnabled: true,
+                    searchPlaceholderValue: 'Search by site name or code...',
+                    itemSelectText: 'Press to select',
+                    noResultsText: 'No sites found',
+                    noChoicesText: 'No sites available',
+                    shouldSort: false,
+                    removeItemButton: false,
+                });
+
+                // Handle site change with confirmation using Choices.js event
+                siteSelectElement.addEventListener('addItem', function(e) {
+                    const newSiteId = e.detail.value;
+
+                    // Update governorate and region
+                    handleSiteChange(newSiteId);
+
+                    if (newSiteId && newSiteId != originalSiteId) {
+                        // Get site details
+                        const selectedSite = allSites.find(site => site.id == newSiteId);
+                        const siteText = selectedSite ? `${selectedSite.code} - ${selectedSite.name}` : '';
+
+                        // Show confirmation modal
+                        showSiteChangeModal(newSiteId, siteText);
+                    }
+                }, false);
+            }
+
+            // Site change confirmation modal
+            function showSiteChangeModal(newSiteId, siteText) {
+                // Create modal if it doesn't exist
+                let modal = document.getElementById('siteChangeModal');
+                if (!modal) {
+                    const modalHTML = `
+                        <div class="modal fade" id="siteChangeModal" tabindex="-1" aria-labelledby="siteChangeModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-warning">
+                                        <h5 class="modal-title" id="siteChangeModalLabel">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>Confirm Site Change
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p class="mb-2"><strong>⚠️ You are about to change the site for this land!</strong></p>
+                                        <div class="alert alert-info mb-3">
+                                            <strong>New Site:</strong> <span id="newSiteInfo"></span>
+                                        </div>
+                                        <p class="text-muted mb-0">
+                                            <small><strong>Note:</strong> This will update the land's location and may affect building associations.</small>
+                                        </p>
+                                    </div>
+                                    <div class="modal-footer border-0">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelSiteChange">Cancel</button>
+                                        <button type="button" class="btn btn-warning" id="confirmSiteChange">
+                                            <i class="bi bi-check-circle me-1"></i>Confirm Change
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.insertAdjacentHTML('beforeend', modalHTML);
+                    modal = document.getElementById('siteChangeModal');
+                }
+
+                // Update modal content
+                document.getElementById('newSiteInfo').textContent = siteText;
+
+                // Show modal
+                const bsModal = new boosted.Modal(modal);
+                bsModal.show();
+
+                // Handle confirmation
+                const confirmBtn = document.getElementById('confirmSiteChange');
+                const cancelBtn = document.getElementById('cancelSiteChange');
+
+                // Remove old event listeners
+                const newConfirmBtn = confirmBtn.cloneNode(true);
+                const newCancelBtn = cancelBtn.cloneNode(true);
+                confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+                cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+                newConfirmBtn.addEventListener('click', function() {
+                    // Keep the new selection
+                    bsModal.hide();
+                });
+
+                newCancelBtn.addEventListener('click', function() {
+                    // Revert to original site
+                    if (siteChoices) {
+                        siteChoices.setChoiceByValue(originalSiteId.toString());
+                    }
+                    bsModal.hide();
+                });
+
+                // Handle modal close (X button or backdrop)
+                modal.addEventListener('hidden.bs.modal', function(e) {
+                    // Check if the value is still the new one - if not, user canceled
+                    const currentValue = siteSelectElement.value;
+                    if (currentValue == newSiteId) {
+                        // User confirmed, do nothing
+                    } else {
+                        // User canceled via backdrop/X, ensure original is selected
+                        if (siteChoices) {
+                            siteChoices.setChoiceByValue(originalSiteId.toString());
+                        }
+                    }
+                }, { once: true });
+            }
         });
     </script>
 @endpush

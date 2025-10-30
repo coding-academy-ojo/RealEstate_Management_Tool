@@ -40,25 +40,30 @@
                         @csrf
                         @method('PUT')
 
-                        <input type="hidden" name="site_id" value="{{ $building->site_id }}">
+                        <input type="hidden" name="site_id" id="hidden_site_id" value="{{ old('site_id', $building->site_id) }}">
 
                         <!-- Site Information -->
                         <div class="mb-4">
-                            <label for="site_id" class="form-label fw-bold">
+                            <label for="site_id_display" class="form-label fw-bold">
                                 Site <span class="text-danger">*</span>
                             </label>
-                            <select id="site_id" class="form-select" disabled>
-                                <option value="{{ $building->site_id }}" selected>
-                                    {{ $building->site->code }} - {{ $building->site->name }}
-                                    ({{ $building->site->governorate_name_en }})
-                                </option>
+                            <select name="site_id_display" id="site_id_display" class="form-select @error('site_id') is-invalid @enderror" required>
+                                <option value="">-- Select Site --</option>
+                                @foreach ($sites as $site)
+                                    <option value="{{ $site->id }}"
+                                        {{ old('site_id', $building->site_id) == $site->id ? 'selected' : '' }}
+                                        data-code="{{ $site->code }}"
+                                        data-name="{{ $site->name }}">
+                                        {{ $site->code }} - {{ $site->name }} ({{ $site->governorate_name_en }})
+                                    </option>
+                                @endforeach
                             </select>
                             @error('site_id')
-                                <div class="text-danger small mt-1">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                            <small class="text-info d-block mt-2">
+                            <small class="text-muted">
                                 <i class="bi bi-info-circle me-1"></i>
-                                Site cannot be changed. Create a new building if it belongs to another site.
+                                Changing the site will update the building's location. A confirmation will be requested.
                             </small>
                         </div>
 
@@ -529,6 +534,127 @@
 
             if (siteSelect && siteSelect.value) {
                 loadLands(siteSelect.value);
+            }
+
+            // Initialize Choices.js for searchable site select
+            const siteSelectDisplay = document.getElementById('site_id_display');
+            const hiddenSiteInput = document.getElementById('hidden_site_id');
+            const originalSiteId = {{ $building->site_id }};
+            let siteChoices = null;
+
+            if (siteSelectDisplay) {
+                siteChoices = new Choices(siteSelectDisplay, {
+                    searchEnabled: true,
+                    searchPlaceholderValue: 'Search by site name or code...',
+                    itemSelectText: 'Press to select',
+                    noResultsText: 'No sites found',
+                    noChoicesText: 'No sites available',
+                    shouldSort: false,
+                    removeItemButton: false,
+                });
+
+                // Handle site change with confirmation
+                siteSelectDisplay.addEventListener('addItem', function(e) {
+                    const newSiteId = e.detail.value;
+
+                    if (newSiteId && newSiteId != originalSiteId) {
+                        // Get site details
+                        const selectedOption = siteSelectDisplay.querySelector(`option[value="${newSiteId}"]`);
+                        const siteName = selectedOption ? selectedOption.dataset.name : '';
+                        const siteCode = selectedOption ? selectedOption.dataset.code : '';
+
+                        // Show confirmation modal
+                        showSiteChangeModal(newSiteId, siteName, siteCode);
+                    } else {
+                        // Update hidden input
+                        hiddenSiteInput.value = newSiteId;
+                        // Load lands for the selected site
+                        loadLands(newSiteId);
+                    }
+                }, false);
+            }
+
+            // Site change confirmation modal
+            function showSiteChangeModal(newSiteId, siteName, siteCode) {
+                // Create modal if it doesn't exist
+                let modal = document.getElementById('siteChangeModal');
+                if (!modal) {
+                    const modalHTML = `
+                        <div class="modal fade" id="siteChangeModal" tabindex="-1" aria-labelledby="siteChangeModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-warning">
+                                        <h5 class="modal-title" id="siteChangeModalLabel">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>Confirm Site Change
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p class="mb-2"><strong>⚠️ You are about to change the site for this building!</strong></p>
+                                        <div class="alert alert-info mb-3">
+                                            <strong>New Site:</strong> <span id="newSiteName"></span> (<span id="newSiteCode"></span>)
+                                        </div>
+                                        <p class="text-muted mb-0">
+                                            <small><strong>Note:</strong> This will update the building's location and may affect land associations.</small>
+                                        </p>
+                                    </div>
+                                    <div class="modal-footer border-0">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelSiteChange">Cancel</button>
+                                        <button type="button" class="btn btn-warning" id="confirmSiteChange">
+                                            <i class="bi bi-check-circle me-1"></i>Confirm Change
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.insertAdjacentHTML('beforeend', modalHTML);
+                    modal = document.getElementById('siteChangeModal');
+                }
+
+                // Update modal content
+                document.getElementById('newSiteName').textContent = siteName;
+                document.getElementById('newSiteCode').textContent = siteCode;
+
+                // Show modal
+                const bsModal = new boosted.Modal(modal);
+                bsModal.show();
+
+                // Handle confirmation
+                const confirmBtn = document.getElementById('confirmSiteChange');
+                const cancelBtn = document.getElementById('cancelSiteChange');
+
+                // Remove old event listeners
+                const newConfirmBtn = confirmBtn.cloneNode(true);
+                const newCancelBtn = cancelBtn.cloneNode(true);
+                confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+                cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+                newConfirmBtn.addEventListener('click', function() {
+                    // Update hidden input
+                    hiddenSiteInput.value = newSiteId;
+                    // Load lands for new site
+                    loadLands(newSiteId);
+                    bsModal.hide();
+                });
+
+                newCancelBtn.addEventListener('click', function() {
+                    // Revert to original site
+                    if (siteChoices) {
+                        siteChoices.setChoiceByValue(originalSiteId.toString());
+                    }
+                    bsModal.hide();
+                });
+
+                // Handle modal close (X button or backdrop)
+                modal.addEventListener('hidden.bs.modal', function(e) {
+                    // Check if it was closed without confirming
+                    if (hiddenSiteInput.value != newSiteId) {
+                        if (siteChoices) {
+                            siteChoices.setChoiceByValue(originalSiteId.toString());
+                        }
+                    }
+                }, { once: true });
             }
         });
     </script>

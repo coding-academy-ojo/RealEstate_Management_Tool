@@ -443,9 +443,8 @@
                     return;
                 }
 
-                siteSelect.addEventListener('change', function() {
-                    const siteId = this.value;
-
+                // Function to handle site change
+                const handleSiteChange = function(siteId) {
                     console.log('Site selected:', siteId);
 
                     if (!siteId) {
@@ -539,14 +538,39 @@
                             `;
                             landsSection.style.display = 'block';
                         });
+                };
+
+                // Add native change listener for non-Choices selects
+                siteSelect.addEventListener('change', function() {
+                    handleSiteChange(this.value);
                 });
 
                 // Trigger change if there's an old site_id value
                 if (siteSelect.value) {
                     console.log('Triggering change for pre-selected site:', siteSelect.value);
-                    siteSelect.dispatchEvent(new Event('change'));
+                    handleSiteChange(siteSelect.value);
                 }
             });
+
+            // Initialize Choices.js for searchable site select
+            const siteSelectElement = document.getElementById('site_id');
+            if (siteSelectElement && !siteSelectElement.hasAttribute('disabled')) {
+                const siteChoices = new Choices(siteSelectElement, {
+                    searchEnabled: true,
+                    searchPlaceholderValue: 'Search by site name or code...',
+                    itemSelectText: 'Press to select',
+                    noResultsText: 'No sites found',
+                    noChoicesText: 'No sites available',
+                    shouldSort: false,
+                    removeItemButton: false,
+                });
+
+                // Listen to Choices.js change event
+                siteSelectElement.addEventListener('addItem', function(event) {
+                    const siteId = event.detail.value;
+                    handleSiteChange(siteId);
+                }, false);                });
+            }
         </script>
     @endpush
 @endsection

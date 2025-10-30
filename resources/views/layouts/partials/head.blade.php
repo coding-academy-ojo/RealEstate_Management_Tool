@@ -202,9 +202,79 @@
         cursor: not-allowed !important;
         opacity: 0.6 !important;
     }
+
+    /* Choices.js Custom Styling for Orange Theme */
+    .choices__inner {
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        padding: 0.375rem 0.75rem;
+        min-height: 38px;
+        color: #212529;
+    }
+
+    .choices__list--single .choices__item {
+        color: #212529 !important;
+    }
+
+    .choices__list--dropdown {
+        border: 1px solid #FF7900;
+        border-radius: 0.375rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        z-index: 1050;
+    }
+
+    .choices__list--dropdown .choices__item {
+        color: #212529 !important;
+    }
+
+    .choices__list--dropdown .choices__item--selectable.is-highlighted {
+        background-color: #FF7900 !important;
+        color: #fff !important;
+    }
+
+    .choices__list--dropdown .choices__item--selectable:hover {
+        background-color: #FF7900 !important;
+        color: #fff !important;
+    }
+
+    .choices__input {
+        background-color: #fff;
+        border: none;
+        padding: 0;
+        margin-bottom: 0;
+    }
+
+    .choices[data-type*="select-one"] .choices__input {
+        padding: 0;
+    }
+
+    .choices__list--single {
+        padding: 0;
+    }
+
+    .choices[data-type*="select-one"]:after {
+        border-color: #6c757d transparent transparent;
+        border-width: 6px 5px 0;
+        margin-top: -3px;
+        right: 16px;
+    }
+
+    .choices.is-focused .choices__inner {
+        border-color: rgba(255, 107, 53, 0.5);
+        box-shadow: 0 0 0 0.25rem rgba(255, 107, 53, 0.25);
+    }
+
+    .choices__placeholder {
+        opacity: 0.5;
+    }
 </style>
 
 <!-- SortableJS for drag-and-drop image reordering -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<!-- Choices.js for searchable select dropdowns -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
 @yield('styles')

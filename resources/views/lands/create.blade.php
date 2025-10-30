@@ -730,9 +730,17 @@
                 'MN': 'South'
             };
 
+            let siteChoicesInstance = null;
+
             // When governorate is selected, populate sites
             governorateFilter.addEventListener('change', function() {
                 const selectedGovernorate = this.value;
+
+                // Destroy existing Choices instance if it exists
+                if (siteChoicesInstance) {
+                    siteChoicesInstance.destroy();
+                    siteChoicesInstance = null;
+                }
 
                 // Reset sites
                 siteSelect.innerHTML = '<option value="">-- Select Site --</option>';
@@ -752,6 +760,17 @@
                             option.value = site.id;
                             option.textContent = `${site.code} - ${site.name}`;
                             siteSelect.appendChild(option);
+                        });
+
+                        // Initialize Choices.js for the now-enabled site select
+                        siteChoicesInstance = new Choices(siteSelect, {
+                            searchEnabled: true,
+                            searchPlaceholderValue: 'Search by site name or code...',
+                            itemSelectText: 'Press to select',
+                            noResultsText: 'No sites found',
+                            noChoicesText: 'No sites available',
+                            shouldSort: false,
+                            removeItemButton: false,
                         });
                     } else {
                         const option = document.createElement('option');
@@ -1068,6 +1087,9 @@
                 this.classList.remove('is-invalid');
                 zoningError.style.display = 'none';
             });
+
+            // Note: Choices.js for site select is initialized dynamically
+            // when governorate is selected (see governorate change handler above)
         });
     </script>
 @endpush
