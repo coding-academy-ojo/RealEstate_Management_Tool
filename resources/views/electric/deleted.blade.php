@@ -47,6 +47,10 @@
                     </thead>
                     <tbody>
                         @forelse($electricityServices as $service)
+                            @php
+                                $companyEnglish = optional($service->electricityCompany)->name ?? $service->company_name;
+                                $companyArabic = optional($service->electricityCompany)->name_ar ?? $service->company_name_ar;
+                            @endphp
                             <tr>
                                 <td>
                                     <div class="fw-semibold">{{ $service->subscriber_name }}</div>
@@ -71,7 +75,18 @@
                                         <span class="text-muted">No Building</span>
                                     @endif
                                 </td>
-                                <td>{{ $service->company_name }}</td>
+                                <td>
+                                    <div>{{ $companyEnglish }}</div>
+                                    @if ($companyArabic)
+                                        <div>{{ $companyArabic }}</div>
+                                    @endif
+                                    @if (optional($service->electricityCompany)->website)
+                                        <a href="{{ $service->electricityCompany->website }}" target="_blank"
+                                            class="text-decoration-none ms-1">
+                                            <i class="bi bi-globe"></i>
+                                        </a>
+                                    @endif
+                                </td>
                                 <td>{{ $service->registration_number }}</td>
                                 <td>
                                     <small class="text-muted">
@@ -83,11 +98,11 @@
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
                                         <button type="button" class="btn btn-sm btn-outline-success" title="Restore"
-                                            onclick="openRestoreModal('{{ $service->id }}', '{{ $service->registration_number }}', '{{ $service->company_name }}')">
+                                            onclick="openRestoreModal('{{ $service->id }}', '{{ $service->registration_number }}', '{{ addslashes(trim($companyEnglish . ($companyArabic ? ' / ' . $companyArabic : ''))) }}')">
                                             <i class="bi bi-arrow-counterclockwise"></i>
                                         </button>
                                         <button type="button" class="btn btn-sm btn-outline-danger" title="Delete Permanently"
-                                            onclick="openForceDeleteModal('{{ $service->id }}', '{{ $service->registration_number }}', '{{ $service->company_name }}')">
+                                            onclick="openForceDeleteModal('{{ $service->id }}', '{{ $service->registration_number }}', '{{ addslashes(trim($companyEnglish . ($companyArabic ? ' / ' . $companyArabic : ''))) }}')">
                                             <i class="bi bi-trash-fill"></i>
                                         </button>
                                     </div>

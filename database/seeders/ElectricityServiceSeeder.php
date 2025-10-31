@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Building;
+use App\Models\ElectricityCompany;
 use App\Models\ElectricityService;
 use Illuminate\Database\Seeder;
 
@@ -13,6 +14,13 @@ class ElectricityServiceSeeder extends Seeder
    */
   public function run(): void
   {
+    $electricityCompanies = ElectricityCompany::orderBy('name')->get();
+
+    if ($electricityCompanies->isEmpty()) {
+      $this->command->warn('No electricity companies available. Skipping electricity service seeding.');
+      return;
+    }
+
     $buildings = Building::doesntHave('electricityServices')->get();
 
     if ($buildings->isEmpty()) {
@@ -27,13 +35,16 @@ class ElectricityServiceSeeder extends Seeder
     foreach ($buildingsToService as $building) {
       $site = $building->site;
       $hasSolar = random_int(0, 4) === 0; // around 20% solar-enabled
+      $company = $this->pickElectricityCompanyForGovernorate($site->governorate, $electricityCompanies);
 
       ElectricityService::create([
         'building_id' => $building->id,
         'subscriber_name' => $this->generateSubscriberName($building),
         'meter_number' => $this->generateUniqueMeterNumber($building->id),
         'has_solar_power' => $hasSolar,
-        'company_name' => $this->getElectricityCompany(),
+        'electricity_company_id' => $company->id,
+        'company_name' => $company->name,
+        'company_name_ar' => $company->name_ar,
         'registration_number' => $this->generateRegistrationNumber($site->governorate, 'E'),
         'reset_file' => null,
         'remarks' => $this->generateRemarks($hasSolar),
@@ -44,9 +55,42 @@ class ElectricityServiceSeeder extends Seeder
     $this->command->info('  Total Electricity Services: ' . ElectricityService::count());
   }
 
-  private function getElectricityCompany(): string
+  private function pickElectricityCompanyForGovernorate(?string $governorate, $companies): ElectricityCompany
   {
-    return 'Jordan Electric Power Company (JEPCO)';
+    if (!$governorate) {
+      return $companies->first();
+    }
+
+    $governorate = mb_strtolower($governorate);
+
+    $distributionMapping = [
+      'amman' => 'Jordan Electric Power Company (JEPCO)',
+      'zarqa' => 'Jordan Electric Power Company (JEPCO)',
+      'madaba' => 'Jordan Electric Power Company (JEPCO)',
+      'balqa' => 'Jordan Electric Power Company (JEPCO)',
+      'irbid' => 'Irbid District Electricity Company (IDECO)',
+      'jerash' => 'Irbid District Electricity Company (IDECO)',
+      'ajloun' => 'Irbid District Electricity Company (IDECO)',
+      'mafraq' => 'Irbid District Electricity Company (IDECO)',
+      'karak' => 'Electricity Distribution Company (EDCO)',
+      'tafila' => 'Electricity Distribution Company (EDCO)',
+      'tafilah' => 'Electricity Distribution Company (EDCO)',
+      'ma\'an' => 'Electricity Distribution Company (EDCO)',
+      'maan' => 'Electricity Distribution Company (EDCO)',
+      'aqaba' => 'Electricity Distribution Company (EDCO)',
+      'valley' => 'Electricity Distribution Company (EDCO)',
+      'wadi' => 'Electricity Distribution Company (EDCO)',
+      'desert' => 'Electricity Distribution Company (EDCO)',
+      'eastern' => 'Electricity Distribution Company (EDCO)',
+    ];
+
+    foreach ($distributionMapping as $needle => $companyName) {
+      if (str_contains($governorate, $needle)) {
+        return $companies->firstWhere('name', $companyName) ?? $companies->first();
+      }
+    }
+
+    return $companies->random();
   }
 
   private function generateRegistrationNumber(?string $governorate, string $prefix): string

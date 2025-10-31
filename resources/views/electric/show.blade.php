@@ -9,6 +9,10 @@
 
 @section('content')
     @php
+        $serviceCompanyEnglish = optional($electricityService->electricityCompany)->name ?? $electricityService->company_name;
+        $serviceCompanyArabic = optional($electricityService->electricityCompany)->name_ar ?? $electricityService->company_name_ar;
+    @endphp
+    @php
         $currentUser = auth()->user();
         $canManageElectricity = $currentUser?->isSuperAdmin() || $currentUser?->hasPrivilege('electricity');
         $isSolar = $electricityService->has_solar_power;
@@ -101,7 +105,7 @@
                     </button>
                 @endif
                 <button type="button" class="btn btn-outline-danger"
-                    onclick="openDeleteModal('{{ $electricityService->id }}', '{{ $electricityService->registration_number }}', '{{ $electricityService->company_name }}')">
+                    onclick="openDeleteModal('{{ $electricityService->id }}', '{{ $electricityService->registration_number }}', '{{ addslashes(trim($serviceCompanyEnglish . ($serviceCompanyArabic ? ' / ' . $serviceCompanyArabic : ''))) }}')">
                     <i class="bi bi-trash me-1"></i> Delete
                 </button>
             </div>
@@ -165,7 +169,18 @@
                                 <i class="bi bi-building-gear text-orange fs-4"></i>
                                 <div>
                                     <div class="fw-semibold">Company</div>
-                                    <div class="text-muted">{{ $electricityService->company_name }}</div>
+                                    <div class="text-muted">
+                                        <div>{{ $serviceCompanyEnglish }}</div>
+                                        @if ($serviceCompanyArabic)
+                                            <div>{{ $serviceCompanyArabic }}</div>
+                                        @endif
+                                        @if (optional($electricityService->electricityCompany)->website)
+                                            <a href="{{ $electricityService->electricityCompany->website }}"
+                                                target="_blank" rel="noopener" class="text-decoration-none ms-1">
+                                                <i class="bi bi-globe"></i>
+                                            </a>
+                                        @endif
+                                    </div>
                                     <div class="text-muted small">Reg #: {{ $electricityService->registration_number }}
                                     </div>
                                     <div class="text-muted small">Solar / Net Metering: {{ $isSolar ? 'Yes' : 'No' }}</div>

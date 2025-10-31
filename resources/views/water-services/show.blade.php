@@ -68,8 +68,12 @@
                         <i class="bi bi-play-circle me-1"></i> Reactivate
                     </button>
                 @endif
+                @php
+                    $serviceCompanyEnglish = optional($waterService->waterCompany)->name ?? $waterService->company_name;
+                    $serviceCompanyArabic = optional($waterService->waterCompany)->name_ar ?? $waterService->company_name_ar;
+                @endphp
                 <button type="button" class="btn btn-outline-danger"
-                    onclick="openDeleteModal('{{ $waterService->id }}', '{{ $waterService->registration_number }}', '{{ $waterService->company_name }}')">
+                    onclick="openDeleteModal('{{ $waterService->id }}', '{{ $waterService->registration_number }}', '{{ addslashes(trim($serviceCompanyEnglish . ($serviceCompanyArabic ? ' / ' . $serviceCompanyArabic : ''))) }}')">
                     <i class="bi bi-trash me-1"></i> Delete
                 </button>
             @endif
@@ -135,7 +139,18 @@
                             <strong class="text-muted">Company Name:</strong>
                         </div>
                         <div class="col-md-8">
-                            {{ $waterService->company_name }}
+                            <div>{{ $serviceCompanyEnglish }}</div>
+                            @if ($serviceCompanyArabic)
+                                <div>{{ $serviceCompanyArabic }}</div>
+                            @endif
+                            @if (optional($waterService->waterCompany)->website)
+                                <div class="mt-1">
+                                    <a href="{{ $waterService->waterCompany->website }}" target="_blank" rel="noopener"
+                                        class="text-decoration-none">
+                                        <i class="bi bi-globe me-1"></i>{{ $waterService->waterCompany->website }}
+                                    </a>
+                                </div>
+                            @endif
                         </div>
                     </div>
 

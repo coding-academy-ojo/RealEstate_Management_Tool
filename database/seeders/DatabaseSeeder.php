@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,              // Independent - create users first
             ZoningStatusSeeder::class,      // Create zoning statuses before sites
+            WaterCompanySeeder::class,      // Seed master list of water utilities
+            ElectricityCompanySeeder::class, // Seed master list of electric utilities
             SiteSeeder::class,              // Creates sites with lands and buildings
             LandSeeder::class,              // Adds additional lands to existing sites
             BuildingSeeder::class,          // Adds additional buildings to sites
@@ -40,6 +42,8 @@ class DatabaseSeeder extends Seeder
             [
                 ['Users', \App\Models\User::count()],
                 ['Zoning Statuses', \App\Models\ZoningStatus::count()],
+                ['Water Companies', \App\Models\WaterCompany::count()],
+                ['Electricity Companies', \App\Models\ElectricityCompany::count()],
                 ['Sites', \App\Models\Site::count()],
                 ['Lands', \App\Models\Land::count()],
                 ['Buildings', \App\Models\Building::count()],
@@ -50,4 +54,3 @@ class DatabaseSeeder extends Seeder
         );
     }
 }
-

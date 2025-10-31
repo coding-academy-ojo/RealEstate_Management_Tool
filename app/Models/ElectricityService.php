@@ -14,6 +14,7 @@ class ElectricityService extends Model
 
     protected $fillable = [
         'building_id',
+        'electricity_company_id',
         'subscriber_name',
         'meter_number',
         'has_solar_power',
@@ -21,6 +22,7 @@ class ElectricityService extends Model
         'deactivation_reason',
         'deactivation_date',
         'company_name',
+        'company_name_ar',
         'registration_number',
         'reset_file',
         'remarks',
@@ -35,6 +37,11 @@ class ElectricityService extends Model
     public function building(): BelongsTo
     {
         return $this->belongsTo(Building::class);
+    }
+
+    public function electricityCompany(): BelongsTo
+    {
+        return $this->belongsTo(ElectricityCompany::class);
     }
 
     public function readings(): HasMany

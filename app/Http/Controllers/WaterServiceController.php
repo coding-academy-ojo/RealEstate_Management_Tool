@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Building;
+use App\Models\WaterCompany;
 use App\Models\WaterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -22,7 +23,7 @@ class WaterServiceController extends Controller
         // Get filter parameters
         $filters = [
             'search' => $request->input('search'),
-            'company' => $request->input('company'),
+            'company_id' => $request->input('company'),
         ];
 
         // Get sort parameters
@@ -30,7 +31,7 @@ class WaterServiceController extends Controller
         $direction = $request->input('direction', 'asc');
 
         // Build query
-        $query = WaterService::with(['building.site', 'latestReading']);
+        $query = WaterService::with(['building.site', 'latestReading', 'waterCompany']);
 
         // Apply search filter
         if ($filters['search']) {
@@ -38,6 +39,7 @@ class WaterServiceController extends Controller
                 $q->where('registration_number', 'like', "%{$filters['search']}%")
                     ->orWhere('iron_number', 'like', "%{$filters['search']}%")
                     ->orWhere('company_name', 'like', "%{$filters['search']}%")
+                    ->orWhere('company_name_ar', 'like', "%{$filters['search']}%")
                     ->orWhere('meter_owner_name', 'like', "%{$filters['search']}%")
                     ->orWhereHas('building', function ($buildingQuery) use ($filters) {
                         $buildingQuery->where('name', 'like', "%{$filters['search']}%");
@@ -46,8 +48,8 @@ class WaterServiceController extends Controller
         }
 
         // Apply company filter
-        if ($filters['company']) {
-            $query->where('company_name', $filters['company']);
+        if ($filters['company_id']) {
+            $query->where('water_company_id', $filters['company_id']);
         }
 
         // Apply sorting
@@ -78,9 +80,17 @@ class WaterServiceController extends Controller
         }
 
         // Get distinct companies for filter dropdown
-        $companies = WaterService::distinct()
-            ->orderBy('company_name')
-            ->pluck('company_name', 'company_name');
+        $companies = WaterCompany::orderBy('name')
+            ->get()
+            ->mapWithKeys(function (WaterCompany $company) {
+                $label = $company->name;
+
+                if ($company->name_ar) {
+                    $label .= ' — ' . $company->name_ar;
+                }
+
+                return [$company->id => $label];
+            });
 
         $waterServices = $query->paginate(15)->withQueryString();
 
@@ -93,7 +103,9 @@ class WaterServiceController extends Controller
     public function create()
     {
         $buildings = Building::with('site')->get();
-        return view('water-services.create', compact('buildings'));
+        $waterCompanies = WaterCompany::orderBy('name')->get();
+
+        return view('water-services.create', compact('buildings', 'waterCompanies'));
     }
 
     /**
@@ -103,7 +115,7 @@ class WaterServiceController extends Controller
     {
         $validated = $request->validate([
             'building_id' => 'required|exists:buildings,id',
-            'company_name' => 'required|string|max:255',
+            'water_company_id' => 'required|exists:water_companies,id',
             'meter_owner_name' => 'required|string|max:255',
             'registration_number' => 'required|string|max:255',
             'iron_number' => 'nullable|string|max:255',
@@ -114,6 +126,10 @@ class WaterServiceController extends Controller
         if ($request->hasFile('initial_meter_image')) {
             $validated['initial_meter_image'] = $request->file('initial_meter_image')->store('water-services/reference-meters', 'private');
         }
+
+        $company = WaterCompany::findOrFail($validated['water_company_id']);
+        $validated['company_name'] = $company->name;
+        $validated['company_name_ar'] = $company->name_ar;
 
         WaterService::create($validated);
         return redirect()->route('water-services.index')->with('success', 'Water service record created successfully!');
@@ -126,6 +142,7 @@ class WaterServiceController extends Controller
     {
         $waterService->load([
             'building.site',
+            'waterCompany',
             'readings' => fn($query) => $query->orderByDesc('reading_date')->orderByDesc('id'),
             'latestReading',
         ]);
@@ -184,7 +201,9 @@ class WaterServiceController extends Controller
     public function edit(WaterService $waterService)
     {
         $buildings = Building::with('site')->get();
-        return view('water-services.edit', compact('waterService', 'buildings'));
+        $waterCompanies = WaterCompany::orderBy('name')->get();
+
+        return view('water-services.edit', compact('waterService', 'buildings', 'waterCompanies'));
     }
 
     /**
@@ -194,7 +213,7 @@ class WaterServiceController extends Controller
     {
         $validated = $request->validate([
             'building_id' => 'required|exists:buildings,id',
-            'company_name' => 'required|string|max:255',
+            'water_company_id' => 'required|exists:water_companies,id',
             'meter_owner_name' => 'required|string|max:255',
             'registration_number' => 'required|string|max:255',
             'iron_number' => 'nullable|string|max:255',
@@ -206,6 +225,10 @@ class WaterServiceController extends Controller
             $this->deleteStoredFile($waterService->initial_meter_image);
             $validated['initial_meter_image'] = $request->file('initial_meter_image')->store('water-services/reference-meters', 'private');
         }
+
+        $company = WaterCompany::findOrFail($validated['water_company_id']);
+        $validated['company_name'] = $company->name;
+        $validated['company_name_ar'] = $company->name_ar;
 
         $waterService->update($validated);
         return redirect()->route('water-services.index')->with('success', 'Water service record updated successfully!');
@@ -256,7 +279,7 @@ class WaterServiceController extends Controller
     public function deleted()
     {
         $waterServices = WaterService::onlyTrashed()
-            ->with(['building.site', 'latestReading'])
+            ->with(['building.site', 'latestReading', 'waterCompany'])
             ->latest('deleted_at')
             ->paginate(15);
         return view('water-services.deleted', compact('waterServices'));

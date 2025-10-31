@@ -50,10 +50,10 @@
 
                     <div class="col-md-4">
                         <select name="company" id="company" class="form-select" style="border-radius: 10px;">
-                            <option value="" {{ empty($filters['company']) ? 'selected' : '' }}>All Companies</option>
+                            <option value="" {{ empty($filters['company_id'] ?? '') ? 'selected' : '' }}>All Companies</option>
                             @foreach ($companies as $companyValue => $companyName)
                                 <option value="{{ $companyValue }}"
-                                    {{ ($filters['company'] ?? '') === $companyValue ? 'selected' : '' }}>
+                                    {{ (string) ($filters['company_id'] ?? '') === (string) $companyValue ? 'selected' : '' }}>
                                     {{ $companyName }}
                                 </option>
                             @endforeach
@@ -174,9 +174,16 @@
                                         <span class="text-muted">No Building</span>
                                     @endif
                                 </td>
+                                @php
+                                    $companyArabic = optional($service->waterCompany)->name_ar ?? $service->company_name_ar;
+                                @endphp
                                 <td>
                                     <div class="fw-semibold text-dark">{{ $service->meter_owner_name }}</div>
-                                    <div class="text-muted small">{{ $service->company_name }}</div>
+                                    <div class="text-muted small">
+                                        @if ($companyArabic)
+                                            {{ $companyArabic }}
+                                        @endif
+                                    </div>
                                     <div class="d-flex flex-wrap gap-2 mt-1 small">
                                         <span class="badge bg-light text-muted border">Reg: {{ $service->registration_number }}</span>
                                         <span class="badge bg-light text-muted border">Iron: {{ $service->iron_number ?? 'N/A' }}</span>
@@ -223,7 +230,7 @@
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger" title="Delete"
-                                            onclick="openDeleteModal('{{ $service->id }}', '{{ $service->registration_number }}', '{{ $service->company_name }}')">
+                                            onclick="openDeleteModal('{{ $service->id }}', '{{ $service->registration_number }}', '{{ addslashes($companyArabic ?? '') }}')">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>

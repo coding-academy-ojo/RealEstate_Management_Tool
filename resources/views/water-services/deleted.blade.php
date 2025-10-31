@@ -48,6 +48,10 @@
                     </thead>
                     <tbody>
                         @forelse($waterServices as $service)
+                            @php
+                                $companyEnglish = optional($service->waterCompany)->name ?? $service->company_name;
+                                $companyArabic = optional($service->waterCompany)->name_ar ?? $service->company_name_ar;
+                            @endphp
                             <tr>
                                 <td>
                                     @if ($service->building)
@@ -58,7 +62,18 @@
                                 </td>
                                 <td>
                                     <div class="fw-semibold text-dark">{{ $service->meter_owner_name }}</div>
-                                    <div class="text-muted small">{{ $service->company_name }}</div>
+                                    <div class="text-muted small">
+                                        {{ $companyEnglish }}
+                                        @if ($companyArabic)
+                                            <span class="d-block">{{ $companyArabic }}</span>
+                                        @endif
+                                        @if (optional($service->waterCompany)->website)
+                                            <a href="{{ $service->waterCompany->website }}" target="_blank"
+                                                class="text-decoration-none ms-1">
+                                                <i class="bi bi-globe"></i>
+                                            </a>
+                                        @endif
+                                    </div>
                                     <div class="d-flex flex-wrap gap-2 mt-1 small">
                                         <span class="badge bg-light text-muted border">Reg: {{ $service->registration_number }}</span>
                                         <span class="badge bg-light text-muted border">Iron: {{ $service->iron_number ?? 'N/A' }}</span>
@@ -103,12 +118,12 @@
                                 <td>
                                     <div class="btn-group" role="group">
                                         <button type="button" class="btn btn-sm btn-outline-success" title="Restore"
-                                            onclick="openRestoreModal('{{ $service->id }}', '{{ $service->registration_number }}', '{{ $service->company_name }}')">
+                                            onclick="openRestoreModal('{{ $service->id }}', '{{ $service->registration_number }}', '{{ addslashes(trim($companyEnglish . ($companyArabic ? ' / ' . $companyArabic : ''))) }}')">
                                             <i class="bi bi-arrow-counterclockwise"></i>
                                         </button>
                                         <button type="button" class="btn btn-sm btn-outline-danger"
                                             title="Delete Permanently"
-                                            onclick="openForceDeleteModal('{{ $service->id }}', '{{ $service->registration_number }}', '{{ $service->company_name }}')">
+                                            onclick="openForceDeleteModal('{{ $service->id }}', '{{ $service->registration_number }}', '{{ addslashes(trim($companyEnglish . ($companyArabic ? ' / ' . $companyArabic : ''))) }}')">
                                             <i class="bi bi-trash-fill"></i>
                                         </button>
                                     </div>

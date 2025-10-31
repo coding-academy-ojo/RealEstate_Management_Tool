@@ -14,7 +14,12 @@ return new class extends Migration
         Schema::create('water_services', function (Blueprint $table) {
             $table->id();
             $table->foreignId('building_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('water_company_id')
+                ->nullable()
+                ->constrained('water_companies')
+                ->nullOnDelete();
             $table->string('company_name');
+            $table->string('company_name_ar')->nullable();
             $table->string('meter_owner_name');
             $table->string('registration_number');
             $table->string('iron_number')->nullable();

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Building;
 use App\Models\ElectricReading;
 use App\Models\ElectricServiceDisconnection;
+use App\Models\ElectricityCompany;
 use App\Models\ElectricityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -24,13 +25,13 @@ class ElectricityServiceController extends Controller
     {
         $filters = [
             'search' => $request->input('search'),
-            'company' => $request->input('company'),
+            'company_id' => $request->input('company'),
         ];
 
         $sort = $request->input('sort', 'number');
         $direction = $request->input('direction', 'asc');
 
-        $query = ElectricityService::with(['building.site', 'latestReading'])
+        $query = ElectricityService::with(['building.site', 'latestReading', 'electricityCompany'])
             ->withCount([
                 'disconnections as open_disconnections_count' => fn($query) => $query
                     ->whereNull('reconnection_date')
@@ -42,14 +43,15 @@ class ElectricityServiceController extends Controller
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('registration_number', 'like', $searchTerm)
                     ->orWhere('company_name', 'like', $searchTerm)
+                    ->orWhere('company_name_ar', 'like', $searchTerm)
                     ->orWhere('subscriber_name', 'like', $searchTerm)
                     ->orWhere('meter_number', 'like', $searchTerm)
                     ->orWhereHas('building', fn($b) => $b->where('name', 'like', $searchTerm));
             });
         }
 
-        if ($filters['company']) {
-            $query->where('company_name', $filters['company']);
+        if ($filters['company_id']) {
+            $query->where('electricity_company_id', $filters['company_id']);
         }
 
         switch ($sort) {
@@ -77,9 +79,17 @@ class ElectricityServiceController extends Controller
                 break;
         }
 
-        $companies = ElectricityService::distinct()
-            ->orderBy('company_name')
-            ->pluck('company_name', 'company_name');
+        $companies = ElectricityCompany::orderBy('name')
+            ->get()
+            ->mapWithKeys(function (ElectricityCompany $company) {
+                $label = $company->name;
+
+                if ($company->name_ar) {
+                    $label .= ' — ' . $company->name_ar;
+                }
+
+                return [$company->id => $label];
+            });
 
         $electricityServices = $query->paginate(15)->withQueryString();
 
@@ -92,7 +102,9 @@ class ElectricityServiceController extends Controller
     public function create()
     {
         $buildings = Building::with('site')->get();
-        return view('electric.create', compact('buildings'));
+        $electricityCompanies = ElectricityCompany::orderBy('name')->get();
+
+        return view('electric.create', compact('buildings', 'electricityCompanies'));
     }
 
     /**
@@ -105,7 +117,7 @@ class ElectricityServiceController extends Controller
             'subscriber_name' => 'required|string|max:255',
             'meter_number' => 'required|string|max:255|unique:electricity_services,meter_number',
             'has_solar_power' => 'nullable|boolean',
-            'company_name' => 'required|string|max:255',
+            'electricity_company_id' => 'required|exists:electricity_companies,id',
             'registration_number' => 'required|string|max:255',
             'reset_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:4096',
             'remarks' => 'nullable|string',
@@ -116,6 +128,10 @@ class ElectricityServiceController extends Controller
         if ($request->hasFile('reset_file')) {
             $validated['reset_file'] = $request->file('reset_file')->store('electricity-services/files', 'private');
         }
+
+        $company = ElectricityCompany::findOrFail($validated['electricity_company_id']);
+        $validated['company_name'] = $company->name;
+        $validated['company_name_ar'] = $company->name_ar;
 
         ElectricityService::create($validated);
 
@@ -131,6 +147,7 @@ class ElectricityServiceController extends Controller
     {
         $electricityService->load([
             'building.site',
+            'electricityCompany',
             'readings' => fn($query) => $query->orderByDesc('reading_date')->orderByDesc('id'),
             'latestReading',
             'disconnections' => fn($query) => $query->orderByDesc('disconnection_date')->orderByDesc('id'),
@@ -210,10 +227,11 @@ class ElectricityServiceController extends Controller
      */
     public function edit(ElectricityService $electricityService)
     {
-        $electricityService->load('building.site');
+        $electricityService->load('building.site', 'electricityCompany');
         $buildings = Building::with('site')->get();
+        $electricityCompanies = ElectricityCompany::orderBy('name')->get();
 
-        return view('electric.edit', compact('electricityService', 'buildings'));
+        return view('electric.edit', compact('electricityService', 'buildings', 'electricityCompanies'));
     }
 
     /**
@@ -231,7 +249,7 @@ class ElectricityServiceController extends Controller
                 Rule::unique('electricity_services', 'meter_number')->ignore($electricityService->id),
             ],
             'has_solar_power' => 'nullable|boolean',
-            'company_name' => 'required|string|max:255',
+            'electricity_company_id' => 'required|exists:electricity_companies,id',
             'registration_number' => 'required|string|max:255',
             'reset_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:4096',
             'remarks' => 'nullable|string',
@@ -243,6 +261,10 @@ class ElectricityServiceController extends Controller
             $this->deleteStoredFile($electricityService->reset_file);
             $validated['reset_file'] = $request->file('reset_file')->store('electricity-services/files', 'private');
         }
+
+        $company = ElectricityCompany::findOrFail($validated['electricity_company_id']);
+        $validated['company_name'] = $company->name;
+        $validated['company_name_ar'] = $company->name_ar;
 
         $electricityService->update($validated);
 
@@ -269,7 +291,7 @@ class ElectricityServiceController extends Controller
     public function deleted()
     {
         $electricityServices = ElectricityService::onlyTrashed()
-            ->with(['building.site', 'latestReading'])
+            ->with(['building.site', 'latestReading', 'electricityCompany'])
             ->latest('deleted_at')
             ->paginate(15);
 

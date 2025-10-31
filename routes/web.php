@@ -378,6 +378,10 @@ Route::middleware('auth')->group(function () {
     Route::get('water-services/{waterService}/readings/{waterReading}/files/{document}', [\App\Http\Controllers\WaterReadingController::class, 'file'])
         ->middleware('privilege:water')
         ->name('water-services.readings.files.show');
+    Route::post('water-companies', [\App\Http\Controllers\WaterCompanyController::class, 'store'])
+        ->middleware('privilege:water')
+        ->name('water-companies.store');
+
     Route::post('water-services/{waterService}/readings', [\App\Http\Controllers\WaterReadingController::class, 'store'])
         ->middleware('privilege:water')
         ->name('water-services.readings.store');
@@ -410,6 +414,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('electricity-services/{electricityService}/readings/{electricReading}', [\App\Http\Controllers\ElectricReadingController::class, 'destroy'])
         ->middleware('privilege:electricity')
         ->name('electricity-services.readings.destroy');
+
+    Route::post('electricity-companies', [\App\Http\Controllers\ElectricityCompanyController::class, 'store'])
+        ->middleware('privilege:electricity')
+        ->name('electricity-companies.store');
 
     Route::post('electricity-services/{electricityService}/disconnections', [\App\Http\Controllers\ElectricServiceDisconnectionController::class, 'store'])
         ->middleware('privilege:electricity')

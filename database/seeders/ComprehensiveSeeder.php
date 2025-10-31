@@ -3,10 +3,12 @@
 namespace Database\Seeders;
 
 use App\Models\Building;
+use App\Models\ElectricityCompany;
 use App\Models\ElectricityService;
 use App\Models\Land;
 use App\Models\ReInnovation;
 use App\Models\Site;
+use App\Models\WaterCompany;
 use App\Models\WaterReading;
 use App\Models\WaterService;
 use Illuminate\Database\Seeder;
@@ -25,6 +27,7 @@ class ComprehensiveSeeder extends Seeder
 
         $this->seedSiteOne($referenceImage, $readingImage);
         $this->seedSiteTwo($referenceImage, $readingImage);
+        $this->syncServiceCompanies();
     }
 
     private function seedSiteOne(string $referenceImage, string $readingImage): void
@@ -96,9 +99,14 @@ class ComprehensiveSeeder extends Seeder
         ]);
         $buildingGuard->lands()->attach($landMain->id);
 
+        $miyahuna = $this->resolveWaterCompany('Miyahuna Water Company');
+        $jepco = $this->resolveElectricityCompany('Jordan Electric Power Company');
+
         $mainWaterService = WaterService::create([
             'building_id' => $buildingShop->id,
-            'company_name' => 'Miyahuna Water Company',
+            'water_company_id' => $miyahuna?->id,
+            'company_name' => optional($miyahuna)->name ?? 'Jordan Water Company - Miyahuna',
+            'company_name_ar' => optional($miyahuna)->name_ar,
             'registration_number' => 'WTR-AM-2024-001',
             'iron_number' => 'IRN-123456',
             'remarks' => 'High-capacity commercial connection with backup tanks.',
@@ -126,7 +134,9 @@ class ComprehensiveSeeder extends Seeder
 
         $secondaryWaterService = WaterService::create([
             'building_id' => $buildingBatteries->id,
-            'company_name' => 'Miyahuna Water Company',
+            'water_company_id' => $miyahuna?->id,
+            'company_name' => optional($miyahuna)->name ?? 'Jordan Water Company - Miyahuna',
+            'company_name_ar' => optional($miyahuna)->name_ar,
             'registration_number' => 'WTR-AM-2024-002',
             'iron_number' => 'IRN-789123',
             'remarks' => 'Dedicated supply for transformer cooling system.',
@@ -165,7 +175,9 @@ class ComprehensiveSeeder extends Seeder
             'subscriber_name' => 'Ahmed Al-Hamdan',
             'meter_number' => 'MTR-ELC-AM-001',
             'has_solar_power' => true,
-            'company_name' => 'Jordan Electric Power Company',
+            'electricity_company_id' => $jepco?->id,
+            'company_name' => optional($jepco)->name ?? 'Jordan Electric Power Company (JEPCO)',
+            'company_name_ar' => optional($jepco)->name_ar,
             'registration_number' => 'ELC-AM-2024-001',
             'reset_file' => null,
             'remarks' => 'Three-phase industrial connection with generator backup and solar panels.',
@@ -176,7 +188,9 @@ class ComprehensiveSeeder extends Seeder
             'subscriber_name' => 'Omar Batteries Trading LLC',
             'meter_number' => 'MTR-ELC-AM-002',
             'has_solar_power' => false,
-            'company_name' => 'Jordan Electric Power Company',
+            'electricity_company_id' => $jepco?->id,
+            'company_name' => optional($jepco)->name ?? 'Jordan Electric Power Company (JEPCO)',
+            'company_name_ar' => optional($jepco)->name_ar,
             'registration_number' => 'ELC-AM-2024-002',
             'reset_file' => null,
             'remarks' => 'High-capacity retail power supply.',
@@ -1107,5 +1121,74 @@ class ComprehensiveSeeder extends Seeder
         $this->command->info('    - Water Services: ' . WaterService::count());
         $this->command->info('    - Electricity Services: ' . ElectricityService::count());
         $this->command->info('    - Re-Innovations: ' . ReInnovation::count());
+    }
+
+    private function syncServiceCompanies(): void
+    {
+        WaterService::all()->each(function (WaterService $service) {
+            $company = $this->resolveWaterCompany($service->company_name);
+
+            if ($company) {
+                $service->forceFill([
+                    'water_company_id' => $company->id,
+                    'company_name' => $company->name,
+                    'company_name_ar' => $company->name_ar,
+                ])->save();
+            }
+        });
+
+        ElectricityService::all()->each(function (ElectricityService $service) {
+            $company = $this->resolveElectricityCompany($service->company_name);
+
+            if ($company) {
+                $service->forceFill([
+                    'electricity_company_id' => $company->id,
+                    'company_name' => $company->name,
+                    'company_name_ar' => $company->name_ar,
+                ])->save();
+            }
+        });
+    }
+
+    private function resolveWaterCompany(string $label): ?WaterCompany
+    {
+        $mapping = [
+            'Miyahuna Water Company' => 'Jordan Water Company - Miyahuna',
+            'Amman Water Company' => 'Jordan Water Company - Miyahuna',
+            'Jordan Water Company' => 'Jordan Water Company - Miyahuna',
+            'Jordan Water Company - Miyahuna' => 'Jordan Water Company - Miyahuna',
+            'Yarmouk Water Company' => 'Yarmouk Water Company',
+            'Aqaba Water Company' => 'Aqaba Water Company',
+            'Wadi Araba Development Company' => 'Wadi Araba Development Company',
+        ];
+
+        $target = $mapping[$label] ?? $label;
+
+        return WaterCompany::where('name', $target)->first();
+    }
+
+    private function resolveElectricityCompany(string $label): ?ElectricityCompany
+    {
+        $mapping = [
+            'Jordan Electric Power Company' => 'Jordan Electric Power Company (JEPCO)',
+            'Jordan Electric Power Company (JEPCO)' => 'Jordan Electric Power Company (JEPCO)',
+            'Irbid District Electricity Company' => 'Irbid District Electricity Company (IDECO)',
+            'Irbid District Electricity Company (IDECO)' => 'Irbid District Electricity Company (IDECO)',
+            'Electricity Distribution Company' => 'Electricity Distribution Company (EDCO)',
+            'Electricity Distribution Company (EDCO)' => 'Electricity Distribution Company (EDCO)',
+            'National Electric Power Company' => 'National Electric Power Company (NEPCO)',
+            'National Electric Power Company (NEPCO)' => 'National Electric Power Company (NEPCO)',
+            'Central Electricity Generating Company' => 'Central Electricity Generating Company (CEGCO)',
+            'Central Electricity Generating Company (CEGCO)' => 'Central Electricity Generating Company (CEGCO)',
+            'AES Jordan' => 'AES Jordan PSC',
+            'AES Jordan PSC' => 'AES Jordan PSC',
+            'Samra Electric Power Company' => 'Samra Electric Power Company (SEPCO)',
+            'Samra Electric Power Company (SEPCO)' => 'Samra Electric Power Company (SEPCO)',
+            'Qatrana Electric Power Company' => 'Qatrana Electric Power Company',
+        ];
+
+        $target = $mapping[$label] ?? $label;
+
+        return ElectricityCompany::where('name', $target)->first();
     }
 }

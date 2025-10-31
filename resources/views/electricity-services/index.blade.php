@@ -50,10 +50,10 @@
 
                     <div class="col-md-4">
                         <select name="company" id="company" class="form-select" style="border-radius: 10px;">
-                            <option value="" {{ empty($filters['company']) ? 'selected' : '' }}>All Companies</option>
+                            <option value="" {{ empty($filters['company_id'] ?? '') ? 'selected' : '' }}>All Companies</option>
                             @foreach ($companies as $companyValue => $companyName)
                                 <option value="{{ $companyValue }}"
-                                    {{ ($filters['company'] ?? '') === $companyValue ? 'selected' : '' }}>
+                                    {{ (string) ($filters['company_id'] ?? '') === (string) $companyValue ? 'selected' : '' }}>
                                     {{ $companyName }}
                                 </option>
                             @endforeach
@@ -162,6 +162,8 @@
                                     // Default asc: normal numbering (1, 2, 3...)
                                     $rowNumber = ($electricityServices->firstItem() ?? 0) + $index;
                                 }
+                                $companyEnglish = optional($service->electricityCompany)->name ?? $service->company_name;
+                                $companyArabic = optional($service->electricityCompany)->name_ar ?? $service->company_name_ar;
                             @endphp
                             <tr>
                                 <td class="text-center fw-bold text-muted">{{ $rowNumber }}</td>
@@ -177,7 +179,18 @@
                                 </td>
                                 <td>
                                     <div class="fw-semibold text-dark">{{ $service->subscriber_and_meter }}</div>
-                                    <div class="text-muted small">{{ $service->company_name }}</div>
+                                    <div class="text-muted small">
+                                        {{ $companyEnglish }}
+                                        @if ($companyArabic)
+                                            <span class="d-block">{{ $companyArabic }}</span>
+                                        @endif
+                                        @if (optional($service->electricityCompany)->website)
+                                            <a href="{{ $service->electricityCompany->website }}" target="_blank"
+                                                class="text-decoration-none ms-1" title="Open company website">
+                                                <i class="bi bi-globe"></i>
+                                            </a>
+                                        @endif
+                                    </div>
                                     <div class="d-flex flex-wrap gap-2 mt-1 small">
                                         <span class="badge bg-light text-muted border">Solar:
                                             {{ $service->solar_net_metering ? 'Yes' : 'No' }}</span>
@@ -228,7 +241,7 @@
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger" title="Delete"
-                                            onclick="openDeleteModal('{{ $service->id }}', '{{ $service->registration_number }}', '{{ $service->company_name }}')">
+                                            onclick="openDeleteModal('{{ $service->id }}', '{{ $service->registration_number }}', '{{ addslashes(trim($companyEnglish . ($companyArabic ? ' / ' . $companyArabic : ''))) }}')">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>

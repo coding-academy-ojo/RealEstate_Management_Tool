@@ -14,7 +14,9 @@ class WaterService extends Model
 
     protected $fillable = [
         'building_id',
+        'water_company_id',
         'company_name',
+        'company_name_ar',
         'meter_owner_name',
         'registration_number',
         'iron_number',
@@ -33,6 +35,11 @@ class WaterService extends Model
     public function building(): BelongsTo
     {
         return $this->belongsTo(Building::class);
+    }
+
+    public function waterCompany(): BelongsTo
+    {
+        return $this->belongsTo(WaterCompany::class);
     }
 
     public function readings(): HasMany

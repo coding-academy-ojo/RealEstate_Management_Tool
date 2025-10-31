@@ -14,6 +14,10 @@ return new class extends Migration
         Schema::create('electricity_services', function (Blueprint $table) {
             $table->id();
             $table->foreignId('building_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('electricity_company_id')
+                ->nullable()
+                ->constrained('electricity_companies')
+                ->nullOnDelete();
             $table->string('subscriber_name')->comment('Full name of the electricity service subscriber');
             $table->string('meter_number')->unique()->comment('Serial number of the electricity meter');
             $table->boolean('has_solar_power')->default(false)->comment('Indicates whether this service participates in solar/net-metering');
@@ -23,6 +27,7 @@ return new class extends Migration
                 ->comment('سبب تعطيل الخدمة في حال عدم الفعالية');
             $table->date('deactivation_date')->nullable()->comment('تاريخ تعطيل أو إلغاء الخدمة');
             $table->string('company_name');
+            $table->string('company_name_ar')->nullable();
             $table->string('registration_number');
             $table->string('reset_file')->nullable();
             $table->string('remarks')->nullable(); // مثال: Check with Hashim Zahari

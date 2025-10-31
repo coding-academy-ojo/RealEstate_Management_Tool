@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Building;
+use App\Models\WaterCompany;
 use App\Models\WaterReading;
 use App\Models\WaterService;
 use Illuminate\Database\Seeder;
@@ -16,6 +17,13 @@ class WaterServiceSeeder extends Seeder
    */
   public function run(): void
   {
+    $waterCompanies = WaterCompany::orderBy('name')->get();
+
+    if ($waterCompanies->isEmpty()) {
+      $this->command->warn('No water companies available. Skipping water service seeding.');
+      return;
+    }
+
     $buildings = Building::doesntHave('waterServices')->get();
 
     if ($buildings->isEmpty()) {
@@ -28,10 +36,13 @@ class WaterServiceSeeder extends Seeder
 
     foreach ($buildingsToService as $building) {
       $site = $building->site;
+      $company = $this->pickWaterCompanyForGovernorate($site->governorate, $waterCompanies);
 
             $service = WaterService::create([
         'building_id' => $building->id,
-        'company_name' => $this->getWaterCompany($site->governorate),
+        'water_company_id' => $company->id,
+        'company_name' => $company->name,
+        'company_name_ar' => $company->name_ar,
                 'meter_owner_name' => fake()->name(),
         'registration_number' => $this->generateRegistrationNumber($site->governorate, 'W'),
         'iron_number' => 'IRON-' . rand(10000, 99999),
@@ -70,15 +81,39 @@ class WaterServiceSeeder extends Seeder
     $this->command->info('  Total Water Services: ' . WaterService::count());
   }
 
-  private function getWaterCompany($governorate): string
+  private function pickWaterCompanyForGovernorate(?string $governorate, $companies): WaterCompany
   {
-    $companies = [
-      'Miyahuna Water Company',
-      'Aqaba Water Company',
-      'Yarmouk Water Company',
-      'Jordan Water Authority',
+    if (!$governorate) {
+      return $companies->first();
+    }
+
+    $governorate = mb_strtolower($governorate);
+
+    $mapping = [
+      'amman' => 'Jordan Water Company - Miyahuna',
+      'zarqa' => 'Jordan Water Company - Miyahuna',
+      'madaba' => 'Jordan Water Company - Miyahuna',
+      'balqa' => 'Jordan Water Company - Miyahuna',
+      'irbid' => 'Yarmouk Water Company',
+      'jerash' => 'Yarmouk Water Company',
+      'ajloun' => 'Yarmouk Water Company',
+      'mafraq' => 'Yarmouk Water Company',
+      'aqaba' => 'Aqaba Water Company',
+      'ma\'an' => 'Aqaba Water Company',
+      'maan' => 'Aqaba Water Company',
+      'karak' => 'Aqaba Water Company',
+      'tafila' => 'Aqaba Water Company',
+      'tafilah' => 'Aqaba Water Company',
+      'wadi araba' => 'Wadi Araba Development Company',
     ];
-    return $companies[array_rand($companies)];
+
+    foreach ($mapping as $needle => $companyName) {
+      if (str_contains($governorate, $needle)) {
+        return $companies->firstWhere('name', $companyName) ?? $companies->first();
+      }
+    }
+
+    return $companies->random();
   }
 
   private function generateRegistrationNumber($governorate, $prefix): string
