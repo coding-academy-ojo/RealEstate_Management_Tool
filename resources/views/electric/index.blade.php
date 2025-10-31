@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Electricity Services')
 
@@ -33,7 +33,6 @@
         </div>
     @endif
 
-    <!-- Search and Filter Card -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
             <form method="GET" action="{{ route('electricity-services.index') }}">
@@ -43,7 +42,7 @@
                             <i class="bi bi-search position-absolute"
                                 style="left: 12px; top: 50%; transform: translateY(-50%); color: #999;"></i>
                             <input type="text" name="search" id="search" class="form-control ps-5"
-                                placeholder="Search by registration #, meter #, company, building..."
+                                placeholder="Search by subscriber, meter, company, or building..."
                                 style="border-radius: 10px;" value="{{ $filters['search'] ?? '' }}">
                         </div>
                     </div>
@@ -113,33 +112,30 @@
                 <table class="table table-hover">
                     <thead class="table-light">
                         <tr>
-                            <th class="sortable" style="width: 60px;">
-                                <a href="{{ $buildSortUrl('number') }}"
-                                    class="d-flex align-items-center justify-content-between text-decoration-none text-dark">
-                                    <span>No.</span>
-                                    <span class="sort-arrows">
+                            <th class="text-center sortable">
+                                <a href="{{ $buildSortUrl('number') }}" class="text-decoration-none text-dark">
+                                    #
+                                    <span class="sort-arrows ms-1">
                                         <i class="bi bi-caret-up-fill {{ $arrowClass('number', 'asc') }}"></i>
                                         <i class="bi bi-caret-down-fill {{ $arrowClass('number', 'desc') }}"></i>
                                     </span>
                                 </a>
                             </th>
                             <th class="sortable">
-                                <a href="{{ $buildSortUrl('building') }}"
-                                    class="d-flex align-items-center justify-content-between text-decoration-none text-dark">
-                                    <span>Building</span>
-                                    <span class="sort-arrows">
+                                <a href="{{ $buildSortUrl('building') }}" class="text-decoration-none text-dark">
+                                    Building
+                                    <span class="sort-arrows ms-1">
                                         <i class="bi bi-caret-up-fill {{ $arrowClass('building', 'asc') }}"></i>
                                         <i class="bi bi-caret-down-fill {{ $arrowClass('building', 'desc') }}"></i>
                                     </span>
                                 </a>
                             </th>
                             <th class="sortable">
-                                <a href="{{ $buildSortUrl('company') }}"
-                                    class="d-flex align-items-center justify-content-between text-decoration-none text-dark">
-                                    <span>Meter Info</span>
-                                    <span class="sort-arrows">
-                                        <i class="bi bi-caret-up-fill {{ $arrowClass('company', 'asc') }}"></i>
-                                        <i class="bi bi-caret-down-fill {{ $arrowClass('company', 'desc') }}"></i>
+                                <a href="{{ $buildSortUrl('subscriber') }}" class="text-decoration-none text-dark">
+                                    Meter Info
+                                    <span class="sort-arrows ms-1">
+                                        <i class="bi bi-caret-up-fill {{ $arrowClass('subscriber', 'asc') }}"></i>
+                                        <i class="bi bi-caret-down-fill {{ $arrowClass('subscriber', 'desc') }}"></i>
                                     </span>
                                 </a>
                             </th>
@@ -151,17 +147,16 @@
                     <tbody>
                         @forelse($electricityServices as $index => $service)
                             @php
-                                // LIFO numbering: newest record gets lowest number
                                 if ($activeSort === 'number' && $activeDirection === 'desc') {
-                                    // When sorting desc, reverse the numbering
                                     $rowNumber =
                                         $electricityServices->total() -
                                         (($electricityServices->currentPage() - 1) * $electricityServices->perPage() +
                                             $index);
                                 } else {
-                                    // Default asc: normal numbering (1, 2, 3...)
                                     $rowNumber = ($electricityServices->firstItem() ?? 0) + $index;
                                 }
+
+                                $latestReading = $service->latestReading;
                             @endphp
                             <tr>
                                 <td class="text-center fw-bold text-muted">{{ $rowNumber }}</td>
@@ -176,35 +171,44 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <div class="fw-semibold text-dark">{{ $service->subscriber_and_meter }}</div>
+                                    @php
+                                        // Extract subscriber name without building code
+                                        $subscriberNameParts = explode(' - ', $service->subscriber_name);
+                                        $cleanSubscriberName = $subscriberNameParts[0];
+                                    @endphp
+                                    <div class="fw-semibold text-dark">{{ $cleanSubscriberName }}</div>
                                     <div class="text-muted small">{{ $service->company_name }}</div>
                                     <div class="d-flex flex-wrap gap-2 mt-1 small">
                                         <span class="badge bg-light text-muted border">Solar:
-                                            {{ $service->solar_net_metering ? 'Yes' : 'No' }}</span>
+                                            {{ $service->has_solar_power ? 'Yes' : 'No' }}</span>
                                         <span class="badge bg-light text-muted border">Reg:
                                             {{ $service->registration_number }}</span>
                                         <span class="badge bg-light text-muted border">Meter:
                                             {{ $service->meter_number }}</span>
                                     </div>
                                 </td>
-                                @php
-                                    $latestReading = $service->latestReading;
-                                @endphp
                                 <td>
                                     @if ($latestReading)
-                                        <div class="fw-semibold">
-                                            {{ number_format((float) $latestReading->current_reading, 2) }}
-                                            <span class="text-muted">kWh</span>
-                                        </div>
-                                        <small class="text-muted">
+                                        @if ($service->has_solar_power)
+                                            <div class="fw-semibold">
+                                                {{ number_format((float) (($latestReading->calculated_produced ?? 0) - ($latestReading->calculated_imported ?? 0)), 2) }}
+                                                <span class="text-muted">kWh</span>
+                                            </div>
+                                        @else
+                                            <div class="fw-semibold">
+                                                {{ number_format((float) $latestReading->calculated_reading, 2) }}
+                                                <span class="text-muted">kWh</span>
+                                            </div>
+                                        @endif
+                                        <small class="text-muted d-block">
                                             {{ optional($latestReading->reading_date)->format('Y-m-d') ?? 'No date' }}
                                         </small>
                                     @else
-                                        <span class="text-muted">No readings</span>
+                                        <span class="text-muted">No readings yet</span>
                                     @endif
                                 </td>
                                 <td>
-                                    @if ($latestReading && !is_null($latestReading->bill_amount))
+                                    @if ($latestReading && $latestReading->bill_amount !== null)
                                         <div class="fw-semibold">
                                             {{ number_format((float) $latestReading->bill_amount, 2) }}
                                             <span class="text-muted">JOD</span>
@@ -214,7 +218,7 @@
                                             {{ $latestReading->is_paid ? 'Paid' : 'Unpaid' }}
                                         </span>
                                     @else
-                                        <span class="text-muted">No bill</span>
+                                        <span class="text-muted">No bills recorded</span>
                                     @endif
                                 </td>
                                 <td>
@@ -223,14 +227,16 @@
                                             class="btn btn-sm btn-outline-primary" title="View">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="{{ route('electricity-services.edit', $service) }}"
-                                            class="btn btn-sm btn-outline-secondary" title="Edit">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Delete"
-                                            onclick="openDeleteModal('{{ $service->id }}', '{{ $service->registration_number }}', '{{ $service->company_name }}')">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
+                                        @if ($canManageElectricity)
+                                            <a href="{{ route('electricity-services.edit', $service) }}"
+                                                class="btn btn-sm btn-outline-secondary" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Delete"
+                                                onclick="openDeleteModal('{{ $service->id }}', '{{ $service->registration_number }}', '{{ $service->company_name }}')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -253,7 +259,6 @@
         @endif
     </div>
 
-    <!-- Delete Confirmation Modal -->
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -293,7 +298,6 @@
             document.getElementById('deleteServiceCompany').textContent = companyName;
             document.getElementById('deleteForm').action = '/electricity-services/' + serviceId;
 
-            // Use Boosted modal API
             const modalElement = document.getElementById('deleteModal');
             const modal = new boosted.Modal(modalElement);
             modal.show();

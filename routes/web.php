@@ -387,11 +387,40 @@ Route::middleware('auth')->group(function () {
     Route::delete('water-services/{waterService}/readings/{waterReading}', [\App\Http\Controllers\WaterReadingController::class, 'destroy'])
         ->middleware('privilege:water')
         ->name('water-services.readings.destroy');
+    Route::post('water-services/{waterService}/deactivate', [\App\Http\Controllers\WaterServiceController::class, 'deactivate'])
+        ->middleware('privilege:water')
+        ->name('water-services.deactivate');
+    Route::post('water-services/{waterService}/reactivate', [\App\Http\Controllers\WaterServiceController::class, 'reactivate'])
+        ->middleware('privilege:water')
+        ->name('water-services.reactivate');
     Route::resource('water-services', \App\Http\Controllers\WaterServiceController::class);
 
     Route::get('electricity-services/{electricityService}/files/{document}', [\App\Http\Controllers\ElectricityServiceController::class, 'file'])
         ->middleware('privilege:electricity')
         ->name('electricity-services.files.show');
+    Route::get('electricity-services/{electricityService}/readings/{electricReading}/files/{document}', [\App\Http\Controllers\ElectricReadingController::class, 'file'])
+        ->middleware('privilege:electricity')
+        ->name('electricity-services.readings.files.show');
+    Route::post('electricity-services/{electricityService}/readings', [\App\Http\Controllers\ElectricReadingController::class, 'store'])
+        ->middleware('privilege:electricity')
+        ->name('electricity-services.readings.store');
+    Route::put('electricity-services/{electricityService}/readings/{electricReading}', [\App\Http\Controllers\ElectricReadingController::class, 'update'])
+        ->middleware('privilege:electricity')
+        ->name('electricity-services.readings.update');
+    Route::delete('electricity-services/{electricityService}/readings/{electricReading}', [\App\Http\Controllers\ElectricReadingController::class, 'destroy'])
+        ->middleware('privilege:electricity')
+        ->name('electricity-services.readings.destroy');
+
+    Route::post('electricity-services/{electricityService}/disconnections', [\App\Http\Controllers\ElectricServiceDisconnectionController::class, 'store'])
+        ->middleware('privilege:electricity')
+        ->name('electricity-services.disconnections.store');
+    Route::put('electricity-services/{electricityService}/disconnections/{disconnection}', [\App\Http\Controllers\ElectricServiceDisconnectionController::class, 'update'])
+        ->middleware('privilege:electricity')
+        ->name('electricity-services.disconnections.update');
+    Route::delete('electricity-services/{electricityService}/disconnections/{disconnection}', [\App\Http\Controllers\ElectricServiceDisconnectionController::class, 'destroy'])
+        ->middleware('privilege:electricity')
+        ->name('electricity-services.disconnections.destroy');
+
     Route::get('electricity-services/deleted/list', [\App\Http\Controllers\ElectricityServiceController::class, 'deleted'])
         ->middleware('privilege:electricity')
         ->name('electricity-services.deleted');
@@ -401,6 +430,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('electricity-services/{id}/force-delete', [\App\Http\Controllers\ElectricityServiceController::class, 'forceDelete'])
         ->middleware('privilege:electricity')
         ->name('electricity-services.force-delete');
+    Route::post('electricity-services/{electricityService}/deactivate', [\App\Http\Controllers\ElectricityServiceController::class, 'deactivate'])
+        ->middleware('privilege:electricity')
+        ->name('electricity-services.deactivate');
+    Route::post('electricity-services/{electricityService}/reactivate', [\App\Http\Controllers\ElectricityServiceController::class, 'reactivate'])
+        ->middleware('privilege:electricity')
+        ->name('electricity-services.reactivate');
     Route::resource('electricity-services', \App\Http\Controllers\ElectricityServiceController::class);
 
     Route::get('renovations/deleted/list', [\App\Http\Controllers\RenovationController::class, 'deleted'])

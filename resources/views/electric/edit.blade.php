@@ -26,7 +26,6 @@
                         @csrf
                         @method('PUT')
 
-                        <!-- Building Selection -->
                         <div class="mb-4">
                             <label for="building_id" class="form-label fw-bold">
                                 Building <span class="text-danger">*</span>
@@ -49,7 +48,53 @@
                         <hr class="my-4">
 
                         <h5 class="mb-3 text-orange">
-                            <i class="bi bi-info-circle me-2"></i>Company Information
+                            <i class="bi bi-person-badge me-2"></i>Service Details
+                        </h5>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="subscriber_name" class="form-label fw-bold">
+                                    Subscriber Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="subscriber_name" id="subscriber_name"
+                                    class="form-control @error('subscriber_name') is-invalid @enderror"
+                                    value="{{ old('subscriber_name', $electricityService->subscriber_name) }}" required>
+                                @error('subscriber_name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="meter_number" class="form-label fw-bold">
+                                    Meter Number <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="meter_number" id="meter_number"
+                                    class="form-control @error('meter_number') is-invalid @enderror"
+                                    value="{{ old('meter_number', $electricityService->meter_number) }}" required>
+                                @error('meter_number')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">Ensure this matches the serial printed on the meter.</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="has_solar_power" name="has_solar_power"
+                                    value="1"
+                                    {{ old('has_solar_power', $electricityService->has_solar_power) ? 'checked' : '' }}>
+                                <label class="form-check-label fw-bold" for="has_solar_power">
+                                    Uses Supplemental Solar Power
+                                </label>
+                            </div>
+                            <small class="text-muted">Toggle on if the tenant exports or offsets through solar
+                                panels.</small>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <h5 class="mb-3 text-orange">
+                            <i class="bi bi-building-gear me-2"></i>Company Information
                         </h5>
 
                         <div class="row">
@@ -82,106 +127,64 @@
                         <hr class="my-4">
 
                         <h5 class="mb-3 text-orange">
-                            <i class="bi bi-speedometer2 me-2"></i>Meter Readings
-                        </h5>
-
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="previous_reading" class="form-label fw-bold">
-                                    Previous Reading (kWh) <span class="text-danger">*</span>
-                                </label>
-                                <input type="number" step="0.01" name="previous_reading" id="previous_reading"
-                                    class="form-control @error('previous_reading') is-invalid @enderror"
-                                    value="{{ old('previous_reading', $electricityService->previous_reading) }}" required>
-                                @error('previous_reading')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4 mb-3">
-                                <label for="current_reading" class="form-label fw-bold">
-                                    Current Reading (kWh) <span class="text-danger">*</span>
-                                </label>
-                                <input type="number" step="0.01" name="current_reading" id="current_reading"
-                                    class="form-control @error('current_reading') is-invalid @enderror"
-                                    value="{{ old('current_reading', $electricityService->current_reading) }}" required>
-                                @error('current_reading')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4 mb-3">
-                                <label for="reading_date" class="form-label fw-bold">
-                                    Reading Date <span class="text-danger">*</span>
-                                </label>
-                                <input type="date" name="reading_date" id="reading_date"
-                                    class="form-control @error('reading_date') is-invalid @enderror"
-                                    value="{{ old('reading_date', $electricityService->reading_date ? $electricityService->reading_date->format('Y-m-d') : '') }}"
-                                    required>
-                                @error('reading_date')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="alert alert-info">
-                            <i class="bi bi-calculator me-2"></i>
-                            <strong>Consumption Calculation:</strong> Current Reading - Previous Reading = Electricity
-                            Consumption
-                        </div>
-
-                        <hr class="my-4">
-
-                        <h5 class="mb-3 text-orange">
-                            <i class="bi bi-file-earmark-arrow-up me-2"></i>Documents & Remarks
+                            <i class="bi bi-chat-left-text me-2"></i>Additional Information
                         </h5>
 
                         <div class="mb-3">
-                            <label for="reset_file" class="form-label fw-bold">
-                                Reset File
-                            </label>
-                            @if ($electricityService->reset_file)
-                                <div class="mb-2">
-                                    <a href="{{ route('electricity-services.files.show', [$electricityService, 'reset']) }}"
-                                        target="_blank" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-file-earmark-pdf"></i> View Current File
-                                    </a>
+                            <label for="remarks" class="form-label fw-bold">Remarks (optional)</label>
+                            <textarea name="remarks" id="remarks" rows="3" class="form-control @error('remarks') is-invalid @enderror"
+                                placeholder="Optional notes...">{{ old('remarks', $electricityService->remarks) }}</textarea>
+                            <hr class="my-4">
+
+                            <h5 class="mb-3 text-orange">
+                                <i class="bi bi-file-earmark-arrow-up me-2"></i>Documents & Remarks
+                            </h5>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label for="reset_file" class="form-label fw-bold">
+                                        Reset File (Optional)
+                                    </label>
+                                    <input type="file" name="reset_file" id="reset_file"
+                                        class="form-control @error('reset_file') is-invalid @enderror"
+                                        accept=".pdf,.jpg,.jpeg,.png">
+                                    @error('reset_file')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <small class="text-muted">Uploading a new file will replace the existing one.</small>
+                                    @if ($electricityService->reset_file)
+                                        <div class="mt-2">
+                                            <a href="{{ route('electricity-services.files.show', [$electricityService, 'reset']) }}"
+                                                target="_blank" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-file-earmark-text me-1"></i> View current reset file
+                                            </a>
+                                        </div>
+                                    @endif
                                 </div>
-                            @endif
-                            <input type="file" name="reset_file" id="reset_file"
-                                class="form-control @error('reset_file') is-invalid @enderror"
-                                accept=".pdf,.jpg,.jpeg,.png">
-                            @error('reset_file')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <small class="text-muted">Accepted: PDF, JPG, PNG (leave empty to keep current file)</small>
-                        </div>
+                                <div class="col-md-6">
+                                    <label for="remarks" class="form-label fw-bold">Remarks</label>
+                                    <textarea name="remarks" id="remarks" rows="4" class="form-control @error('remarks') is-invalid @enderror">{{ old('remarks', $electricityService->remarks) }}</textarea>
+                                    @error('remarks')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
 
-                        <div class="mb-4">
-                            <label for="remarks" class="form-label fw-bold">Remarks</label>
-                            <textarea name="remarks" id="remarks" rows="3" class="form-control @error('remarks') is-invalid @enderror">{{ old('remarks', $electricityService->remarks) }}</textarea>
-                            @error('remarks')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <!-- Submit Buttons -->
-                        <div class="d-flex gap-2 justify-content-end mt-4">
-                            <a href="{{ route('electricity-services.show', $electricityService) }}"
-                                class="btn btn-secondary">
-                                <i class="bi bi-x-circle me-1"></i> Cancel
-                            </a>
-                            <button type="submit" class="btn btn-orange">
-                                <i class="bi bi-check-circle me-1"></i> Update Electricity Service
-                            </button>
-                        </div>
+                            <div class="d-flex gap-2 justify-content-end mt-4">
+                                <a href="{{ route('electricity-services.show', $electricityService) }}"
+                                    class="btn btn-secondary">
+                                    <i class="bi bi-x-circle me-1"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-orange">
+                                    <i class="bi bi-check-circle me-1"></i> Update Electricity Service
+                                </button>
+                            </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Confirmation Modal for Changing Building -->
     <div class="modal fade" id="changeBuildingModal" tabindex="-1" aria-labelledby="changeBuildingModalLabel"
         aria-hidden="true">
         <div class="modal-dialog">
@@ -195,7 +198,8 @@
                 </div>
                 <div class="modal-body">
                     <p class="mb-0">Are you sure you want to change the building for this electricity service record?</p>
-                    <p class="text-muted mb-0 mt-2"><small>This will update the building association for this electricity service.</small></p>
+                    <p class="text-muted mb-0 mt-2"><small>This will update the building association for this electricity
+                            service.</small></p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -219,7 +223,6 @@
             let pendingBuildingId = null;
 
             if (buildingSelect) {
-                // Initialize Choices.js for searchable building dropdown
                 buildingChoices = new Choices(buildingSelect, {
                     searchEnabled: true,
                     searchPlaceholderValue: 'Search by building code or name...',
@@ -230,42 +233,33 @@
                     removeItemButton: false,
                 });
 
-                // Listen for building changes
                 buildingSelect.addEventListener('change', function(e) {
                     const newBuildingId = this.value;
 
-                    // If building changed from original, show confirmation modal
                     if (newBuildingId && newBuildingId !== originalBuildingId) {
                         e.preventDefault();
                         pendingBuildingId = newBuildingId;
 
-                        // Show the modal
                         const modal = new bootstrap.Modal(document.getElementById('changeBuildingModal'));
                         modal.show();
                     }
                 });
 
-                // Handle confirmation
                 const confirmBtn = document.getElementById('confirmBuildingChange');
                 if (confirmBtn) {
                     confirmBtn.addEventListener('click', function() {
-                        // Close modal
                         const modalElement = document.getElementById('changeBuildingModal');
                         const modal = bootstrap.Modal.getInstance(modalElement);
                         if (modal) {
                             modal.hide();
                         }
-
-                        // Keep the new selection
                         pendingBuildingId = null;
                     });
                 }
 
-                // Handle modal cancel/close - revert to original
                 const modalElement = document.getElementById('changeBuildingModal');
                 if (modalElement) {
                     modalElement.addEventListener('hidden.bs.modal', function() {
-                        // If user canceled, revert to original building
                         if (pendingBuildingId !== null) {
                             buildingChoices.setChoiceByValue(originalBuildingId);
                             pendingBuildingId = null;

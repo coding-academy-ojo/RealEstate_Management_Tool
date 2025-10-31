@@ -14,6 +14,28 @@
         $unpaidCount = $readings->where('is_paid', false)->count();
     @endphp
 
+    @if (!$waterService->is_active)
+        <div class="alert alert-danger border-danger d-flex align-items-center mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill fa-2x me-3 text-danger"></i>
+            <div class="flex-grow-1">
+                <h5 class="alert-heading mb-1"><i class="bi bi-x-circle me-2"></i>Service Deactivated</h5>
+                <p class="mb-0">
+                    <strong>Reason:</strong>
+                    @switch($waterService->deactivation_reason)
+                        @case('cancelled') Service Cancelled @break
+                        @case('meter_changed') Meter Changed @break
+                        @case('merged') Merged with Another Service @break
+                        @case('other') Other Reason @break
+                        @default Unknown @break
+                    @endswitch
+                    @if ($waterService->deactivation_date)
+                        | <strong>Date:</strong> {{ $waterService->deactivation_date->format('d M Y') }}
+                    @endif
+                </p>
+            </div>
+        </div>
+    @endif
+
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
         <div>
             <h2 class="mb-1">
@@ -31,12 +53,21 @@
         </div>
         <div class="d-flex flex-wrap gap-2">
             @if ($canManageWater)
-                <button type="button" class="btn btn-orange" onclick="openReadingModal('create')">
-                    <i class="bi bi-plus-circle me-1"></i> Add Reading
-                </button>
-                <a href="{{ route('water-services.edit', $waterService) }}" class="btn btn-outline-orange">
-                    <i class="bi bi-pencil me-1"></i> Edit
-                </a>
+                @if ($waterService->is_active)
+                    <button type="button" class="btn btn-orange" onclick="openReadingModal('create')">
+                        <i class="bi bi-plus-circle me-1"></i> Add Reading
+                    </button>
+                    <a href="{{ route('water-services.edit', $waterService) }}" class="btn btn-outline-orange">
+                        <i class="bi bi-pencil me-1"></i> Edit
+                    </a>
+                    <button type="button" class="btn btn-warning" onclick="openDeactivateModal()">
+                        <i class="bi bi-pause-circle me-1"></i> Deactivate
+                    </button>
+                @else
+                    <button type="button" class="btn btn-success" onclick="openReactivateModal()">
+                        <i class="bi bi-play-circle me-1"></i> Reactivate
+                    </button>
+                @endif
                 <button type="button" class="btn btn-outline-danger"
                     onclick="openDeleteModal('{{ $waterService->id }}', '{{ $waterService->registration_number }}', '{{ $waterService->company_name }}')">
                     <i class="bi bi-trash me-1"></i> Delete
@@ -454,6 +485,111 @@
         </div>
     @endif
 
+    <!-- Deactivate Modal -->
+    <div class="modal fade" id="deactivateModal" tabindex="-1" aria-labelledby="deactivateModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning bg-opacity-10">
+                    <h5 class="modal-title" id="deactivateModalLabel">
+                        <i class="bi bi-pause-circle text-warning me-2"></i>Deactivate Service
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="{{ route('water-services.deactivate', $waterService) }}">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Warning:</strong> Deactivating this service will prevent adding new readings until reactivated.
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="deactivation_reason" class="form-label fw-bold">
+                                Deactivation Reason <span class="text-danger">*</span>
+                                <span class="text-muted">(سبب التعطيل)</span>
+                            </label>
+                            <select class="form-select" id="deactivation_reason" name="deactivation_reason" required>
+                                <option value="">Select a reason...</option>
+                                <option value="cancelled">Service Cancelled (الخدمة أُلغيت)</option>
+                                <option value="meter_changed">Meter Changed (تم تغيير العداد)</option>
+                                <option value="merged">Merged with Another Service (تم الدمج)</option>
+                                <option value="other">Other Reason (سبب آخر)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="deactivation_date" class="form-label fw-bold">
+                                Deactivation Date <span class="text-danger">*</span>
+                                <span class="text-muted">(تاريخ التعطيل)</span>
+                            </label>
+                            <input type="date" class="form-control" id="deactivation_date"
+                                name="deactivation_date" value="{{ date('Y-m-d') }}" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-pause-circle me-1"></i> Deactivate Service
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reactivate Modal -->
+    <div class="modal fade" id="reactivateModal" tabindex="-1" aria-labelledby="reactivateModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success bg-opacity-10">
+                    <h5 class="modal-title" id="reactivateModalLabel">
+                        <i class="bi bi-play-circle text-success me-2"></i>Reactivate Service
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="{{ route('water-services.reactivate', $waterService) }}">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <strong>Confirm:</strong> Are you sure you want to reactivate this service?
+                        </div>
+
+                        <p class="text-muted">
+                            This will restore full functionality to the service, allowing you to add new readings.
+                        </p>
+
+                        @if ($waterService->deactivation_reason)
+                            <div class="alert alert-info">
+                                <strong>Previous Deactivation:</strong><br>
+                                <strong>Reason:</strong>
+                                @switch($waterService->deactivation_reason)
+                                    @case('cancelled') Service Cancelled @break
+                                    @case('meter_changed') Meter Changed @break
+                                    @case('merged') Merged with Another Service @break
+                                    @case('other') Other Reason @break
+                                @endswitch
+                                @if ($waterService->deactivation_date)
+                                    <br><strong>Date:</strong> {{ $waterService->deactivation_date->format('d M Y') }}
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-play-circle me-1"></i> Reactivate Service
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Delete Confirmation Modal -->
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -579,6 +715,22 @@
                 meter_url: dataset.readingMeterUrl || null,
                 bill_url: dataset.readingBillUrl || null,
             });
+        }
+
+        function openDeactivateModal() {
+            const modalElement = document.getElementById('deactivateModal');
+            if (modalElement) {
+                const modal = new boosted.Modal(modalElement);
+                modal.show();
+            }
+        }
+
+        function openReactivateModal() {
+            const modalElement = document.getElementById('reactivateModal');
+            if (modalElement) {
+                const modal = new boosted.Modal(modalElement);
+                modal.show();
+            }
         }
     </script>
 

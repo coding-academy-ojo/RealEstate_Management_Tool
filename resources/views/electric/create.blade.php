@@ -21,7 +21,6 @@
                     <form action="{{ route('electricity-services.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
 
-                        <!-- Building Selection -->
                         <div class="mb-4">
                             <label for="building_id" class="form-label fw-bold">
                                 Building <span class="text-danger">*</span>
@@ -44,7 +43,51 @@
                         <hr class="my-4">
 
                         <h5 class="mb-3 text-orange">
-                            <i class="bi bi-info-circle me-2"></i>Company Information
+                            <i class="bi bi-person-badge me-2"></i>Service Details
+                        </h5>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="subscriber_name" class="form-label fw-bold">
+                                    Subscriber Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="subscriber_name" id="subscriber_name"
+                                    class="form-control @error('subscriber_name') is-invalid @enderror"
+                                    value="{{ old('subscriber_name') }}" required>
+                                @error('subscriber_name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="meter_number" class="form-label fw-bold">
+                                    Meter Number <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="meter_number" id="meter_number"
+                                    class="form-control @error('meter_number') is-invalid @enderror"
+                                    value="{{ old('meter_number') }}" required>
+                                @error('meter_number')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">Enter the unique serial number on the physical meter.</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="has_solar_power" name="has_solar_power"
+                                    value="1" {{ old('has_solar_power') ? 'checked' : '' }}>
+                                <label class="form-check-label fw-bold" for="has_solar_power">
+                                    Uses Supplemental Solar Power
+                                </label>
+                            </div>
+                            <small class="text-muted">Enable if the service relies on solar panels or net-metering.</small>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <h5 class="mb-3 text-orange">
+                            <i class="bi bi-building-gear me-2"></i>Company Information
                         </h5>
 
                         <div class="row">
@@ -76,89 +119,49 @@
                         <hr class="my-4">
 
                         <h5 class="mb-3 text-orange">
-                            <i class="bi bi-speedometer2 me-2"></i>Meter Readings
-                        </h5>
-
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="previous_reading" class="form-label fw-bold">
-                                    Previous Reading (kWh) <span class="text-danger">*</span>
-                                </label>
-                                <input type="number" step="0.01" name="previous_reading" id="previous_reading"
-                                    class="form-control @error('previous_reading') is-invalid @enderror"
-                                    value="{{ old('previous_reading', 0) }}" required>
-                                @error('previous_reading')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4 mb-3">
-                                <label for="current_reading" class="form-label fw-bold">
-                                    Current Reading (kWh) <span class="text-danger">*</span>
-                                </label>
-                                <input type="number" step="0.01" name="current_reading" id="current_reading"
-                                    class="form-control @error('current_reading') is-invalid @enderror"
-                                    value="{{ old('current_reading', 0) }}" required>
-                                @error('current_reading')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4 mb-3">
-                                <label for="reading_date" class="form-label fw-bold">
-                                    Reading Date <span class="text-danger">*</span>
-                                </label>
-                                <input type="date" name="reading_date" id="reading_date"
-                                    class="form-control @error('reading_date') is-invalid @enderror"
-                                    value="{{ old('reading_date', date('Y-m-d')) }}" required>
-                                @error('reading_date')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="alert alert-info">
-                            <i class="bi bi-calculator me-2"></i>
-                            <strong>Consumption Calculation:</strong> Current Reading - Previous Reading = Electricity
-                            Consumption
-                        </div>
-
-                        <hr class="my-4">
-
-                        <h5 class="mb-3 text-orange">
-                            <i class="bi bi-file-earmark-arrow-up me-2"></i>Documents & Remarks
+                            <i class="bi bi-speedometer2 me-2"></i>Reference Readings (Optional)
                         </h5>
 
                         <div class="mb-3">
-                            <label for="reset_file" class="form-label fw-bold">
-                                Reset File (Optional)
-                            </label>
-                            <input type="file" name="reset_file" id="reset_file"
-                                class="form-control @error('reset_file') is-invalid @enderror"
-                                accept=".pdf,.jpg,.jpeg,.png">
-                            @error('reset_file')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <small class="text-muted">Accepted: PDF, JPG, PNG</small>
-                        </div>
+                            <label for="remarks" class="form-label fw-bold">Remarks (optional)</label>
+                            <textarea name="remarks" id="remarks" rows="3" class="form-control @error('remarks') is-invalid @enderror"
+                                placeholder="Optional notes...">{{ old('remarks') }}</textarea>
 
-                        <div class="mb-4">
-                            <label for="remarks" class="form-label fw-bold">Remarks</label>
-                            <textarea name="remarks" id="remarks" rows="3" class="form-control @error('remarks') is-invalid @enderror">{{ old('remarks') }}</textarea>
-                            @error('remarks')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                            <hr class="my-4">
 
-                        <!-- Submit Buttons -->
-                        <div class="d-flex gap-2 justify-content-end mt-4">
-                            <a href="{{ route('electricity-services.index') }}" class="btn btn-secondary">
-                                <i class="bi bi-x-circle me-1"></i> Cancel
-                            </a>
-                            <button type="submit" class="btn btn-orange">
-                                <i class="bi bi-check-circle me-1"></i> Create Electricity Service
-                            </button>
-                        </div>
+                            <h5 class="mb-3 text-orange">
+                                <i class="bi bi-file-earmark-arrow-up me-2"></i>Documents & Remarks
+                            </h5>
+
+                            <div class="mb-3">
+                                <label for="reset_file" class="form-label fw-bold">
+                                    Reset File (Optional)
+                                </label>
+                                <input type="file" name="reset_file" id="reset_file"
+                                    class="form-control @error('reset_file') is-invalid @enderror"
+                                    accept=".pdf,.jpg,.jpeg,.png">
+                                @error('reset_file')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">Accepted: PDF, JPG, PNG (max 4 MB)</small>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="remarks" class="form-label fw-bold">Remarks</label>
+                                <textarea name="remarks" id="remarks" rows="3" class="form-control @error('remarks') is-invalid @enderror">{{ old('remarks') }}</textarea>
+                                @error('remarks')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="d-flex gap-2 justify-content-end mt-4">
+                                <a href="{{ route('electricity-services.index') }}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle me-1"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-orange">
+                                    <i class="bi bi-check-circle me-1"></i> Create Electricity Service
+                                </button>
+                            </div>
                     </form>
                 </div>
             </div>
@@ -172,8 +175,7 @@
             const buildingSelect = document.getElementById('building_id');
 
             if (buildingSelect) {
-                // Initialize Choices.js for searchable building dropdown
-                const buildingChoices = new Choices(buildingSelect, {
+                new Choices(buildingSelect, {
                     searchEnabled: true,
                     searchPlaceholderValue: 'Search by building code or name...',
                     itemSelectText: 'Press to select',

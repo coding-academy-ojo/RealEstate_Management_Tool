@@ -19,7 +19,15 @@ class WaterService extends Model
         'registration_number',
         'iron_number',
         'remarks',
+        'is_active',
+        'deactivation_reason',
+        'deactivation_date',
         'initial_meter_image',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'deactivation_date' => 'date',
     ];
 
     public function building(): BelongsTo
@@ -35,5 +43,23 @@ class WaterService extends Model
     public function latestReading(): HasOne
     {
         return $this->hasOne(WaterReading::class)->latestOfMany('reading_date');
+    }
+
+    public function deactivate(string $reason, ?string $date = null): void
+    {
+        $this->update([
+            'is_active' => false,
+            'deactivation_reason' => $reason,
+            'deactivation_date' => $date ?? now()->toDateString(),
+        ]);
+    }
+
+    public function reactivate(): void
+    {
+        $this->update([
+            'is_active' => true,
+            'deactivation_reason' => null,
+            'deactivation_date' => null,
+        ]);
     }
 }

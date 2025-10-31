@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Building;
+use App\Models\ElectricReading;
+use App\Models\ElectricServiceDisconnection;
 use App\Models\ElectricityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class ElectricityServiceController extends Controller
 {
@@ -19,48 +22,48 @@ class ElectricityServiceController extends Controller
      */
     public function index(Request $request)
     {
-        // Get filter parameters
         $filters = [
             'search' => $request->input('search'),
             'company' => $request->input('company'),
         ];
 
-        // Get sort parameters
         $sort = $request->input('sort', 'number');
         $direction = $request->input('direction', 'asc');
 
-        // Build query
-        $query = ElectricityService::with('building.site');
+        $query = ElectricityService::with(['building.site', 'latestReading'])
+            ->withCount([
+                'disconnections as open_disconnections_count' => fn($query) => $query
+                    ->whereNull('reconnection_date')
+                    ->whereNull('deleted_at'),
+            ]);
 
-        // Apply search filter
         if ($filters['search']) {
-            $query->where(function ($q) use ($filters) {
-                $q->where('registration_number', 'like', "%{$filters['search']}%")
-                    ->orWhere('company_name', 'like', "%{$filters['search']}%")
-                    ->orWhereHas('building', function ($buildingQuery) use ($filters) {
-                        $buildingQuery->where('name', 'like', "%{$filters['search']}%");
-                    });
+            $searchTerm = "%{$filters['search']}%";
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('registration_number', 'like', $searchTerm)
+                    ->orWhere('company_name', 'like', $searchTerm)
+                    ->orWhere('subscriber_name', 'like', $searchTerm)
+                    ->orWhere('meter_number', 'like', $searchTerm)
+                    ->orWhereHas('building', fn($b) => $b->where('name', 'like', $searchTerm));
             });
         }
 
-        // Apply company filter
         if ($filters['company']) {
             $query->where('company_name', $filters['company']);
         }
 
-        // Apply sorting
         switch ($sort) {
             case 'company':
                 $query->orderBy('company_name', $direction);
                 break;
+            case 'subscriber':
+                $query->orderBy('subscriber_name', $direction);
+                break;
             case 'registration':
                 $query->orderBy('registration_number', $direction);
                 break;
-            case 'previous':
-                $query->orderBy('previous_reading', $direction);
-                break;
-            case 'current':
-                $query->orderBy('current_reading', $direction);
+            case 'meter':
+                $query->orderBy('meter_number', $direction);
                 break;
             case 'building':
                 $query->join('buildings', 'electricity_services.building_id', '=', 'buildings.id')
@@ -69,20 +72,18 @@ class ElectricityServiceController extends Controller
                 break;
             case 'number':
             default:
-                // For number column, reverse the direction for data sorting
                 $actualDirection = $direction === 'asc' ? 'desc' : 'asc';
                 $query->orderBy('id', $actualDirection);
                 break;
         }
 
-        // Get distinct companies for filter dropdown
         $companies = ElectricityService::distinct()
             ->orderBy('company_name')
             ->pluck('company_name', 'company_name');
 
         $electricityServices = $query->paginate(15)->withQueryString();
 
-        return view('electricity-services.index', compact('electricityServices', 'companies', 'filters', 'sort', 'direction'));
+        return view('electric.index', compact('electricityServices', 'companies', 'filters', 'sort', 'direction'));
     }
 
     /**
@@ -91,7 +92,7 @@ class ElectricityServiceController extends Controller
     public function create()
     {
         $buildings = Building::with('site')->get();
-        return view('electricity-services.create', compact('buildings'));
+        return view('electric.create', compact('buildings'));
     }
 
     /**
@@ -101,22 +102,26 @@ class ElectricityServiceController extends Controller
     {
         $validated = $request->validate([
             'building_id' => 'required|exists:buildings,id',
+            'subscriber_name' => 'required|string|max:255',
+            'meter_number' => 'required|string|max:255|unique:electricity_services,meter_number',
+            'has_solar_power' => 'nullable|boolean',
             'company_name' => 'required|string|max:255',
             'registration_number' => 'required|string|max:255',
-            'previous_reading' => 'required|numeric|min:0',
-            'current_reading' => 'required|numeric|min:0',
-            'reading_date' => 'required|date',
-            'reset_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'reset_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:4096',
             'remarks' => 'nullable|string',
         ]);
 
-        // Handle file upload
+        $validated['has_solar_power'] = $request->boolean('has_solar_power');
+
         if ($request->hasFile('reset_file')) {
             $validated['reset_file'] = $request->file('reset_file')->store('electricity-services/files', 'private');
         }
 
         ElectricityService::create($validated);
-        return redirect()->route('electricity-services.index')->with('success', 'Electricity service record created successfully!');
+
+        return redirect()
+            ->route('electricity-services.index')
+            ->with('success', 'Electricity service record created successfully!');
     }
 
     /**
@@ -124,8 +129,80 @@ class ElectricityServiceController extends Controller
      */
     public function show(ElectricityService $electricityService)
     {
-        $electricityService->load('building.site');
-        return view('electricity-services.show', compact('electricityService'));
+        $electricityService->load([
+            'building.site',
+            'readings' => fn($query) => $query->orderByDesc('reading_date')->orderByDesc('id'),
+            'latestReading',
+            'disconnections' => fn($query) => $query->orderByDesc('disconnection_date')->orderByDesc('id'),
+        ]);
+
+        $sortKey = static function ($reading) {
+            $base = $reading->reading_date?->timestamp ?? $reading->created_at?->timestamp ?? 0;
+            return ($base * 1_000_000) + $reading->id;
+        };
+
+        $displayReadings = $electricityService->readings
+            ->sortByDesc($sortKey)
+            ->values();
+
+        $chronological = $displayReadings
+            ->reverse()
+            ->values();
+
+        $previousById = [];
+        $previousImportedCalculated = 0.0;
+        $previousProducedCalculated = 0.0;
+        $isSolar = $electricityService->has_solar_power;
+
+        foreach ($chronological as $reading) {
+            $previousById[$reading->id] = [
+                'imported_calculated' => round($previousImportedCalculated, 2),
+                'produced_calculated' => round($previousProducedCalculated, 2),
+            ];
+
+            $previousImportedCalculated = (float) ($reading->imported_calculated ?? 0);
+            $previousProducedCalculated = (float) ($reading->produced_calculated ?? 0);
+        }
+
+        $readings = $displayReadings->map(function (ElectricReading $reading) use ($previousById) {
+            $previous = $previousById[$reading->id] ?? [
+                'imported_calculated' => 0.0,
+                'produced_calculated' => 0.0,
+            ];
+
+            $reading->setAttribute('computed_previous_imported_calculated', $previous['imported_calculated']);
+            $reading->setAttribute('computed_previous_produced_calculated', $previous['produced_calculated']);
+            $reading->setAttribute('computed_consumption', round((float) ($reading->consumption_value ?? 0), 2));
+            return $reading;
+        });
+
+        $latestReading = $electricityService->latestReading;
+
+        $openDisconnection = $electricityService->disconnections
+            ->firstWhere(fn(ElectricServiceDisconnection $record) => $record->reconnection_date === null);
+
+        $unpaidCount = $readings->where('is_paid', false)->count();
+
+        return view('electric.show', [
+            'electricityService' => $electricityService,
+            'readings' => $readings,
+            'latestReading' => $latestReading,
+            'openDisconnection' => $openDisconnection,
+            'unpaidCount' => $unpaidCount,
+            'latestIndicator' => $latestReading
+                ? ($isSolar
+                    ? round(
+                        (float) (($latestReading->produced_calculated ?? 0) - ($latestReading->imported_calculated ?? 0)),
+                        2
+                    )
+                    : round((float) ($latestReading->imported_calculated ?? 0), 2))
+                : null,
+            'latestImportedCurrent' => $latestReading?->imported_current,
+            'latestImportedCalculated' => $latestReading?->imported_calculated,
+            'latestProducedCurrent' => $latestReading?->produced_current,
+            'latestProducedCalculated' => $latestReading?->produced_calculated,
+            'latestSavedEnergy' => $latestReading?->saved_energy,
+        ]);
     }
 
     /**
@@ -133,8 +210,10 @@ class ElectricityServiceController extends Controller
      */
     public function edit(ElectricityService $electricityService)
     {
+        $electricityService->load('building.site');
         $buildings = Building::with('site')->get();
-        return view('electricity-services.edit', compact('electricityService', 'buildings'));
+
+        return view('electric.edit', compact('electricityService', 'buildings'));
     }
 
     /**
@@ -144,23 +223,32 @@ class ElectricityServiceController extends Controller
     {
         $validated = $request->validate([
             'building_id' => 'required|exists:buildings,id',
+            'subscriber_name' => 'required|string|max:255',
+            'meter_number' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('electricity_services', 'meter_number')->ignore($electricityService->id),
+            ],
+            'has_solar_power' => 'nullable|boolean',
             'company_name' => 'required|string|max:255',
             'registration_number' => 'required|string|max:255',
-            'previous_reading' => 'required|numeric|min:0',
-            'current_reading' => 'required|numeric|min:0',
-            'reading_date' => 'required|date',
-            'reset_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'reset_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:4096',
             'remarks' => 'nullable|string',
         ]);
 
-        // Handle file upload
+        $validated['has_solar_power'] = $request->boolean('has_solar_power');
+
         if ($request->hasFile('reset_file')) {
             $this->deleteStoredFile($electricityService->reset_file);
             $validated['reset_file'] = $request->file('reset_file')->store('electricity-services/files', 'private');
         }
 
         $electricityService->update($validated);
-        return redirect()->route('electricity-services.index')->with('success', 'Electricity service record updated successfully!');
+
+        return redirect()
+            ->route('electricity-services.index')
+            ->with('success', 'Electricity service record updated successfully!');
     }
 
     /**
@@ -169,42 +257,59 @@ class ElectricityServiceController extends Controller
     public function destroy(ElectricityService $electricityService)
     {
         $electricityService->delete();
-        return redirect()->route('electricity-services.index')->with('success', 'Electricity service record deleted successfully!');
+
+        return redirect()
+            ->route('electricity-services.index')
+            ->with('success', 'Electricity service record deleted successfully!');
     }
 
     /**
-     * Display deleted electricity services
+     * Display deleted electricity services.
      */
     public function deleted()
     {
         $electricityServices = ElectricityService::onlyTrashed()
-            ->with('building.site')
+            ->with(['building.site', 'latestReading'])
             ->latest('deleted_at')
             ->paginate(15);
-        return view('electricity-services.deleted', compact('electricityServices'));
+
+        return view('electric.deleted', compact('electricityServices'));
     }
 
     /**
-     * Restore a soft deleted electricity service
+     * Restore a soft-deleted electricity service.
      */
     public function restore($id)
     {
         $electricityService = ElectricityService::onlyTrashed()->findOrFail($id);
         $electricityService->restore();
-        return redirect()->route('electricity-services.deleted')->with('success', 'Electricity service restored successfully!');
+
+        return redirect()
+            ->route('electricity-services.deleted')
+            ->with('success', 'Electricity service restored successfully!');
     }
 
     /**
-     * Permanently delete an electricity service
+     * Permanently delete an electricity service.
      */
     public function forceDelete($id)
     {
-        $electricityService = ElectricityService::onlyTrashed()->findOrFail($id);
+        $electricityService = ElectricityService::onlyTrashed()
+            ->with(['readings', 'disconnections'])
+            ->findOrFail($id);
 
         $this->deleteStoredFile($electricityService->reset_file);
 
+        foreach ($electricityService->readings as $reading) {
+            $this->deleteStoredFile($reading->meter_image);
+            $this->deleteStoredFile($reading->bill_image);
+        }
+
         $electricityService->forceDelete();
-        return redirect()->route('electricity-services.deleted')->with('success', 'Electricity service permanently deleted!');
+
+        return redirect()
+            ->route('electricity-services.deleted')
+            ->with('success', 'Electricity service permanently deleted!');
     }
 
     public function file(ElectricityService $electricityService, string $document)
@@ -261,5 +366,31 @@ class ElectricityServiceController extends Controller
         }
 
         return null;
+    }
+
+    public function deactivate(Request $request, ElectricityService $electricityService)
+    {
+        $validated = $request->validate([
+            'deactivation_reason' => 'required|in:cancelled,meter_changed,merged,other',
+            'deactivation_date' => 'required|date',
+        ]);
+
+        $electricityService->deactivate(
+            $validated['deactivation_reason'],
+            $validated['deactivation_date']
+        );
+
+        return redirect()
+            ->route('electricity-services.show', $electricityService)
+            ->with('success', 'Electricity service has been deactivated successfully.');
+    }
+
+    public function reactivate(ElectricityService $electricityService)
+    {
+        $electricityService->reactivate();
+
+        return redirect()
+            ->route('electricity-services.show', $electricityService)
+            ->with('success', 'Electricity service has been reactivated successfully.');
     }
 }

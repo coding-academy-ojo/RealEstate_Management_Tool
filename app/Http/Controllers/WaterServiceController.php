@@ -221,6 +221,36 @@ class WaterServiceController extends Controller
     }
 
     /**
+     * Deactivate the water service
+     */
+    public function deactivate(Request $request, WaterService $waterService)
+    {
+        $validated = $request->validate([
+            'deactivation_reason' => 'required|in:cancelled,meter_changed,merged,other',
+            'deactivation_date' => 'required|date',
+        ]);
+
+        $waterService->deactivate(
+            $validated['deactivation_reason'],
+            $validated['deactivation_date']
+        );
+
+        return redirect()->route('water-services.show', $waterService)
+            ->with('success', 'Water service has been deactivated successfully!');
+    }
+
+    /**
+     * Reactivate the water service
+     */
+    public function reactivate(WaterService $waterService)
+    {
+        $waterService->reactivate();
+
+        return redirect()->route('water-services.show', $waterService)
+            ->with('success', 'Water service has been reactivated successfully!');
+    }
+
+    /**
      * Display deleted water services
      */
     public function deleted()

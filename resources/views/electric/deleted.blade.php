@@ -26,23 +26,21 @@
 
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white py-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="bi bi-archive me-2 text-muted"></i>Trashed Electricity Services
-                    <span class="badge bg-secondary">{{ $electricityServices->total() }}</span>
-                </h5>
-            </div>
+            <h5 class="mb-0">
+                <i class="bi bi-archive me-2 text-muted"></i>Trashed Electricity Services
+                <span class="badge bg-secondary">{{ $electricityServices->total() }}</span>
+            </h5>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
+                <table class="table table-hover mb-0 align-middle">
                     <thead class="table-light">
                         <tr>
+                            <th>Subscriber</th>
+                            <th>Meter</th>
                             <th>Building</th>
                             <th>Company</th>
                             <th>Registration #</th>
-                            <th>Previous Reading</th>
-                            <th>Current Reading</th>
                             <th>Deleted At</th>
                             <th class="text-center">Actions</th>
                         </tr>
@@ -51,16 +49,30 @@
                         @forelse($electricityServices as $service)
                             <tr>
                                 <td>
+                                    <div class="fw-semibold">{{ $service->subscriber_name }}</div>
+                                    <small class="text-muted">
+                                        Solar:
+                                        @if ($service->has_solar_power)
+                                            <span class="badge bg-success-subtle text-success">Active</span>
+                                        @else
+                                            <span class="badge bg-secondary-subtle text-secondary">No</span>
+                                        @endif
+                                    </small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-dark text-white">{{ $service->meter_number }}</span>
+                                </td>
+                                <td>
                                     @if ($service->building)
                                         <span class="fw-semibold text-primary">{{ $service->building->name }}</span>
+                                        <br>
+                                        <small class="text-muted">{{ $service->building->code }}</small>
                                     @else
                                         <span class="text-muted">No Building</span>
                                     @endif
                                 </td>
-                                <td class="fw-semibold">{{ $service->company_name }}</td>
+                                <td>{{ $service->company_name }}</td>
                                 <td>{{ $service->registration_number }}</td>
-                                <td>{{ number_format($service->previous_reading, 2) }} kWh</td>
-                                <td>{{ number_format($service->current_reading, 2) }} kWh</td>
                                 <td>
                                     <small class="text-muted">
                                         {{ $service->deleted_at->format('Y-m-d H:i') }}
@@ -68,14 +80,13 @@
                                         <span class="text-warning">{{ $service->deleted_at->diffForHumans() }}</span>
                                     </small>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <div class="btn-group" role="group">
                                         <button type="button" class="btn btn-sm btn-outline-success" title="Restore"
                                             onclick="openRestoreModal('{{ $service->id }}', '{{ $service->registration_number }}', '{{ $service->company_name }}')">
                                             <i class="bi bi-arrow-counterclockwise"></i>
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger"
-                                            title="Delete Permanently"
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Delete Permanently"
                                             onclick="openForceDeleteModal('{{ $service->id }}', '{{ $service->registration_number }}', '{{ $service->company_name }}')">
                                             <i class="bi bi-trash-fill"></i>
                                         </button>
@@ -101,24 +112,21 @@
         @endif
     </div>
 
-    <!-- Restore Confirmation Modal -->
     <div class="modal fade" id="restoreModal" tabindex="-1" aria-labelledby="restoreModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header border-0">
+                <div class="modal-header border-0 bg-success text-white">
                     <h5 class="modal-title" id="restoreModalLabel">
-                        <i class="bi bi-arrow-counterclockwise text-success me-2"></i>Confirm Restore
+                        <i class="bi bi-arrow-counterclockwise me-2"></i>Restore Electricity Service
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <p class="mb-2">Are you sure you want to restore this electricity service?</p>
-                    <div class="alert alert-info mb-0">
+                    <div class="alert alert-success mb-0">
                         <strong id="restoreServiceRegistration"></strong> - <span id="restoreServiceCompany"></span>
                     </div>
-                    <p class="text-muted mt-2 mb-0">
-                        <small>This service will be moved back to the active electricity services list.</small>
-                    </p>
                 </div>
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
@@ -133,7 +141,6 @@
         </div>
     </div>
 
-    <!-- Force Delete Confirmation Modal -->
     <div class="modal fade" id="forceDeleteModal" tabindex="-1" aria-labelledby="forceDeleteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -145,16 +152,13 @@
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-2"><strong>⚠️ This action cannot be undone!</strong></p>
+                    <p class="mb-2"><strong>This action cannot be undone!</strong></p>
                     <p class="mb-2">Are you sure you want to permanently delete this electricity service?</p>
                     <div class="alert alert-danger mb-0">
-                        <strong id="forceDeleteServiceRegistration"></strong> - <span
-                            id="forceDeleteServiceCompany"></span>
+                        <strong id="forceDeleteServiceRegistration"></strong> - <span id="forceDeleteServiceCompany"></span>
                     </div>
                     <p class="text-danger mt-2 mb-0">
-                        <small><strong>Warning:</strong> This will permanently delete the service and all associated files.
-                            This
-                            action cannot be reversed!</small>
+                        <small><strong>Warning:</strong> This will permanently delete the service and all associated files.</small>
                     </p>
                 </div>
                 <div class="modal-footer border-0">
@@ -177,7 +181,6 @@
             document.getElementById('restoreServiceCompany').textContent = companyName;
             document.getElementById('restoreForm').action = '/electricity-services/' + serviceId + '/restore';
 
-            // Use Boosted modal API
             const modalElement = document.getElementById('restoreModal');
             const modal = new boosted.Modal(modalElement);
             modal.show();
@@ -188,7 +191,6 @@
             document.getElementById('forceDeleteServiceCompany').textContent = companyName;
             document.getElementById('forceDeleteForm').action = '/electricity-services/' + serviceId + '/force-delete';
 
-            // Use Boosted modal API
             const modalElement = document.getElementById('forceDeleteModal');
             const modal = new boosted.Modal(modalElement);
             modal.show();

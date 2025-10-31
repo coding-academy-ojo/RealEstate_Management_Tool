@@ -19,6 +19,11 @@ return new class extends Migration
             $table->string('registration_number');
             $table->string('iron_number')->nullable();
             $table->text('remarks')->nullable();
+            $table->boolean('is_active')->default(true)->comment('توضح إذا كانت الخدمة فعّالة أو غير فعّالة');
+            $table->enum('deactivation_reason', ['cancelled', 'meter_changed', 'merged', 'other'])
+                ->nullable()
+                ->comment('سبب تعطيل الخدمة في حال عدم الفعالية');
+            $table->date('deactivation_date')->nullable()->comment('تاريخ تعطيل أو إلغاء الخدمة');
             $table->string('initial_meter_image')->nullable();
             $table->timestamps();
             $table->softDeletes();
