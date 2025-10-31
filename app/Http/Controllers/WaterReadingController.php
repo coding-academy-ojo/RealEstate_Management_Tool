@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\WaterReading;
 use App\Models\WaterService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -12,6 +13,150 @@ class WaterReadingController extends Controller
   public function __construct()
   {
     $this->middleware('privilege:water');
+  }
+
+  public function index(Request $request)
+  {
+    $filters = [
+      'status' => $request->input('status', 'all'),
+      'search' => trim((string) $request->input('search')),
+    ];
+
+    $sort = $request->input('sort', 'date');
+    $direction = $request->input('direction', 'desc');
+
+    $allReadings = WaterReading::select('id', 'water_service_id', 'current_reading', 'reading_date', 'created_at')
+      ->orderBy('reading_date')
+      ->orderBy('id')
+      ->get()
+      ->groupBy('water_service_id');
+
+    $computed = [];
+
+    foreach ($allReadings as $serviceReadings) {
+      $previous = 0.0;
+      $isFirst = true;
+
+      foreach ($serviceReadings as $reading) {
+        $current = (float) ($reading->current_reading ?? 0);
+        $consumption = $isFirst ? $current : max(0, round($current - $previous, 2));
+
+        $computed[$reading->id] = [
+          'previous' => round($previous, 2),
+          'consumption' => round($consumption, 2),
+        ];
+
+        $previous = $current;
+        $isFirst = false;
+      }
+    }
+
+    $readingsQuery = WaterReading::with([
+      'waterService.building.site',
+      'waterService.waterCompany',
+    ]);
+
+    // Apply sorting
+    switch ($sort) {
+      case 'service':
+        $readingsQuery->join('water_services', 'water_readings.water_service_id', '=', 'water_services.id')
+          ->orderBy('water_services.registration_number', $direction)
+          ->select('water_readings.*');
+        break;
+      case 'bill':
+        $readingsQuery->orderBy('bill_amount', $direction);
+        break;
+      case 'consumption':
+        $readingsQuery->orderBy('consumption_value', $direction);
+        break;
+      case 'number':
+        $readingsQuery->orderBy('id', $direction);
+        break;
+      case 'date':
+      default:
+        $readingsQuery->orderBy('reading_date', $direction)->orderBy('id', $direction);
+        break;
+    }
+
+    if ($filters['status'] === 'paid') {
+      $readingsQuery->where('is_paid', true);
+    } elseif ($filters['status'] === 'unpaid') {
+      $readingsQuery->where('is_paid', false);
+    }
+
+    $parsedDate = null;
+
+    if ($filters['search']) {
+      $searchTerm = '%' . $filters['search'] . '%';
+
+      try {
+        $parsedDate = Carbon::parse($filters['search']);
+      } catch (\Exception $exception) {
+        $parsedDate = null;
+      }
+
+      $readingsQuery->where(function ($query) use ($searchTerm, $parsedDate) {
+        $query->whereHas('waterService', function ($serviceQuery) use ($searchTerm) {
+          $serviceQuery->where('registration_number', 'like', $searchTerm)
+            ->orWhere('meter_owner_name', 'like', $searchTerm)
+            ->orWhere('company_name', 'like', $searchTerm)
+            ->orWhere('company_name_ar', 'like', $searchTerm)
+            ->orWhereHas('building', function ($buildingQuery) use ($searchTerm) {
+              $buildingQuery->where('name', 'like', $searchTerm)
+                ->orWhereHas('site', function ($siteQuery) use ($searchTerm) {
+                  $siteQuery->where('name', 'like', $searchTerm)
+                    ->orWhere('governorate', 'like', $searchTerm);
+                });
+            });
+        })
+          ->orWhere('notes', 'like', $searchTerm)
+          ->orWhere('bill_amount', 'like', $searchTerm);
+
+        if ($parsedDate) {
+          $query->orWhereDate('reading_date', $parsedDate->toDateString());
+        }
+      });
+    }
+
+    $readings = $readingsQuery->paginate(25)->withQueryString();
+
+    $readings->setCollection(
+      $readings->getCollection()->map(function (WaterReading $reading) use ($computed) {
+        $info = $computed[$reading->id] ?? ['previous' => 0.0, 'consumption' => 0.0];
+
+        $reading->setAttribute('computed_previous_reading', $info['previous']);
+        $reading->setAttribute('computed_consumption', $info['consumption']);
+
+        return $reading;
+      })
+    );
+
+    $summaryBaseQuery = WaterReading::query();
+
+    $summary = [
+      'total_outstanding' => (float) (clone $summaryBaseQuery)->where('is_paid', false)->sum('bill_amount'),
+      'total_readings' => (clone $summaryBaseQuery)->count(),
+      'unpaid_count' => (clone $summaryBaseQuery)->where('is_paid', false)->count(),
+      'paid_count' => (clone $summaryBaseQuery)->where('is_paid', true)->count(),
+      'unique_services' => (clone $summaryBaseQuery)->distinct('water_service_id')->count('water_service_id'),
+      'total_consumption' => (float) (clone $summaryBaseQuery)->sum('consumption_value'),
+    ];
+
+    $filteredTotals = [
+      'outstanding' => (float) $readings->getCollection()->where('is_paid', false)->sum(function (WaterReading $reading) {
+        return (float) ($reading->bill_amount ?? 0);
+      }),
+      'paid' => (float) $readings->getCollection()->where('is_paid', true)->sum(function (WaterReading $reading) {
+        return (float) ($reading->bill_amount ?? 0);
+      }),
+    ];
+
+    return view('water.bills.index', [
+      'readings' => $readings,
+      'summary' => $summary,
+      'filteredTotals' => $filteredTotals,
+      'filters' => $filters,
+    ]);
   }
 
   public function store(Request $request, WaterService $waterService)
@@ -31,7 +176,9 @@ class WaterReadingController extends Controller
     WaterReading::create($data);
     $this->recalculateReadings($waterService);
 
-    return redirect()->route('water-services.show', $waterService)
+    $redirectUrl = $this->resolveRedirectUrl($request, route('water-services.show', $waterService));
+
+    return redirect()->to($redirectUrl)
       ->with('success', 'Water reading added successfully.');
   }
 
@@ -55,7 +202,9 @@ class WaterReadingController extends Controller
     $waterReading->update($data);
     $this->recalculateReadings($waterService);
 
-    return redirect()->route('water-services.show', $waterService)
+    $redirectUrl = $this->resolveRedirectUrl($request, route('water-services.show', $waterService));
+
+    return redirect()->to($redirectUrl)
       ->with('success', 'Water reading updated successfully.');
   }
 
@@ -69,7 +218,9 @@ class WaterReadingController extends Controller
     $waterReading->delete();
     $this->recalculateReadings($waterService);
 
-    return redirect()->route('water-services.show', $waterService)
+    $redirectUrl = $this->resolveRedirectUrl(request(), route('water-services.show', $waterService));
+
+    return redirect()->to($redirectUrl)
       ->with('success', 'Water reading deleted successfully.');
   }
 
@@ -174,5 +325,16 @@ class WaterReadingController extends Controller
     }
 
     return null;
+  }
+
+  private function resolveRedirectUrl(Request $request, string $fallback): string
+  {
+    $redirect = trim((string) $request->input('redirect_to'));
+
+    if ($redirect && str_starts_with($redirect, url('/'))) {
+      return $redirect;
+    }
+
+    return $fallback;
   }
 }

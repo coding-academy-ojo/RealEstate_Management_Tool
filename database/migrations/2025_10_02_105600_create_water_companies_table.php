@@ -17,6 +17,7 @@ return new class extends Migration
       $table->string('name_ar')->nullable();
       $table->string('website')->nullable();
       $table->timestamps();
+      $table->softDeletes();
     });
   }
 

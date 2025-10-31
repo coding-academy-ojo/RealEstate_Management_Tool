@@ -7,6 +7,32 @@
 @endsection
 
 @section('content')
+    <style>
+        #content {
+            background-color: #f8f9fa !important;
+            background-image: none !important;
+            position: relative;
+        }
+        #content::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url("{{ asset('assets/images/water-drops.png') }}") !important;
+            background-repeat: repeat !important;
+            background-size: 20px 20px !important;
+            opacity: 0.2;
+            pointer-events: none;
+            z-index: 0;
+        }
+        #content > * {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+
     @php
         $currentUser = auth()->user();
         $canManageWater = $currentUser?->isSuperAdmin() || $currentUser?->hasPrivilege('water');
@@ -36,19 +62,21 @@
     <!-- Search and Filter Card -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
-            <form method="GET" action="{{ route('water-services.index') }}">
+            <form method="GET" action="{{ route('water.services.index') }}">
                 <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-xl-4 col-lg-5 col-md-6">
+                        <label for="search" class="form-label text-muted text-uppercase small fw-semibold mb-1">Search</label>
                         <div class="position-relative">
                             <i class="bi bi-search position-absolute"
                                 style="left: 12px; top: 50%; transform: translateY(-50%); color: #999;"></i>
                             <input type="text" name="search" id="search" class="form-control ps-5"
-                                placeholder="Search by registration #, iron #, company, building..."
+                                placeholder="Registration #, iron #, company, building..."
                                 style="border-radius: 10px;" value="{{ $filters['search'] ?? '' }}">
                         </div>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
+                        <label for="company" class="form-label text-muted text-uppercase small fw-semibold mb-1">Company</label>
                         <select name="company" id="company" class="form-select" style="border-radius: 10px;">
                             <option value="" {{ empty($filters['company_id'] ?? '') ? 'selected' : '' }}>All Companies</option>
                             @foreach ($companies as $companyValue => $companyName)
@@ -60,12 +88,36 @@
                         </select>
                     </div>
 
-                    <div class="col-md-2">
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-orange flex-fill" style="border-radius: 10px;">
+                    <div class="col-xl-3 col-lg-3 col-md-6">
+                        <label for="governorate" class="form-label text-muted text-uppercase small fw-semibold mb-1">Governorate</label>
+                        <select name="governorate" id="governorate" class="form-select" style="border-radius: 10px;">
+                            <option value="">All Governorates</option>
+                            @foreach ($governorates as $code => $label)
+                                <option value="{{ $code }}"
+                                    {{ (string) ($filters['governorate'] ?? '') === (string) $code ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-xl-2 col-lg-12 col-md-6">
+                        <label for="status" class="form-label text-muted text-uppercase small fw-semibold mb-1">Status</label>
+                        <select name="status" id="status" class="form-select mb-2 mb-lg-0" style="border-radius: 10px;">
+                            <option value="all" {{ ($filters['status'] ?? 'all') === 'all' ? 'selected' : '' }}>All</option>
+                            <option value="active" {{ ($filters['status'] ?? 'all') === 'active' ? 'selected' : '' }}>Active</option>
+                            <option value="inactive" {{ ($filters['status'] ?? 'all') === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-2">
+                    <div class="col-12">
+                        <div class="d-flex flex-wrap gap-2 justify-content-end">
+                            <button type="submit" class="btn btn-orange px-4" style="border-radius: 10px;">
                                 <i class="bi bi-funnel me-1"></i> Apply
                             </button>
-                            <a href="{{ route('water-services.index') }}" class="btn btn-light flex-fill"
+                            <a href="{{ route('water.services.index') }}" class="btn btn-light px-4"
                                 style="border-radius: 10px;">
                                 <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
                             </a>
@@ -76,6 +128,37 @@
                 <input type="hidden" name="sort" value="{{ $sort }}">
                 <input type="hidden" name="direction" value="{{ $direction }}">
             </form>
+
+            @php
+                $filterBadgeParams = collect($filters ?? [])
+                    ->filter(fn($value) => $value !== null && $value !== '')
+                    ->reject(fn($value, $key) => $key === 'status' && $value === 'all')
+                    ->toArray();
+                $filterLabels = [
+                    'search' => 'Search',
+                    'company_id' => 'Company',
+                    'governorate' => 'Governorate',
+                    'status' => 'Status',
+                ];
+            @endphp
+
+            @if (!empty($filterBadgeParams))
+                <div class="mt-3 d-flex flex-wrap gap-2">
+                    @foreach ($filterBadgeParams as $key => $value)
+                        @php
+                            $displayValue = match ($key) {
+                                'company_id' => $companies[$value] ?? $value,
+                                'governorate' => $governorates[$value] ?? $value,
+                                'status' => ucfirst($value),
+                                default => $value,
+                            };
+                        @endphp
+                        <span class="badge bg-light text-dark border">
+                            {{ $filterLabels[$key] ?? ucfirst($key) }}: {{ $displayValue }}
+                        </span>
+                    @endforeach
+                </div>
+            @endif
 
             <div class="mt-3">
                 <small class="text-muted">{{ $waterServices->total() }} service(s) found</small>
@@ -88,6 +171,7 @@
         $activeDirection = $direction ?? 'asc';
         $filterParams = collect($filters ?? [])
             ->filter(fn($value) => $value !== null && $value !== '')
+            ->reject(fn($value, $key) => $key === 'status' && $value === 'all')
             ->toArray();
 
         $buildSortUrl = function (string $column) use ($filterParams, $activeSort, $activeDirection) {
@@ -95,7 +179,7 @@
             $params['sort'] = $column;
             $params['direction'] = $activeSort === $column && $activeDirection === 'asc' ? 'desc' : 'asc';
 
-            return route('water-services.index', $params);
+            return route('water.services.index', $params);
         };
 
         $arrowClass = function (string $column, string $direction) use ($activeSort, $activeDirection) {

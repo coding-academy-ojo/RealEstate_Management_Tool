@@ -3,12 +3,35 @@
 @section('title', 'Create Water Service')
 
 @section('breadcrumbs')
-    <li class="breadcrumb-item"><a href="{{ route('water-services.index') }}">Water Services</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('water.services.index') }}">Water Services</a></li>
     <li class="breadcrumb-item active">Create</li>
 @endsection
 
 @section('styles')
 <style>
+    #content {
+        background-color: #f8f9fa !important;
+        background-image: none !important;
+        position: relative;
+    }
+    #content::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url("{{ asset('assets/images/water-drops.png') }}") !important;
+        background-repeat: repeat !important;
+        background-size: 20px 20px !important;
+        opacity: 0.2;
+        pointer-events: none;
+        z-index: 0;
+    }
+    #content > * {
+        position: relative;
+        z-index: 1;
+    }
     .d-flex .choices {
         flex-grow: 1;
     }
@@ -157,7 +180,7 @@
 
                         <!-- Submit Buttons -->
                         <div class="d-flex gap-2 justify-content-end mt-4">
-                            <a href="{{ route('water-services.index') }}" class="btn btn-secondary">
+                            <a href="{{ route('water.services.index') }}" class="btn btn-secondary">
                                 <i class="bi bi-x-circle me-1"></i> Cancel
                             </a>
                             <button type="submit" class="btn btn-orange">
@@ -343,7 +366,7 @@
                     }
 
                     try {
-                        const response = await fetch('{{ route('water-companies.store') }}', {
+                        const response = await fetch('{{ route('water.companies.store') }}', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',

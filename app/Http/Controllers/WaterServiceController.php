@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Building;
+use App\Models\Site;
 use App\Models\WaterCompany;
 use App\Models\WaterService;
 use Illuminate\Http\Request;
@@ -24,6 +25,8 @@ class WaterServiceController extends Controller
         $filters = [
             'search' => $request->input('search'),
             'company_id' => $request->input('company'),
+            'governorate' => $request->input('governorate'),
+            'status' => $request->input('status', 'all'),
         ];
 
         // Get sort parameters
@@ -50,6 +53,20 @@ class WaterServiceController extends Controller
         // Apply company filter
         if ($filters['company_id']) {
             $query->where('water_company_id', $filters['company_id']);
+        }
+
+        // Apply governorate filter
+        if ($filters['governorate']) {
+            $query->whereHas('building.site', function ($siteQuery) use ($filters) {
+                $siteQuery->where('governorate', $filters['governorate']);
+            });
+        }
+
+        // Apply status filter
+        if ($filters['status'] === 'active') {
+            $query->where('is_active', true);
+        } elseif ($filters['status'] === 'inactive') {
+            $query->where('is_active', false);
         }
 
         // Apply sorting
@@ -94,7 +111,17 @@ class WaterServiceController extends Controller
 
         $waterServices = $query->paginate(15)->withQueryString();
 
-        return view('water-services.index', compact('waterServices', 'companies', 'filters', 'sort', 'direction'));
+        $governorates = Site::select('governorate')
+            ->distinct()
+            ->orderBy('governorate')
+            ->get()
+            ->mapWithKeys(function (Site $site) {
+                $code = $site->governorate;
+                $label = $site->governorate_name_en ?? $code;
+                return [$code => $label];
+            });
+
+        return view('water-services.index', compact('waterServices', 'companies', 'filters', 'sort', 'direction', 'governorates'));
     }
 
     /**
@@ -132,7 +159,7 @@ class WaterServiceController extends Controller
         $validated['company_name_ar'] = $company->name_ar;
 
         WaterService::create($validated);
-        return redirect()->route('water-services.index')->with('success', 'Water service record created successfully!');
+        return redirect()->route('water.services.index')->with('success', 'Water service record created successfully!');
     }
 
     /**
@@ -231,7 +258,7 @@ class WaterServiceController extends Controller
         $validated['company_name_ar'] = $company->name_ar;
 
         $waterService->update($validated);
-        return redirect()->route('water-services.index')->with('success', 'Water service record updated successfully!');
+        return redirect()->route('water.services.index')->with('success', 'Water service record updated successfully!');
     }
 
     /**
@@ -240,7 +267,7 @@ class WaterServiceController extends Controller
     public function destroy(WaterService $waterService)
     {
         $waterService->delete();
-        return redirect()->route('water-services.index')->with('success', 'Water service record deleted successfully!');
+        return redirect()->route('water.services.index')->with('success', 'Water service record deleted successfully!');
     }
 
     /**

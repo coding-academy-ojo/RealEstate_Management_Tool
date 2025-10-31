@@ -245,7 +245,7 @@
 
                     <!-- Quick Actions -->
                     <div class="mt-3 d-grid gap-2">
-                        <a href="{{ route('water-services.index') }}" class="btn btn-sm btn-primary">
+                        <a href="{{ route('water.services.index') }}" class="btn btn-sm btn-primary">
                             <i class="bi bi-droplet me-1"></i>Manage Water
                         </a>
                         <a href="{{ route('electricity-services.index') }}" class="btn btn-sm btn-warning">

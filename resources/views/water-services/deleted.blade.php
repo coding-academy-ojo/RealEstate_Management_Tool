@@ -3,16 +3,42 @@
 @section('title', 'Deleted Water Services')
 
 @section('breadcrumbs')
-    <li class="breadcrumb-item"><a href="{{ route('water-services.index') }}">Water Services</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('water.services.index') }}">Water Services</a></li>
     <li class="breadcrumb-item active">Deleted Services</li>
 @endsection
 
 @section('content')
+    <style>
+        #content {
+            background-color: #f8f9fa !important;
+            background-image: none !important;
+            position: relative;
+        }
+        #content::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url("{{ asset('assets/images/water-drops.png') }}") !important;
+            background-repeat: repeat !important;
+            background-size: 20px 20px !important;
+            opacity: 0.2;
+            pointer-events: none;
+            z-index: 0;
+        }
+        #content > * {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">
             <i class="bi bi-trash me-2 text-muted"></i>Deleted Water Services
         </h2>
-        <a href="{{ route('water-services.index') }}" class="btn btn-back">
+    <a href="{{ route('water.services.index') }}" class="btn btn-back">
             <i class="bi bi-arrow-left me-1"></i> Back to Water Services
         </a>
     </div>

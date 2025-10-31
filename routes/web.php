@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\WaterCompanyController;
+use App\Http\Controllers\WaterServiceController;
+use App\Http\Controllers\WaterOverviewController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
@@ -378,9 +381,27 @@ Route::middleware('auth')->group(function () {
     Route::get('water-services/{waterService}/readings/{waterReading}/files/{document}', [\App\Http\Controllers\WaterReadingController::class, 'file'])
         ->middleware('privilege:water')
         ->name('water-services.readings.files.show');
-    Route::post('water-companies', [\App\Http\Controllers\WaterCompanyController::class, 'store'])
+    Route::get('water/overview', [WaterOverviewController::class, 'overview'])
         ->middleware('privilege:water')
-        ->name('water-companies.store');
+        ->name('water.overview');
+
+    Route::get('water/bills', [\App\Http\Controllers\WaterReadingController::class, 'index'])
+        ->middleware('privilege:water')
+        ->name('water.bills.index');
+
+    Route::get('water/index', [WaterServiceController::class, 'index'])
+        ->name('water.services.index');
+
+    Route::prefix('water/companies')
+        ->name('water.companies.')
+        ->middleware('privilege:water')
+        ->group(function () {
+            Route::get('/', [WaterCompanyController::class, 'index'])->name('index');
+            Route::post('/', [WaterCompanyController::class, 'store'])->name('store');
+            Route::put('{waterCompany}', [WaterCompanyController::class, 'update'])->name('update');
+            Route::delete('{waterCompany}', [WaterCompanyController::class, 'destroy'])->name('destroy');
+            Route::post('{company}/restore', [WaterCompanyController::class, 'restore'])->name('restore');
+        });
 
     Route::post('water-services/{waterService}/readings', [\App\Http\Controllers\WaterReadingController::class, 'store'])
         ->middleware('privilege:water')
@@ -397,7 +418,7 @@ Route::middleware('auth')->group(function () {
     Route::post('water-services/{waterService}/reactivate', [\App\Http\Controllers\WaterServiceController::class, 'reactivate'])
         ->middleware('privilege:water')
         ->name('water-services.reactivate');
-    Route::resource('water-services', \App\Http\Controllers\WaterServiceController::class);
+    Route::resource('water-services', \App\Http\Controllers\WaterServiceController::class)->except(['index']);
 
     Route::get('electricity-services/{electricityService}/files/{document}', [\App\Http\Controllers\ElectricityServiceController::class, 'file'])
         ->middleware('privilege:electricity')
