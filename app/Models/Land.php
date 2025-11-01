@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use App\Traits\LogsActivity;
 
 class Land extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, LogsActivity;
 
     protected $fillable = [
         'site_id',
@@ -88,5 +89,31 @@ class Land extends Model
     {
         return $this->belongsToMany(ZoningStatus::class, 'land_zoning_status')
             ->withTimestamps();
+    }
+
+    /**
+     * Get the name to use in activity descriptions
+     */
+    public function getActivityName(): string
+    {
+        // Show plot number and basin for land instead of ID
+        if ($this->plot_number && $this->basin) {
+            return "Plot {$this->plot_number} in Basin {$this->basin}";
+        } elseif ($this->plot_number) {
+            return "Plot {$this->plot_number}";
+        } elseif ($this->basin) {
+            return "Basin {$this->basin}";
+        }
+
+        // If we have a site, count the land position in that site
+        if ($this->site_id && $this->site) {
+            $landPosition = Land::where('site_id', $this->site_id)
+                ->where('id', '<=', $this->id)
+                ->orderBy('id')
+                ->count();
+            return "Land #{$landPosition}";
+        }
+
+        return "Land #{$this->id}";
     }
 }

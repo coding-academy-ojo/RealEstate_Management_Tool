@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\LogsActivity;
 
 class WaterReading extends Model
 {
-  use HasFactory;
+  use HasFactory, LogsActivity;
 
   protected $fillable = [
     'water_service_id',
@@ -33,5 +34,17 @@ class WaterReading extends Model
   public function waterService(): BelongsTo
   {
     return $this->belongsTo(WaterService::class);
+  }
+
+  /**
+   * Get the name to use in activity descriptions
+   */
+  public function getActivityName(): string
+  {
+    // Show reading date if available, otherwise just "Water Reading"
+    if ($this->reading_date) {
+      return "Water Reading ({$this->reading_date->format('M d, Y')})";
+    }
+    return "Water Reading";
   }
 }

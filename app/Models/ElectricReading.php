@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\LogsActivity;
 
 class ElectricReading extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'electric_service_id',
@@ -105,5 +106,17 @@ class ElectricReading extends Model
         if ($service) {
             $service->recalculateElectricConsumption();
         }
+    }
+
+    /**
+     * Get the name to use in activity descriptions
+     */
+    public function getActivityName(): string
+    {
+        // Show reading date if available, otherwise just "Electric Reading"
+        if ($this->reading_date) {
+            return "Electric Reading ({$this->reading_date->format('M d, Y')})";
+        }
+        return "Electric Reading";
     }
 }

@@ -270,51 +270,86 @@
                     <small class="text-muted">Latest updates across all modules</small>
                 </div>
                 <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        @forelse($stats['recent_activities'] as $activity)
-                            <a href="{{ $activity['route'] }}"
-                                class="list-group-item list-group-item-action border-0 py-2 px-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-shrink-0">
-                                        <div class="bg-{{ $activity['color'] }} bg-opacity-10 rounded-circle p-1"
-                                            style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
-                                            <i class="bi bi-{{ $activity['icon'] }} text-{{ $activity['color'] }}"
-                                                style="font-size: 0.875rem;"></i>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1 ms-2">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <div class="d-flex align-items-center">
-                                                    <span class="fw-semibold me-2"
-                                                        style="font-size: 0.875rem;">{{ $activity['title'] }}</span>
-                                                    @if ($activity['action'] === 'created')
-                                                        <span class="badge bg-success"
-                                                            style="font-size: 0.65rem; padding: 0.15rem 0.4rem;">Created</span>
-                                                    @elseif($activity['action'] === 'updated')
-                                                        <span class="badge bg-primary"
-                                                            style="font-size: 0.65rem; padding: 0.15rem 0.4rem;">Updated</span>
-                                                    @elseif($activity['action'] === 'deleted')
-                                                        <span class="badge bg-danger"
-                                                            style="font-size: 0.65rem; padding: 0.15rem 0.4rem;">Deleted</span>
-                                                    @endif
-                                                </div>
-                                                <small class="text-muted" style="font-size: 0.75rem;">
-                                                    {{ $activity['subtitle'] }} • {{ $activity['description'] }}
-                                                </small>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="px-3 py-2" style="width: 5%;"></th>
+                                    <th class="py-2" style="width: 35%;">Activity</th>
+                                    <th class="py-2" style="width: 15%;">Type</th>
+                                    <th class="py-2" style="width: 20%;">User</th>
+                                    <th class="py-2 text-end pe-3" style="width: 25%;">Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($stats['recent_activities'] as $activity)
+                                    <tr class="activity-row-dashboard" style="cursor: pointer;" onclick="window.location='{{ $activity['route'] }}'">
+                                        <td class="px-3">
+                                            <div class="bg-{{ $activity['color'] }} bg-opacity-10 rounded-circle p-1"
+                                                style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
+                                                <i class="bi bi-{{ $activity['icon'] }} text-{{ $activity['color'] }}"
+                                                    style="font-size: 0.75rem;"></i>
                                             </div>
-                                            <small class="text-muted"
-                                                style="font-size: 0.7rem;">{{ $activity['timestamp']->diffForHumans() }}</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        @empty
-                            <div class="text-center py-4">
-                                <i class="bi bi-inbox" style="font-size: 2rem; opacity: 0.3;"></i>
-                                <p class="text-muted mt-2 mb-0 small">No recent activities found</p>
-                            </div>
-                        @endforelse
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold text-dark" style="font-size: 0.875rem;">{{ $activity['title'] }}</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge"
+                                                style="font-size: 0.65rem; padding: 0.2rem 0.5rem;
+                                                @if($activity['type'] === 'site') background-color: #ff7900;
+                                                @elseif($activity['type'] === 'building') background-color: #6c757d;
+                                                @elseif($activity['type'] === 'land') background-color: #198754;
+                                                @elseif(str_contains($activity['type'], 'water')) background-color: #0d6efd;
+                                                @elseif(str_contains($activity['type'], 'electric')) background-color: #ffc107; color: #000;
+                                                @elseif($activity['type'] === 'innovation') background-color: #dc3545;
+                                                @elseif($activity['type'] === 'image') background-color: #6f42c1;
+                                                @elseif($activity['type'] === 'zoning') background-color: #20c997;
+                                                @else background-color: #adb5bd;
+                                                @endif">
+                                                @if($activity['type'] === 'site') Site
+                                                @elseif($activity['type'] === 'building') Building
+                                                @elseif($activity['type'] === 'land') Land
+                                                @elseif($activity['type'] === 'water') Water
+                                                @elseif($activity['type'] === 'water_reading') Reading
+                                                @elseif($activity['type'] === 'water_company') Company
+                                                @elseif($activity['type'] === 'electricity') Electricity
+                                                @elseif($activity['type'] === 'electric_reading') Reading
+                                                @elseif($activity['type'] === 'electricity_company') Company
+                                                @elseif($activity['type'] === 'disconnection') Disconnection
+                                                @elseif($activity['type'] === 'innovation') Renovation
+                                                @elseif($activity['type'] === 'image') Image
+                                                @elseif($activity['type'] === 'zoning') Zoning
+                                                @else {{ ucfirst($activity['type']) }}
+                                                @endif
+                                            </span>
+                                            @if ($activity['action'] === 'created')
+                                                <span class="badge bg-success ms-1" style="font-size: 0.6rem; padding: 0.15rem 0.4rem;">New</span>
+                                            @elseif($activity['action'] === 'updated')
+                                                <span class="badge bg-primary ms-1" style="font-size: 0.6rem; padding: 0.15rem 0.4rem;">Edit</span>
+                                            @elseif($activity['action'] === 'deleted')
+                                                <span class="badge bg-danger ms-1" style="font-size: 0.6rem; padding: 0.15rem 0.4rem;">Del</span>
+                                            @elseif($activity['action'] === 'restored')
+                                                <span class="badge bg-info ms-1" style="font-size: 0.6rem; padding: 0.15rem 0.4rem;">Restore</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <small class="fw-semibold text-dark" style="font-size: 0.75rem;">{{ $activity['subtitle'] }}</small>
+                                        </td>
+                                        <td class="text-end pe-3">
+                                            <small class="text-muted" style="font-size: 0.7rem;">{{ $activity['timestamp']->diffForHumans() }}</small>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">
+                                            <i class="bi bi-inbox" style="font-size: 2rem; opacity: 0.3;"></i>
+                                            <p class="text-muted mt-2 mb-0 small">No recent activities found</p>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
                 <div class="card-footer bg-light border-0 py-2">
@@ -463,6 +498,14 @@
 
         canvas {
             max-height: 100% !important;
+        }
+
+        .activity-row-dashboard {
+            transition: all 0.2s ease;
+        }
+
+        .activity-row-dashboard:hover {
+            background-color: #f8f9fa;
         }
     </style>
 

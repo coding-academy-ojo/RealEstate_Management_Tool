@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
+use App\Traits\LogsActivity;
 
 class Image extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, LogsActivity;
 
     protected $fillable = [
         'imageable_type',
@@ -74,5 +75,14 @@ class Image extends Model
                 }
             }
         });
+    }
+
+    /**
+     * Get the name to use in activity descriptions
+     */
+    public function getActivityName(): string
+    {
+        // For images, just return "Image" or the title if available
+        return $this->title ?: 'Image';
     }
 }
