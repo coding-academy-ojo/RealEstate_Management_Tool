@@ -12,7 +12,7 @@ class WaterReadingController extends Controller
 {
   public function __construct()
   {
-    $this->middleware('privilege:water');
+    $this->middleware('privilege:water')->except(['index']);
   }
 
   public function index(Request $request)

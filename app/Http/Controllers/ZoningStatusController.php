@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 
 class ZoningStatusController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('privilege:sites_lands_buildings');
+    }
+
     /**
      * Store a newly created zoning status
      */

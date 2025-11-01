@@ -12,6 +12,12 @@ use Illuminate\Support\Str;
 
 class ImageController extends Controller
 {
+    public function __construct()
+    {
+        // View-only access for showing images, all other operations require specific privileges
+        $this->middleware('privilege:sites_lands_buildings')->only(['upload', 'update', 'setPrimary', 'destroy', 'reorder']);
+    }
+
     /**
      * Upload images for a model.
      */

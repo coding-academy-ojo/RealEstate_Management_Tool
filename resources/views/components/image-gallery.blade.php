@@ -458,7 +458,7 @@
             });
     }
 
-        // Image Preview on Upload
+    // Image Preview on Upload & Delete Confirmation Handler
     document.addEventListener('DOMContentLoaded', function() {
         const confirmDeleteBtn = document.getElementById('confirmDeleteImageButton');
         if (confirmDeleteBtn) {
@@ -489,6 +489,7 @@
             });
         }
 
+        // Image preview on file selection
         document.querySelectorAll('input[type="file"][name="images[]"]').forEach(input => {
             input.addEventListener('change', function(e) {
                 const container = this.closest('.modal-body').querySelector(
@@ -561,29 +562,4 @@
     function cancelReorder(type, entityId) {
         location.reload();
     }
-
-    // Image Preview on Upload
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('input[type="file"][name="images[]"]').forEach(input => {
-            input.addEventListener('change', function(e) {
-                const container = this.closest('.modal-body').querySelector(
-                    '[id^="imagePreviewContainer"]');
-                container.innerHTML = '';
-
-                Array.from(this.files).forEach(file => {
-                    if (file.type.startsWith('image/')) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const div = document.createElement('div');
-                            div.className = 'position-relative';
-                            div.innerHTML =
-                                `<img src="${e.target.result}" class="img-thumbnail" style="width: 100%; height: 120px; object-fit: cover;">`;
-                            container.appendChild(div);
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
-            });
-        });
-    });
 </script>
