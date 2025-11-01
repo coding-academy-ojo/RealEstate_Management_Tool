@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -111,5 +112,60 @@ class ElectricityService extends Model
             'deactivation_reason' => null,
             'deactivation_date' => null,
         ]);
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeByStatus(Builder $query, ?string $status): Builder
+    {
+        if (!$status || $status === 'all') {
+            return $query;
+        }
+
+        if ($status === 'inactive') {
+            return $query->where('is_active', false);
+        }
+
+        return $query->where('is_active', true);
+    }
+
+    public function scopeByCompany(Builder $query, $companyId): Builder
+    {
+        if (!$companyId) {
+            return $query;
+        }
+
+        return $query->where('electricity_company_id', $companyId);
+    }
+
+    public function scopeByGovernorate(Builder $query, ?string $governorate): Builder
+    {
+        if (!$governorate) {
+            return $query;
+        }
+
+        return $query->whereHas('building.site', function (Builder $builder) use ($governorate): void {
+            $builder->where('governorate', $governorate);
+        });
+    }
+
+    public function scopeWithSolar(Builder $query, $flag): Builder
+    {
+        if ($flag === null || $flag === '' || $flag === 'all') {
+            return $query;
+        }
+
+        if (in_array($flag, ['1', 1, true, 'true', 'yes', 'with'], true)) {
+            return $query->where('has_solar_power', true);
+        }
+
+        if (in_array($flag, ['0', 0, false, 'false', 'no', 'without'], true)) {
+            return $query->where('has_solar_power', false);
+        }
+
+        return $query;
     }
 }

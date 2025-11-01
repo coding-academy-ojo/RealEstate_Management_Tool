@@ -1,9 +1,12 @@
 <?php
 
+use App\Http\Controllers\ElectricityBillController;
+use App\Http\Controllers\ElectricityCompanyController;
+use App\Http\Controllers\ElectricityOverviewController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WaterCompanyController;
-use App\Http\Controllers\WaterServiceController;
 use App\Http\Controllers\WaterOverviewController;
+use App\Http\Controllers\WaterServiceController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
@@ -436,9 +439,27 @@ Route::middleware('auth')->group(function () {
         ->middleware('privilege:electricity')
         ->name('electricity-services.readings.destroy');
 
-    Route::post('electricity-companies', [\App\Http\Controllers\ElectricityCompanyController::class, 'store'])
+    Route::get('electricity/overview', [ElectricityOverviewController::class, 'index'])
         ->middleware('privilege:electricity')
-        ->name('electricity-companies.store');
+        ->name('electricity.overview');
+
+    Route::get('electricity/bills', [ElectricityBillController::class, 'index'])
+        ->middleware('privilege:electricity')
+        ->name('electricity.bills.index');
+
+    Route::get('electricity/index', [\App\Http\Controllers\ElectricityServiceController::class, 'index'])
+        ->name('electricity.services.index');
+
+    Route::prefix('electricity/companies')
+        ->name('electricity.companies.')
+        ->middleware('privilege:electricity')
+        ->group(function () {
+            Route::get('/', [ElectricityCompanyController::class, 'index'])->name('index');
+            Route::post('/', [ElectricityCompanyController::class, 'store'])->name('store');
+            Route::put('{electricityCompany}', [ElectricityCompanyController::class, 'update'])->name('update');
+            Route::delete('{electricityCompany}', [ElectricityCompanyController::class, 'destroy'])->name('destroy');
+            Route::post('{company}/restore', [ElectricityCompanyController::class, 'restore'])->name('restore');
+        });
 
     Route::post('electricity-services/{electricityService}/disconnections', [\App\Http\Controllers\ElectricServiceDisconnectionController::class, 'store'])
         ->middleware('privilege:electricity')

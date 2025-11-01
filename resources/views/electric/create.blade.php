@@ -9,6 +9,32 @@
 
 @section('styles')
 <style>
+    #content {
+        background-color: #f8f9fa !important;
+        background-image: none !important;
+        position: relative;
+    }
+
+    #content::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url("{{ asset('assets/images/energie.png') }}") !important;
+        background-repeat: repeat !important;
+        background-size: 22px 22px !important;
+        opacity: 0.18;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    #content>* {
+        position: relative;
+        z-index: 1;
+    }
+
     .d-flex .choices {
         flex-grow: 1;
     }

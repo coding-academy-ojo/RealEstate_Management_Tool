@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -52,6 +53,49 @@ class ElectricReading extends Model
     public function electricityService(): BelongsTo
     {
         return $this->belongsTo(ElectricityService::class, 'electric_service_id');
+    }
+
+    public function scopeCalculatedBetween(Builder $query, ?string $from, ?string $to): Builder
+    {
+        if ($from) {
+            $query->whereDate('reading_date', '>=', $from);
+        }
+
+        if ($to) {
+            $query->whereDate('reading_date', '<=', $to);
+        }
+
+        return $query;
+    }
+
+    public function scopeWithPaidStatus(Builder $query, ?string $status): Builder
+    {
+        if (!$status || $status === 'all') {
+            return $query;
+        }
+
+        if ($status === 'paid') {
+            return $query->where('is_paid', true);
+        }
+
+        if ($status === 'unpaid') {
+            return $query->where('is_paid', false);
+        }
+
+        return $query;
+    }
+
+    public function scopeWithAmountBetween(Builder $query, ?float $min, ?float $max): Builder
+    {
+        if ($min !== null && $min !== '') {
+            $query->where('bill_amount', '>=', $min);
+        }
+
+        if ($max !== null && $max !== '') {
+            $query->where('bill_amount', '<=', $max);
+        }
+
+        return $query;
     }
 
     private function refreshServiceConsumption(): void

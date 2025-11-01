@@ -7,6 +7,7 @@ use App\Models\ElectricReading;
 use App\Models\ElectricServiceDisconnection;
 use App\Models\ElectricityCompany;
 use App\Models\ElectricityService;
+use App\Models\Site;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -24,12 +25,15 @@ class ElectricityServiceController extends Controller
     public function index(Request $request)
     {
         $filters = [
-            'search' => $request->input('search'),
+            'search' => trim((string) $request->input('search')),
             'company_id' => $request->input('company'),
+            'governorate' => $request->input('governorate'),
+            'status' => $request->input('status', 'all'),
+            'solar' => $request->input('solar', 'all'),
         ];
 
         $sort = $request->input('sort', 'number');
-        $direction = $request->input('direction', 'asc');
+        $direction = $request->input('direction', 'desc');
 
         $query = ElectricityService::with(['building.site', 'latestReading', 'electricityCompany'])
             ->withCount([
@@ -50,9 +54,11 @@ class ElectricityServiceController extends Controller
             });
         }
 
-        if ($filters['company_id']) {
-            $query->where('electricity_company_id', $filters['company_id']);
-        }
+        $query
+            ->byCompany($filters['company_id'])
+            ->byGovernorate($filters['governorate'])
+            ->byStatus($filters['status'])
+            ->withSolar($filters['solar']);
 
         switch ($sort) {
             case 'company':
@@ -74,8 +80,7 @@ class ElectricityServiceController extends Controller
                 break;
             case 'number':
             default:
-                $actualDirection = $direction === 'asc' ? 'desc' : 'asc';
-                $query->orderBy('id', $actualDirection);
+                $query->orderBy('id', $direction === 'asc' ? 'asc' : 'desc');
                 break;
         }
 
@@ -91,9 +96,39 @@ class ElectricityServiceController extends Controller
                 return [$company->id => $label];
             });
 
+        $governorates = Site::select('governorate')
+            ->distinct()
+            ->orderBy('governorate')
+            ->get()
+            ->mapWithKeys(function (Site $site) {
+                $code = $site->governorate;
+                $label = $site->governorate_name_en ?? $code;
+                return [$code => $label];
+            });
+
         $electricityServices = $query->paginate(15)->withQueryString();
 
-        return view('electric.index', compact('electricityServices', 'companies', 'filters', 'sort', 'direction'));
+        $summary = [
+            'total' => ElectricityService::count(),
+            'active' => ElectricityService::where('is_active', true)->count(),
+            'inactive' => ElectricityService::where('is_active', false)->count(),
+            'trashed' => ElectricityService::onlyTrashed()->count(),
+            'solar' => ElectricityService::where('has_solar_power', true)->count(),
+            'outstanding' => (float) ElectricReading::where('is_paid', false)->sum('bill_amount'),
+            'consumption_year' => (float) ElectricReading::whereBetween('reading_date', [now()->startOfYear(), now()->endOfYear()])->sum('consumption_value'),
+        ];
+
+        $summary['active_ratio'] = $summary['total'] > 0 ? round(($summary['active'] / $summary['total']) * 100, 1) : 0.0;
+
+        return view('electric.index', [
+            'electricityServices' => $electricityServices,
+            'companies' => $companies,
+            'governorates' => $governorates,
+            'filters' => $filters,
+            'sort' => $sort,
+            'direction' => $direction,
+            'summary' => $summary,
+        ]);
     }
 
     /**

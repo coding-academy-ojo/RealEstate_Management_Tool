@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             BuildingSeeder::class,          // Adds additional buildings to sites
             WaterServiceSeeder::class,      // Adds water services to buildings
             ElectricityServiceSeeder::class, // Adds electricity services to buildings
+            ElectricReadingSeeder::class,   // Adds electricity readings (after services)
             RenovationSeeder::class,      // Adds renovations to buildings
         ]);
 
@@ -49,6 +50,7 @@ class DatabaseSeeder extends Seeder
                 ['Buildings', \App\Models\Building::count()],
                 ['Water Services', \App\Models\WaterService::count()],
                 ['Electricity Services', \App\Models\ElectricityService::count()],
+                ['Electric Readings', \App\Models\ElectricReading::count()],
                 ['Renovations', \App\Models\Renovation::count()],
             ]
         );

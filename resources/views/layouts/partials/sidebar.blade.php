@@ -262,6 +262,12 @@
                 request()->routeIs('water-services.*') ||
                 request()->routeIs('water.bills.index') ||
                 request()->routeIs('water.companies.*');
+
+            $electricitySectionActive = request()->routeIs('electricity.overview') ||
+                request()->routeIs('electricity.services.index') ||
+                request()->routeIs('electricity-services.*') ||
+                request()->routeIs('electricity.bills.index') ||
+                request()->routeIs('electricity.companies.*');
         @endphp
 
         <div class="sidebar-dropdown {{ $waterSectionActive ? 'open' : '' }}">
@@ -299,12 +305,40 @@
             </div>
         </div>
 
-        <a href="{{ route('electricity-services.index') }}"
-            class="sidebar-link {{ request()->routeIs('electricity-services.*') ? 'active' : '' }}"
-            data-tooltip="Electricity Services">
-            <i class="bi bi-lightning-charge"></i>
-            <span>Electricity</span>
-        </a>
+        <div class="sidebar-dropdown {{ $electricitySectionActive ? 'open' : '' }}">
+            <button type="button"
+                class="sidebar-link dropdown-toggle {{ $electricitySectionActive ? 'active' : '' }}"
+                data-sidebar-toggle="electricity"
+                data-tooltip="Electricity Services"
+                aria-expanded="{{ $electricitySectionActive ? 'true' : 'false' }}">
+                <i class="bi bi-lightning-charge"></i>
+                <span>Electricity Services</span>
+                <i class="bi bi-chevron-down chevron"></i>
+            </button>
+
+            <div class="sidebar-submenu">
+                <a href="{{ route('electricity.overview') }}"
+                    class="sidebar-sublink {{ request()->routeIs('electricity.overview') ? 'active' : '' }}">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Overview</span>
+                </a>
+                <a href="{{ route('electricity.services.index') }}"
+                    class="sidebar-sublink {{ request()->routeIs('electricity.services.index') || request()->routeIs('electricity-services.*') ? 'active' : '' }}">
+                    <i class="bi bi-list-ul"></i>
+                    <span>Services</span>
+                </a>
+                <a href="{{ route('electricity.bills.index') }}"
+                    class="sidebar-sublink {{ request()->routeIs('electricity.bills.index') ? 'active' : '' }}">
+                    <i class="bi bi-receipt"></i>
+                    <span>Electricity Bills</span>
+                </a>
+                <a href="{{ route('electricity.companies.index') }}"
+                    class="sidebar-sublink {{ request()->routeIs('electricity.companies.*') ? 'active' : '' }}">
+                    <i class="bi bi-building-gear"></i>
+                    <span>Electricity Companies</span>
+                </a>
+            </div>
+        </div>
 
         <a href="{{ route('renovations.index') }}"
             class="sidebar-link {{ request()->routeIs('renovations.*') ? 'active' : '' }}"
@@ -338,7 +372,7 @@
 </aside>
 
 <!-- Floating dropdown menu for minimized sidebar -->
-<div id="floating-water-menu" style="display: none; position: fixed; background: #1c1c1c; min-width: 240px; border-radius: 8px; box-shadow: 4px 4px 20px rgba(0, 0, 0, 0.5); z-index: 9999; padding: 0.5rem 0; border-left: 3px solid #ff7900;">
+<div id="floating-water-menu" class="floating-sidebar-menu" style="display: none; position: fixed; background: #1c1c1c; min-width: 240px; border-radius: 8px; box-shadow: 4px 4px 20px rgba(0, 0, 0, 0.5); z-index: 9999; padding: 0.5rem 0; border-left: 3px solid #ff7900;">
     <a href="{{ route('water.overview') }}"
         class="sidebar-sublink {{ request()->routeIs('water.overview') ? 'active' : '' }}"
         style="display: flex; align-items: center; padding: 12px 20px; color: #f1f1f1; text-decoration: none; border-left: 3px solid transparent; transition: all 0.2s ease;">
@@ -365,68 +399,105 @@
     </a>
 </div>
 
+<div id="floating-electricity-menu" class="floating-sidebar-menu" style="display: none; position: fixed; background: #1c1c1c; min-width: 240px; border-radius: 8px; box-shadow: 4px 4px 20px rgba(0, 0, 0, 0.5); z-index: 9999; padding: 0.5rem 0; border-left: 3px solid #ff7900;">
+    <a href="{{ route('electricity.overview') }}"
+        class="sidebar-sublink {{ request()->routeIs('electricity.overview') ? 'active' : '' }}"
+        style="display: flex; align-items: center; padding: 12px 20px; color: #f1f1f1; text-decoration: none; border-left: 3px solid transparent; transition: all 0.2s ease;">
+        <i class="bi bi-speedometer2" style="margin-right: 12px; font-size: 1.1rem; width: 24px; text-align: center;"></i>
+        <span>Overview</span>
+    </a>
+    <a href="{{ route('electricity.services.index') }}"
+        class="sidebar-sublink {{ request()->routeIs('electricity.services.index') || request()->routeIs('electricity-services.*') ? 'active' : '' }}"
+        style="display: flex; align-items: center; padding: 12px 20px; color: #f1f1f1; text-decoration: none; border-left: 3px solid transparent; transition: all 0.2s ease;">
+        <i class="bi bi-list-ul" style="margin-right: 12px; font-size: 1.1rem; width: 24px; text-align: center;"></i>
+        <span>Services</span>
+    </a>
+    <a href="{{ route('electricity.bills.index') }}"
+        class="sidebar-sublink {{ request()->routeIs('electricity.bills.index') ? 'active' : '' }}"
+        style="display: flex; align-items: center; padding: 12px 20px; color: #f1f1f1; text-decoration: none; border-left: 3px solid transparent; transition: all 0.2s ease;">
+        <i class="bi bi-receipt" style="margin-right: 12px; font-size: 1.1rem; width: 24px; text-align: center;"></i>
+        <span>Electricity Bills</span>
+    </a>
+    <a href="{{ route('electricity.companies.index') }}"
+        class="sidebar-sublink {{ request()->routeIs('electricity.companies.*') ? 'active' : '' }}"
+        style="display: flex; align-items: center; padding: 12px 20px; color: #f1f1f1; text-decoration: none; border-left: 3px solid transparent; transition: all 0.2s ease;">
+        <i class="bi bi-building-gear" style="margin-right: 12px; font-size: 1.1rem; width: 24px; text-align: center;"></i>
+        <span>Electricity Companies</span>
+    </a>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const sidebar = document.getElementById('sidebar');
         const dropdownButtons = document.querySelectorAll('#sidebar [data-sidebar-toggle]');
-        const floatingMenu = document.getElementById('floating-water-menu');
+        const floatingMenus = Array.from(document.querySelectorAll('.floating-sidebar-menu'));
 
-        console.log('Dropdown script loaded, found buttons:', dropdownButtons.length);
+        function hideFloatingMenus(exceptMenu) {
+            floatingMenus.forEach(function(menu) {
+                if (!exceptMenu || menu !== exceptMenu) {
+                    menu.style.display = 'none';
+                }
+            });
+        }
 
         dropdownButtons.forEach(function(button) {
             const container = button.closest('.sidebar-dropdown');
             if (!container) {
-                console.log('No container found for button');
                 return;
             }
 
             const submenu = container.querySelector('.sidebar-submenu');
             if (!submenu) {
-                console.log('No submenu found');
                 return;
             }
 
-            console.log('Setting up dropdown for:', button.getAttribute('data-sidebar-toggle'));
+            const toggleKey = button.getAttribute('data-sidebar-toggle');
+            const floatingMenu = toggleKey ? document.getElementById(`floating-${toggleKey}-menu`) : null;
 
-            // Click handler
             button.addEventListener('click', function(event) {
                 event.preventDefault();
                 event.stopPropagation();
 
                 const isMinimized = sidebar.classList.contains('minimized');
-                console.log('Dropdown clicked! Minimized:', isMinimized);
 
                 if (isMinimized && floatingMenu) {
-                    // Use floating menu for minimized mode
                     const rect = button.getBoundingClientRect();
                     const isVisible = floatingMenu.style.display === 'block';
 
-                    console.log('Floating menu visible:', isVisible);
-
                     if (isVisible) {
                         floatingMenu.style.display = 'none';
-                        console.log('Hiding floating menu');
                     } else {
+                        hideFloatingMenus(floatingMenu);
                         floatingMenu.style.top = rect.top + 'px';
                         floatingMenu.style.left = '70px';
                         floatingMenu.style.display = 'block';
-                        console.log('Showing floating menu at top:', rect.top, 'left: 70px');
                     }
                 } else {
-                    // In normal mode, toggle dropdown below
                     const isOpen = container.classList.toggle('open');
                     button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-                    console.log('Normal mode toggle, open:', isOpen);
+
+                    if (isOpen) {
+                        dropdownButtons.forEach(function(otherButton) {
+                            if (otherButton === button) {
+                                return;
+                            }
+                            const otherContainer = otherButton.closest('.sidebar-dropdown');
+                            if (otherContainer) {
+                                otherContainer.classList.remove('open');
+                                otherButton.setAttribute('aria-expanded', 'false');
+                            }
+                        });
+                    }
                 }
             });
 
-            // Close floating menu when clicking outside
             document.addEventListener('click', function(e) {
-                if (floatingMenu && floatingMenu.style.display === 'block') {
-                    if (!container.contains(e.target) && !floatingMenu.contains(e.target)) {
-                        floatingMenu.style.display = 'none';
-                        console.log('Closed floating menu - clicked outside');
-                    }
+                if (!floatingMenu || floatingMenu.style.display !== 'block') {
+                    return;
+                }
+
+                if (!container.contains(e.target) && !floatingMenu.contains(e.target)) {
+                    floatingMenu.style.display = 'none';
                 }
             });
         });
