@@ -58,6 +58,11 @@
             'with' => 'Solar services',
             'without' => 'Non-solar only',
         ];
+        $disconnectionOptions = [
+            'all' => 'All services',
+            'with' => 'With open disconnections',
+            'without' => 'No disconnections',
+        ];
 
         $activeSort = $sort ?? 'number';
         $activeDirection = $direction ?? 'desc';
@@ -152,6 +157,14 @@
                     </select>
                 </div>
                 <div class="col-12 col-sm-6 col-lg-2">
+                    <label for="disconnections" class="form-label fw-semibold">Disconnections</label>
+                    <select class="form-select" id="disconnections" name="disconnections">
+                        @foreach ($disconnectionOptions as $value => $label)
+                            <option value="{{ $value }}" @selected(($filters['disconnections'] ?? 'all') === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-2">
                     <label for="governorate" class="form-label fw-semibold">Governorate</label>
                     <select class="form-select" id="governorate" name="governorate">
                         <option value="">All</option>
@@ -230,7 +243,6 @@
                                 </a>
                             </th>
                             <th>Latest Reading</th>
-                            <th class="text-center">Disconnections</th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
@@ -261,9 +273,6 @@
                                         <span class="badge {{ $service->has_solar_power ? 'bg-warning text-dark' : 'bg-light text-muted border' }}">
                                             <i class="bi bi-sun me-1"></i>{{ $service->has_solar_power ? 'Solar' : 'Grid only' }}
                                         </span>
-                                        <span class="badge {{ $service->is_active ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }}">
-                                            {{ $service->is_active ? 'Active' : 'Inactive' }}
-                                        </span>
                                     </div>
                                 </td>
                                 <td>
@@ -279,15 +288,6 @@
                                         <div class="text-muted small">Bill: {{ $latestReading->bill_amount ? number_format((float) $latestReading->bill_amount, 2) . ' JOD' : '—' }}</div>
                                     @else
                                         <span class="text-muted">No readings</span>
-                                    @endif
-                                </td>
-                                <td class="text-center">
-                                    @if ($service->open_disconnections_count > 0)
-                                        <span class="badge bg-danger">
-                                            {{ $service->open_disconnections_count }} open
-                                        </span>
-                                    @else
-                                        <span class="badge bg-success-subtle text-success">None</span>
                                     @endif
                                 </td>
                                 <td class="text-end">
@@ -309,7 +309,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-5">
+                                <td colspan="6" class="text-center text-muted py-5">
                                     <i class="bi bi-lightning-charge" style="font-size: 3rem; opacity: 0.3;"></i>
                                     <p class="mt-3 mb-1 fw-semibold">No electricity services found</p>
                                     <small>Adjust filters or add a new service to get started.</small>

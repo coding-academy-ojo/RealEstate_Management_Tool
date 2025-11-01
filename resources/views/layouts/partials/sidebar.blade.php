@@ -233,6 +233,10 @@
             <i class="bi bi-clock-history"></i>
             <span>Activities</span>
         </a>
+    </div>
+
+    <div class="sidebar-section">
+        <h6 class="sidebar-title">PROPERTIES</h6>
 
         <a href="{{ route('sites.index') }}" class="sidebar-link {{ request()->routeIs('sites.*') ? 'active' : '' }}"
             data-tooltip="Sites">
@@ -285,12 +289,12 @@
                 <a href="{{ route('water.overview') }}"
                     class="sidebar-sublink {{ request()->routeIs('water.overview') ? 'active' : '' }}">
                     <i class="bi bi-graph-up"></i>
-                    <span>Overview</span>
+                    <span>Water Overview</span>
                 </a>
                 <a href="{{ route('water.services.index') }}"
                     class="sidebar-sublink {{ request()->routeIs('water.services.index') || request()->routeIs('water-services.*') ? 'active' : '' }}">
                     <i class="bi bi-list-ul"></i>
-                    <span>Services</span>
+                    <span>Water Services</span>
                 </a>
                 <a href="{{ route('water.bills.index') }}"
                     class="sidebar-sublink {{ request()->routeIs('water.bills.index') ? 'active' : '' }}">
@@ -320,12 +324,12 @@
                 <a href="{{ route('electricity.overview') }}"
                     class="sidebar-sublink {{ request()->routeIs('electricity.overview') ? 'active' : '' }}">
                     <i class="bi bi-speedometer2"></i>
-                    <span>Overview</span>
+                    <span>Electricity Overview</span>
                 </a>
                 <a href="{{ route('electricity.services.index') }}"
                     class="sidebar-sublink {{ request()->routeIs('electricity.services.index') || request()->routeIs('electricity-services.*') ? 'active' : '' }}">
                     <i class="bi bi-list-ul"></i>
-                    <span>Services</span>
+                    <span>Electricity Services</span>
                 </a>
                 <a href="{{ route('electricity.bills.index') }}"
                     class="sidebar-sublink {{ request()->routeIs('electricity.bills.index') ? 'active' : '' }}">
@@ -377,13 +381,13 @@
         class="sidebar-sublink {{ request()->routeIs('water.overview') ? 'active' : '' }}"
         style="display: flex; align-items: center; padding: 12px 20px; color: #f1f1f1; text-decoration: none; border-left: 3px solid transparent; transition: all 0.2s ease;">
         <i class="bi bi-graph-up" style="margin-right: 12px; font-size: 1.1rem; width: 24px; text-align: center;"></i>
-        <span>Overview</span>
+        <span>Water Overview</span>
     </a>
     <a href="{{ route('water.services.index') }}"
         class="sidebar-sublink {{ request()->routeIs('water.services.index') || request()->routeIs('water-services.*') ? 'active' : '' }}"
         style="display: flex; align-items: center; padding: 12px 20px; color: #f1f1f1; text-decoration: none; border-left: 3px solid transparent; transition: all 0.2s ease;">
         <i class="bi bi-list-ul" style="margin-right: 12px; font-size: 1.1rem; width: 24px; text-align: center;"></i>
-        <span>Services</span>
+        <span>Water Services</span>
     </a>
     <a href="{{ route('water.bills.index') }}"
         class="sidebar-sublink {{ request()->routeIs('water.bills.index') ? 'active' : '' }}"
@@ -404,13 +408,13 @@
         class="sidebar-sublink {{ request()->routeIs('electricity.overview') ? 'active' : '' }}"
         style="display: flex; align-items: center; padding: 12px 20px; color: #f1f1f1; text-decoration: none; border-left: 3px solid transparent; transition: all 0.2s ease;">
         <i class="bi bi-speedometer2" style="margin-right: 12px; font-size: 1.1rem; width: 24px; text-align: center;"></i>
-        <span>Overview</span>
+        <span>Electricity Overview</span>
     </a>
     <a href="{{ route('electricity.services.index') }}"
         class="sidebar-sublink {{ request()->routeIs('electricity.services.index') || request()->routeIs('electricity-services.*') ? 'active' : '' }}"
         style="display: flex; align-items: center; padding: 12px 20px; color: #f1f1f1; text-decoration: none; border-left: 3px solid transparent; transition: all 0.2s ease;">
         <i class="bi bi-list-ul" style="margin-right: 12px; font-size: 1.1rem; width: 24px; text-align: center;"></i>
-        <span>Services</span>
+        <span>Electricity Services</span>
     </a>
     <a href="{{ route('electricity.bills.index') }}"
         class="sidebar-sublink {{ request()->routeIs('electricity.bills.index') ? 'active' : '' }}"
