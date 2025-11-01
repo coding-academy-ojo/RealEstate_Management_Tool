@@ -39,6 +39,16 @@ Route::get('/dashboard', function () {
         'total_water_services' => \App\Models\WaterService::count(),
         'total_electricity_services' => \App\Models\ElectricityService::count(),
 
+        // Water service stats
+        'total_water_readings' => \App\Models\WaterReading::count(),
+        'unpaid_water_bills' => \App\Models\WaterReading::where('is_paid', false)->whereNotNull('bill_amount')->count(),
+        'total_water_outstanding' => \App\Models\WaterReading::where('is_paid', false)->sum('bill_amount'),
+
+        // Electricity service stats
+        'total_electricity_readings' => \App\Models\ElectricReading::count(),
+        'unpaid_electricity_bills' => \App\Models\ElectricReading::where('is_paid', false)->whereNotNull('bill_amount')->count(),
+        'total_electricity_outstanding' => \App\Models\ElectricReading::where('is_paid', false)->sum('bill_amount'),
+
         // Buildings by governorate - converted to full English names
         'buildings_by_governorate' => \App\Models\Site::selectRaw('governorate, COUNT(DISTINCT buildings.id) as count')
             ->leftJoin('buildings', 'sites.id', '=', 'buildings.site_id')

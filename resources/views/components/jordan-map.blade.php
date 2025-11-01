@@ -302,7 +302,7 @@
             @endphp
 
             @foreach ($regionStats as $regionId => $stat)
-                <div class="region-stat-card mb-3">
+                <div class="region-stat-card mb-3" data-region-id="{{ $regionId }}" data-governorates="{{ implode(',', $regions[$regionId]['governorates']) }}">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <div class="d-flex align-items-center">
                             <div class="region-color-dot" style="background: {{ $stat['color'] }};"></div>
@@ -370,12 +370,32 @@
         padding: 12px;
         border: 1px solid #e9ecef;
         transition: all 0.3s ease;
+        cursor: pointer;
     }
 
     .region-stat-card:hover {
         box-shadow: 0 4px 12px rgba(255, 121, 0, 0.1);
         border-color: #ff7900;
         transform: translateY(-2px);
+    }
+
+    .governorate.region-highlight {
+        fill: url(#gradOrange) !important;
+        stroke: #ff7900 !important;
+        stroke-width: 3 !important;
+        filter: drop-shadow(0 4px 8px rgba(255, 121, 0, 0.4));
+        opacity: 1;
+        animation: pulse 0.6s ease-in-out;
+    }
+
+    .governorate.region-dimmed {
+        opacity: 0.3 !important;
+        filter: grayscale(0.5) brightness(1.2);
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.02); }
     }
 
     .region-color-dot {
@@ -829,6 +849,41 @@
                     gov.style.transform = 'scale(1)';
                 }, 100);
             }, index * 40);
+        });
+
+        // Region card hover effects
+        const regionCards = document.querySelectorAll('.region-stat-card');
+
+        regionCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                const governorateCodes = this.getAttribute('data-governorates').split(',');
+
+                // First, dim all governorates
+                governorates.forEach(gov => {
+                    gov.classList.add('region-dimmed');
+                });
+
+                // Then highlight only the governorates in this region
+                governorateCodes.forEach(code => {
+                    const govElement = document.querySelector(`.governorate[data-code="${code}"]`);
+                    if (govElement) {
+                        govElement.classList.remove('region-dimmed');
+                        govElement.classList.add('region-highlight');
+                        // Bring to front
+                        govElement.parentNode.appendChild(govElement);
+                    }
+                });
+            });
+
+            card.addEventListener('mouseleave', function() {
+                // Remove all highlights and dims
+                document.querySelectorAll('.governorate.region-highlight').forEach(gov => {
+                    gov.classList.remove('region-highlight');
+                });
+                document.querySelectorAll('.governorate.region-dimmed').forEach(gov => {
+                    gov.classList.remove('region-dimmed');
+                });
+            });
         });
     });
 </script>

@@ -142,10 +142,10 @@
         </div>
     </div>
 
-    <!-- Services and Activity Section -->
+    <!-- Services Overview Section - Full Width -->
     <div class="row mb-4">
-        <div class="col-xl-4 mb-4">
-            <div class="card border-0 shadow-lg h-100">
+        <div class="col-12">
+            <div class="card border-0 shadow-lg">
                 <div class="card-header bg-white border-bottom py-3">
                     <h5 class="mb-0 fw-bold text-dark">
                         <i class="bi bi-gear-wide-connected me-2 text-orange"></i>
@@ -153,114 +153,124 @@
                     </h5>
                 </div>
                 <div class="card-body p-3">
-                    <!-- Water Services -->
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-primary bg-opacity-10 rounded-2 p-2 me-2">
-                                    <i class="bi bi-droplet-fill text-primary" style="font-size: 1rem;"></i>
-                                </div>
-                                <div>
-                                    <h6 class="mb-0 fw-semibold" style="font-size: 0.875rem;">Water Services</h6>
-                                    <small class="text-muted" style="font-size: 0.7rem;">Active connections</small>
-                                </div>
-                            </div>
-                            <div class="text-end">
-                                <div class="fw-bold text-primary" style="font-size: 1.25rem;">
-                                    {{ $stats['total_water_services'] }}</div>
-                            </div>
-                        </div>
-                        <div class="progress" style="height: 6px; border-radius: 3px;">
-                            <div class="progress-bar bg-primary" role="progressbar"
-                                style="width: {{ $stats['total_water_services'] > 0 ? min(($stats['total_water_services'] / max($stats['total_water_services'], $stats['total_electricity_services'])) * 100, 100) : 0 }}%;"
-                                aria-valuenow="{{ $stats['total_water_services'] }}" aria-valuemin="0"
-                                aria-valuemax="100">
-                            </div>
-                        </div>
-                    </div>
+                    <div class="row">
+                        <!-- Water Services Section -->
+                        <div class="col-lg-4 mb-3 mb-lg-0">
+                            <div class="card h-100 border-0 shadow-lg" style="background-color: #1c1c1c !important;">
+                                <div class="card-body p-4 text-white">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                                            <i class="bi bi-droplet-fill" style="font-size: 1.5rem; color: #0d6efd;"></i>
+                                        </div>
+                                        <h6 class="mb-0 text-uppercase fw-bold" style="color: #0d6efd;">Water Services</h6>
+                                    </div>
+                                    <h2 class="mb-1 text-white fw-bold">{{ $stats['total_water_services'] }}</h2>
+                                    <small class="text-white-50 d-block mb-3" style="font-size: 0.75rem;">Active connections</small>
 
-                    <!-- Electricity Services -->
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-warning bg-opacity-10 rounded-2 p-2 me-2">
-                                    <i class="bi bi-lightning-charge-fill text-warning" style="font-size: 1rem;"></i>
+                                    <div class="border-top border-secondary pt-3 mt-3">
+                                        <div class="row text-center">
+                                            <div class="col-4 border-end border-secondary">
+                                                <div class="text-white-50 small" style="font-size: 0.7rem;">Readings</div>
+                                                <div class="fw-bold text-white" style="font-size: 0.9rem;">{{ number_format($stats['total_water_readings']) }}</div>
+                                            </div>
+                                            <div class="col-4 border-end border-secondary">
+                                                <div class="text-white-50 small" style="font-size: 0.7rem;">Unpaid</div>
+                                                <div class="fw-bold text-warning" style="font-size: 0.9rem;">{{ number_format($stats['unpaid_water_bills']) }}</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-white-50 small" style="font-size: 0.7rem;">Outstanding</div>
+                                                <div class="fw-bold text-danger" style="font-size: 0.85rem;">{{ number_format($stats['total_water_outstanding'], 0) }} <small class="text-white-50" style="font-size: 0.6rem;">JOD</small></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h6 class="mb-0 fw-semibold" style="font-size: 0.875rem;">Electricity Services</h6>
-                                    <small class="text-muted" style="font-size: 0.7rem;">Power connections</small>
+                                <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3">
+                                    <a href="{{ route('water.overview') }}" class="btn btn-sm text-decoration-none w-100"
+                                        style="background-color: #0d6efd; color: white; border: none;">
+                                        <i class="bi bi-arrow-right me-1"></i> View Details
+                                    </a>
                                 </div>
-                            </div>
-                            <div class="text-end">
-                                <div class="fw-bold text-warning" style="font-size: 1.25rem;">
-                                    {{ $stats['total_electricity_services'] }}</div>
                             </div>
                         </div>
-                        <div class="progress" style="height: 6px; border-radius: 3px;">
-                            <div class="progress-bar bg-warning" role="progressbar"
-                                style="width: {{ $stats['total_electricity_services'] > 0 ? min(($stats['total_electricity_services'] / max($stats['total_water_services'], $stats['total_electricity_services'])) * 100, 100) : 0 }}%;"
-                                aria-valuenow="{{ $stats['total_electricity_services'] }}" aria-valuemin="0"
-                                aria-valuemax="100">
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Renovations -->
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-danger bg-opacity-10 rounded-2 p-2 me-2">
-                                    <i class="bi bi-lightbulb-fill text-danger" style="font-size: 1rem;"></i>
-                                </div>
-                                <div>
-                                    <h6 class="mb-0 fw-semibold" style="font-size: 0.875rem;">Renovations</h6>
-                                    <small class="text-muted" style="font-size: 0.7rem;">Total projects</small>
-                                </div>
-                            </div>
-                            <div class="text-end">
-                                <div class="fw-bold text-danger" style="font-size: 1.25rem;">
-                                    {{ $stats['total_innovations'] }}</div>
-                            </div>
-                        </div>
-                        <div class="progress" style="height: 6px; border-radius: 3px;">
-                            <div class="progress-bar bg-danger" role="progressbar"
-                                style="width: {{ $stats['total_innovations'] > 0 ? 100 : 0 }}%;"
-                                aria-valuenow="{{ $stats['total_innovations'] }}" aria-valuemin="0" aria-valuemax="100">
-                            </div>
-                        </div>
-                    </div>
+                        <!-- Electricity Services Section -->
+                        <div class="col-lg-4 mb-3 mb-lg-0">
+                            <div class="card h-100 border-0 shadow-lg" style="background-color: #1c1c1c !important;">
+                                <div class="card-body p-4 text-white">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                                            <i class="bi bi-lightning-charge-fill" style="font-size: 1.5rem; color: #ffc107;"></i>
+                                        </div>
+                                        <h6 class="mb-0 text-uppercase fw-bold" style="color: #ffc107;">Electricity Services</h6>
+                                    </div>
+                                    <h2 class="mb-1 text-white fw-bold">{{ $stats['total_electricity_services'] }}</h2>
+                                    <small class="text-white-50 d-block mb-3" style="font-size: 0.75rem;">Power connections</small>
 
-                    <!-- Total Investment -->
-                    <div class="mt-4 pt-3 border-top">
-                        <div class="text-center p-3 rounded-3"
-                            style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
-                            <div class="mb-1">
-                                <i class="bi bi-cash-stack text-success" style="font-size: 1.75rem;"></i>
+                                    <div class="border-top border-secondary pt-3 mt-3">
+                                        <div class="row text-center">
+                                            <div class="col-4 border-end border-secondary">
+                                                <div class="text-white-50 small" style="font-size: 0.7rem;">Readings</div>
+                                                <div class="fw-bold text-white" style="font-size: 0.9rem;">{{ number_format($stats['total_electricity_readings']) }}</div>
+                                            </div>
+                                            <div class="col-4 border-end border-secondary">
+                                                <div class="text-white-50 small" style="font-size: 0.7rem;">Unpaid</div>
+                                                <div class="fw-bold text-warning" style="font-size: 0.9rem;">{{ number_format($stats['unpaid_electricity_bills']) }}</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-white-50 small" style="font-size: 0.7rem;">Outstanding</div>
+                                                <div class="fw-bold text-danger" style="font-size: 0.85rem;">{{ number_format($stats['total_electricity_outstanding'], 0) }} <small class="text-white-50" style="font-size: 0.6rem;">JOD</small></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3">
+                                    <a href="{{ route('electricity.overview') }}" class="btn btn-sm text-decoration-none w-100"
+                                        style="background-color: #ffc107; color: #000; border: none;">
+                                        <i class="bi bi-arrow-right me-1"></i> View Details
+                                    </a>
+                                </div>
                             </div>
-                            <h4 class="mb-0 fw-bold text-success">{{ number_format($stats['total_innovation_cost'], 0) }}
-                                <small class="text-muted">JOD</small></h4>
-                            <small class="text-muted fw-semibold">Total Renovation Investment</small>
                         </div>
-                    </div>
 
-                    <!-- Quick Actions -->
-                    <div class="mt-3 d-grid gap-2">
-                        <a href="{{ route('water.services.index') }}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-droplet me-1"></i>Manage Water
-                        </a>
-                        <a href="{{ route('electricity-services.index') }}" class="btn btn-sm btn-warning">
-                            <i class="bi bi-lightning-charge me-1"></i>Manage Electricity
-                        </a>
-                        <a href="{{ route('renovations.index') }}" class="btn btn-sm btn-danger">
-                            <i class="bi bi-lightbulb me-1"></i>View Renovations
-                        </a>
+                        <!-- Renovations Section -->
+                        <div class="col-lg-4">
+                            <div class="card h-100 border-0 shadow-lg" style="background-color: #1c1c1c !important;">
+                                <div class="card-body p-4 text-white">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                                            <i class="bi bi-lightbulb-fill" style="font-size: 1.5rem; color: #ff7900;"></i>
+                                        </div>
+                                        <h6 class="mb-0 text-uppercase fw-bold" style="color: #ff7900;">Renovations</h6>
+                                    </div>
+                                    <h2 class="mb-1 text-white fw-bold">{{ $stats['total_innovations'] }}</h2>
+                                    <small class="text-white-50 d-block mb-3" style="font-size: 0.75rem;">Total projects</small>
+
+                                    <div class="border-top border-secondary pt-3 mt-3">
+                                        <div class="row text-center">
+                                            <div class="col-12">
+                                                <div class="text-white-50 small" style="font-size: 0.7rem;">Total Investment</div>
+                                                <div class="fw-bold text-success" style="font-size: 1.1rem;">{{ number_format($stats['total_innovation_cost'], 0) }} <small class="text-white-50">JOD</small></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3">
+                                    <a href="{{ route('renovations.index') }}" class="btn btn-sm text-decoration-none w-100"
+                                        style="background-color: #ff7900; color: white; border: none;">
+                                        <i class="bi bi-arrow-right me-1"></i> View Projects
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Recent Activities -->
-        <div class="col-xl-8 mb-4">
+    <!-- Recent Activity Section - Full Width -->
+    <div class="row mb-4">
+        <div class="col-12">
             <div class="card border-0 shadow-lg h-100">
                 <div class="card-header bg-white border-bottom py-3">
                     <h5 class="mb-0 fw-bold text-dark">
@@ -282,7 +292,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($stats['recent_activities'] as $activity)
+                                @forelse($stats['recent_activities']->take(5) as $activity)
                                     <tr class="activity-row-dashboard" style="cursor: pointer;" onclick="window.location='{{ $activity['route'] }}'">
                                         <td class="px-3">
                                             <div class="bg-{{ $activity['color'] }} bg-opacity-10 rounded-circle p-1"
@@ -356,7 +366,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <small class="text-muted">
                             <i class="bi bi-info-circle me-1"></i>
-                            Showing {{ count($stats['recent_activities']) }} most recent
+                            Showing last 5 activities
                         </small>
                         <a href="{{ route('activities.index') }}" class="btn btn-orange btn-sm">
                             <i class="bi bi-list-ul me-1"></i>View All Activities
