@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Image;
-use App\Models\Site;
 use App\Models\Building;
+use App\Models\Image;
 use App\Models\Land;
+use App\Models\Site;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -37,14 +38,39 @@ class ImageController extends Controller
 
         $uploadedCount = 0;
 
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $index => $file) {
-                $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                // Changed to private disk for consistency
-                $path = $file->storeAs("images/{$type}s/{$id}", $filename, 'private');
+        $uploadedFilesInfo = [];
 
-                // Get the next order number
-                $nextOrder = $model->images()->max('order') + 1;
+        if ($request->hasFile('images')) {
+            $uploadedFiles = $request->file('images');
+            $hasExistingImages = $model->images()->exists();
+            $currentMaxOrder = $model->images()->max('order') ?? -1;
+            $folderName = Str::plural(Str::snake(class_basename($model)));
+
+            Log::debug('Uploading gallery images', [
+                'request_type' => $type,
+                'resolved_folder' => $folderName,
+                'model_class' => get_class($model),
+                'model_id' => $model->getKey(),
+                'existing_images' => $hasExistingImages,
+                'starting_order' => $currentMaxOrder,
+            ]);
+
+            foreach ($uploadedFiles as $index => $file) {
+                $currentMaxOrder++;
+                $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs("images/{$folderName}/{$model->getKey()}", $filename, 'private');
+
+                $isPrimary = !$hasExistingImages && $uploadedCount === 0;
+
+                Log::debug('Storing gallery image file', [
+                    'model' => get_class($model),
+                    'model_id' => $model->getKey(),
+                    'original_name' => $file->getClientOriginalName(),
+                    'stored_filename' => $filename,
+                    'disk_path' => $path,
+                    'is_primary' => $isPrimary,
+                    'order' => $currentMaxOrder,
+                ]);
 
                 $model->images()->create([
                     'filename' => $filename,
@@ -54,15 +80,29 @@ class ImageController extends Controller
                     'size' => $file->getSize(),
                     'title' => $request->titles[$index] ?? null,
                     'description' => $request->descriptions[$index] ?? null,
-                    'order' => $nextOrder,
-                    'is_primary' => $model->images()->count() === 0, // First image is primary
+                    'order' => $currentMaxOrder,
+                    'is_primary' => $isPrimary,
                 ]);
+
+                $uploadedFilesInfo[] = [
+                    'original' => $file->getClientOriginalName(),
+                    'stored_as' => $filename,
+                ];
 
                 $uploadedCount++;
             }
         }
 
-        return back()->with('success', "{$uploadedCount} image(s) uploaded successfully.");
+        if ($uploadedCount > 0) {
+            $list = collect($uploadedFilesInfo)
+                ->pluck('original')
+                ->map(fn($name) => "\"{$name}\"")
+                ->implode(', ');
+
+            return back()->with('success', "Uploaded {$uploadedCount} image(s): {$list}.");
+        }
+
+        return back()->with('warning', 'No images were uploaded. Please try again.');
     }
 
     /**
@@ -102,8 +142,14 @@ class ImageController extends Controller
     /**
      * Delete an image.
      */
-    public function destroy(Image $image)
+    public function destroy(Request $request, Image $image)
     {
+        Log::debug('Deleting gallery image', [
+            'image_id' => $image->id,
+            'imageable_type' => $image->imageable_type,
+            'imageable_id' => $image->imageable_id,
+        ]);
+
         $wasPrimary = $image->is_primary;
         $imageableType = $image->imageable_type;
         $imageableId = $image->imageable_id;
@@ -120,6 +166,13 @@ class ImageController extends Controller
             if ($firstImage) {
                 $firstImage->update(['is_primary' => true]);
             }
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Image deleted successfully.',
+            ]);
         }
 
         return back()->with('success', 'Image deleted successfully.');

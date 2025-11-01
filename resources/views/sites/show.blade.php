@@ -451,13 +451,13 @@ foreach ($site->lands as $land) {
     </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
+    <!-- Delete Site Confirmation Modal -->
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header border-0">
                     <h5 class="modal-title" id="deleteModalLabel">
-                        <i class="bi bi-exclamation-triangle text-warning me-2"></i>Confirm Delete
+                        <i class="bi bi-exclamation-triangle text-warning me-2"></i>Confirm Delete Site
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -485,62 +485,126 @@ foreach ($site->lands as $land) {
         </div>
     </div>
 
+    <!-- Delete Building Confirmation Modal -->
+    <div class="modal fade" id="deleteBuildingModal" tabindex="-1" aria-labelledby="deleteBuildingModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="deleteBuildingModalLabel">
+                        <i class="bi bi-exclamation-triangle text-warning me-2"></i>Confirm Delete Building
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Are you sure you want to delete this building?</p>
+                    <div class="alert alert-warning mb-0">
+                        <strong id="deleteBuildingCode"></strong> - <span id="deleteBuildingName"></span>
+                    </div>
+                    <p class="text-muted mt-2 mb-0">
+                        <small>This action will move the building to trash. You can restore it later from the Deleted Buildings
+                            page.</small>
+                    </p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <form id="deleteBuildingForm" method="POST" class="d-inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Land Confirmation Modal -->
+    <div class="modal fade" id="deleteLandModal" tabindex="-1" aria-labelledby="deleteLandModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="deleteLandModalLabel">
+                        <i class="bi bi-exclamation-triangle text-warning me-2"></i>Confirm Delete Land
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Are you sure you want to delete this land?</p>
+                    <div class="alert alert-warning mb-0">
+                        <strong id="deleteLandKey"></strong> - <span id="deleteLandBasin"></span>
+                    </div>
+                    <p class="text-muted mt-2 mb-0">
+                        <small>This action will move the land to trash. You can restore it later from the Deleted Lands
+                            page.</small>
+                    </p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <form id="deleteLandForm" method="POST" class="d-inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        function resolveModalInstance(element) {
+            if (!element) {
+                return null;
+            }
+
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                return bootstrap.Modal.getOrCreateInstance(element);
+            }
+
+            if (typeof boosted !== 'undefined' && boosted.Modal) {
+                return typeof boosted.Modal.getOrCreateInstance === 'function'
+                    ? boosted.Modal.getOrCreateInstance(element)
+                    : new boosted.Modal(element);
+            }
+
+            return null;
+        }
+
         function openDeleteModal(siteId, siteCode, siteName) {
             document.getElementById('deleteSiteCode').textContent = siteCode;
             document.getElementById('deleteSiteName').textContent = siteName;
             document.getElementById('deleteForm').action = '/sites/' + siteId;
 
-            // Use Boosted modal API
             const modalElement = document.getElementById('deleteModal');
-            const modal = new boosted.Modal(modalElement);
-            modal.show();
+            const modal = resolveModalInstance(modalElement);
+            if (modal) {
+                modal.show();
+            }
         }
 
         function openDeleteBuildingModal(buildingId, buildingCode, buildingName) {
-            if (confirm(`Are you sure you want to delete building ${buildingCode} - ${buildingName}?\n\nThis action will move the building to trash.`)) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/buildings/' + buildingId;
+            document.getElementById('deleteBuildingCode').textContent = buildingCode;
+            document.getElementById('deleteBuildingName').textContent = buildingName;
+            document.getElementById('deleteBuildingForm').action = '/buildings/' + buildingId;
 
-                const csrfToken = document.createElement('input');
-                csrfToken.type = 'hidden';
-                csrfToken.name = '_token';
-                csrfToken.value = '{{ csrf_token() }}';
-
-                const methodField = document.createElement('input');
-                methodField.type = 'hidden';
-                methodField.name = '_method';
-                methodField.value = 'DELETE';
-
-                form.appendChild(csrfToken);
-                form.appendChild(methodField);
-                document.body.appendChild(form);
-                form.submit();
+            const modalElement = document.getElementById('deleteBuildingModal');
+            const modal = resolveModalInstance(modalElement);
+            if (modal) {
+                modal.show();
             }
         }
 
         function openDeleteLandModal(landId, plotKey, basin) {
-            const basinText = basin ? ` (Basin: ${basin})` : '';
-            if (confirm(`Are you sure you want to delete land ${plotKey}${basinText}?\n\nThis action will move the land to trash.`)) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/lands/' + landId;
+            document.getElementById('deleteLandKey').textContent = plotKey;
+            document.getElementById('deleteLandBasin').textContent = basin ? `Basin ${basin}` : '';
+            document.getElementById('deleteLandForm').action = '/lands/' + landId;
 
-                const csrfToken = document.createElement('input');
-                csrfToken.type = 'hidden';
-                csrfToken.name = '_token';
-                csrfToken.value = '{{ csrf_token() }}';
-
-                const methodField = document.createElement('input');
-                methodField.type = 'hidden';
-                methodField.name = '_method';
-                methodField.value = 'DELETE';
-
-                form.appendChild(csrfToken);
-                form.appendChild(methodField);
-                document.body.appendChild(form);
-                form.submit();
+            const modalElement = document.getElementById('deleteLandModal');
+            const modal = resolveModalInstance(modalElement);
+            if (modal) {
+                modal.show();
             }
         }
     </script>

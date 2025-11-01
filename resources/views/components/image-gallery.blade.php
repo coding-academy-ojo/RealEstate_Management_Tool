@@ -90,6 +90,8 @@
                                 @endif
                                 @if ($image->description)
                                     <p class="text-muted small mb-0">{{ Str::limit($image->description, 60) }}</p>
+                                @elseif($image->original_name)
+                                    <p class="text-muted small mb-0">{{ Str::limit($image->original_name, 60) }}</p>
                                 @endif
                             </div>
                         @endif
@@ -384,13 +386,33 @@
 </style>
 
 <script>
+    function resolveModalInstance(element) {
+        if (!element) {
+            return null;
+        }
+
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            return bootstrap.Modal.getOrCreateInstance(element);
+        }
+
+        if (typeof boosted !== 'undefined' && boosted.Modal) {
+            return typeof boosted.Modal.getOrCreateInstance === 'function'
+                ? boosted.Modal.getOrCreateInstance(element)
+                : new boosted.Modal(element);
+        }
+
+        return null;
+    }
+
     // View Image in Modal
     function viewImage(url, title, description) {
         document.getElementById('imageViewerImg').src = url;
         document.getElementById('imageViewerTitle').textContent = title || 'Image';
         document.getElementById('imageViewerDescription').textContent = description || '';
-        const modal = new boosted.Modal(document.getElementById('imageViewerModal'));
-        modal.show();
+        const modal = resolveModalInstance(document.getElementById('imageViewerModal'));
+        if (modal) {
+            modal.show();
+        }
     }
 
     // Edit Image
@@ -427,12 +449,9 @@
     function deleteImage(imageId, type, entityId) {
         pendingDeleteImageId = imageId;
         const deleteModal = document.getElementById('deleteImageModal');
+        const modal = resolveModalInstance(deleteModal);
 
-        if (deleteModal && typeof bootstrap !== 'undefined') {
-            const modal = new bootstrap.Modal(deleteModal);
-            modal.show();
-        } else if (deleteModal && typeof boosted !== 'undefined') {
-            const modal = new boosted.Modal(deleteModal);
+        if (modal) {
             modal.show();
         } else {
             // Fallback to confirm if modal not available
@@ -450,11 +469,21 @@
                     'Accept': 'application/json'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to delete image');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     location.reload();
+                } else {
+                    alert(data.message || 'Unable to delete the image.');
                 }
+            })
+            .catch(() => {
+                alert('Something went wrong while deleting the image. Please try again.');
             });
     }
 
@@ -469,8 +498,7 @@
                     // Hide the modal
                     const deleteModal = document.getElementById('deleteImageModal');
                     if (deleteModal) {
-                        const modalInstance = bootstrap.Modal.getInstance(deleteModal) ||
-                                            boosted.Modal.getInstance(deleteModal);
+                        const modalInstance = resolveModalInstance(deleteModal);
                         if (modalInstance) {
                             modalInstance.hide();
                         }

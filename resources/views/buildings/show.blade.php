@@ -30,14 +30,10 @@
                 <a href="{{ route('buildings.edit', $building) }}" class="btn btn-orange">
                     <i class="bi bi-pencil me-1"></i> Edit
                 </a>
-                <form action="{{ route('buildings.destroy', $building) }}" method="POST" class="d-inline"
-                    onsubmit="return confirm('Are you sure you want to delete this building?');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-trash me-1"></i> Delete
-                    </button>
-                </form>
+                <button type="button" class="btn btn-danger"
+                    onclick="openDeleteModal('{{ $building->id }}', '{{ $building->code }}', '{{ $building->name }}')">
+                    <i class="bi bi-trash me-1"></i> Delete
+                </button>
             @endif
         </div>
     </div>
@@ -635,4 +631,70 @@ foreach ($building->images as $image) {
             </div>
         </div>
     @endif
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="deleteModalLabel">
+                        <i class="bi bi-exclamation-triangle text-warning me-2"></i>Confirm Delete
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Are you sure you want to delete this building?</p>
+                    <div class="alert alert-warning mb-0">
+                        <strong id="deleteBuildingCode"></strong> - <span id="deleteBuildingName"></span>
+                    </div>
+                    <p class="text-muted mt-2 mb-0">
+                        <small>This action will move the building to trash. You can restore it later from the Deleted Buildings
+                            page.</small>
+                    </p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <form id="deleteForm" method="POST" class="d-inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function resolveModalInstance(element) {
+            if (!element) {
+                return null;
+            }
+
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                return bootstrap.Modal.getOrCreateInstance(element);
+            }
+
+            if (typeof boosted !== 'undefined' && boosted.Modal) {
+                return typeof boosted.Modal.getOrCreateInstance === 'function'
+                    ? boosted.Modal.getOrCreateInstance(element)
+                    : new boosted.Modal(element);
+            }
+
+            return null;
+        }
+
+        function openDeleteModal(buildingId, buildingCode, buildingName) {
+            document.getElementById('deleteBuildingCode').textContent = buildingCode;
+            document.getElementById('deleteBuildingName').textContent = buildingName;
+            document.getElementById('deleteForm').action = '/buildings/' + buildingId;
+
+            const modalElement = document.getElementById('deleteModal');
+            const modal = resolveModalInstance(modalElement);
+            if (modal) {
+                modal.show();
+            }
+        }
+    </script>
 @endsection
