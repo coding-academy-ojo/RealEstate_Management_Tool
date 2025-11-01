@@ -13,6 +13,7 @@
             background-color: #f8f9fa !important;
             background-image: none !important;
             position: relative;
+            z-index: auto !important;
         }
         #content::before {
             content: "";
@@ -28,9 +29,9 @@
             pointer-events: none;
             z-index: 0;
         }
-        #content > * {
+        #content>*:not(.modal-backdrop):not(.modal) {
             position: relative;
-            z-index: 1;
+            z-index: auto;
         }
     </style>
 
@@ -243,133 +244,6 @@
                     </div>
                 </div>
             </div>
-
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="bi bi-speedometer2 me-2 text-orange"></i>Reading History
-                    </h5>
-                    @if ($canManageWater)
-                        <button type="button" class="btn btn-sm btn-orange" onclick="openReadingModal('create')">
-                            <i class="bi bi-plus-circle me-1"></i> Add Reading
-                        </button>
-                    @endif
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive reading-table-wrapper">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width: 60px;">#</th>
-                                    <th>Reading Date</th>
-                                    <th class="text-end">Previous (m³)</th>
-                                    <th class="text-end">Current (m³)</th>
-                                    <th class="text-end">Consumption (m³)</th>
-                                    <th class="text-end">Bill (JOD)</th>
-                                    <th>Status</th>
-                                    <th>Notes</th>
-                                    <th>Documents</th>
-                                    @if ($canManageWater)
-                                        <th class="text-center">Actions</th>
-                                    @endif
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($readings as $index => $reading)
-                                    <tr>
-                                        <td class="text-center text-muted">{{ $index + 1 }}</td>
-                                        <td>
-                                            <div class="fw-semibold">{{ $reading->reading_date?->format('F d, Y') ?? '—' }}</div>
-                                            <small class="text-muted">Logged {{ $reading->created_at?->diffForHumans() }}</small>
-                                        </td>
-                                        @php
-                                            $computedPrevious = (float) $reading->getAttribute('computed_previous_reading');
-                                            $computedConsumption = $reading->getAttribute('computed_consumption');
-                                        @endphp
-                                        <td class="text-end">
-                                            {{ number_format($computedPrevious, 2) }}
-                                        </td>
-                                        <td class="text-end">
-                                            {{ number_format((float) $reading->current_reading, 2) }}
-                                        </td>
-                                        <td class="text-end">
-                                            {{ number_format((float) $computedConsumption, 2) }}
-                                        </td>
-                                        <td class="text-end">
-                                            {{ is_null($reading->bill_amount) ? '—' : number_format((float) $reading->bill_amount, 2) }}
-                                        </td>
-                                        <td>
-                                            <span class="badge rounded-pill fw-semibold {{ $reading->is_paid ? 'bg-success text-white' : 'bg-warning text-dark' }}">
-                                                {{ $reading->is_paid ? 'Paid' : 'Unpaid' }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            @if ($reading->notes)
-                                                {{ \Illuminate\Support\Str::limit($reading->notes, 70) }}
-                                            @else
-                                                <span class="text-muted">—</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <div class="d-flex gap-2">
-                                                @if ($reading->meter_image)
-                                                    <a href="{{ route('water-services.readings.files.show', [$waterService, $reading, 'meter']) }}"
-                                                        target="_blank" class="btn btn-sm btn-outline-primary" title="View Meter Image">
-                                                        <i class="bi bi-camera"></i>
-                                                    </a>
-                                                @endif
-                                                @if ($reading->bill_image)
-                                                    <a href="{{ route('water-services.readings.files.show', [$waterService, $reading, 'bill']) }}"
-                                                        target="_blank" class="btn btn-sm btn-outline-secondary" title="View Bill">
-                                                        <i class="bi bi-file-earmark-text"></i>
-                                                    </a>
-                                                @endif
-                                                @if (!$reading->meter_image && !$reading->bill_image)
-                                                    <span class="text-muted">—</span>
-                                                @endif
-                                            </div>
-                                        </td>
-                                        @if ($canManageWater)
-                                            <td>
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary"
-                                                        data-reading-id="{{ $reading->id }}"
-                                                        data-reading-current="{{ $reading->current_reading }}"
-                                                        data-reading-bill="{{ $reading->bill_amount }}"
-                                                        data-reading-paid="{{ $reading->is_paid ? 1 : 0 }}"
-                                                        data-reading-date="{{ $reading->reading_date?->format('Y-m-d') }}"
-                                                        data-reading-notes="{{ $reading->notes }}"
-                                                        data-reading-previous="{{ $reading->getAttribute('computed_previous_reading') }}"
-                                                        data-reading-meter-url="{{ $reading->meter_image ? route('water-services.readings.files.show', [$waterService, $reading, 'meter']) : '' }}"
-                                                        data-reading-bill-url="{{ $reading->bill_image ? route('water-services.readings.files.show', [$waterService, $reading, 'bill']) : '' }}"
-                                                        onclick="openReadingModalFromButton(this)">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </button>
-                                                    <form action="{{ route('water-services.readings.destroy', [$waterService, $reading]) }}"
-                                                        method="POST" onsubmit="return confirm('Delete this reading entry?');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        @endif
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="{{ $canManageWater ? 10 : 9 }}" class="text-center py-4">
-                                            <i class="bi bi-droplet" style="font-size: 3rem; opacity: 0.3;"></i>
-                                            <p class="text-muted mt-2 mb-0">No readings recorded yet.</p>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <div class="col-lg-4 mb-4">
@@ -436,9 +310,137 @@
         </div>
     </div>
 
+    <!-- Reading History Section - Full Width -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3 d-flex justify-content-between flex-wrap gap-2 align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-speedometer2 me-2 text-orange"></i>Reading History
+            </h5>
+            @if ($canManageWater)
+                <button type="button" class="btn btn-sm btn-orange" onclick="openReadingModal('create')">
+                    <i class="bi bi-plus-circle me-1"></i> Add Reading
+                </button>
+            @endif
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive reading-table-wrapper">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 60px;">#</th>
+                            <th>Reading Date</th>
+                            <th class="text-end">Previous (m³)</th>
+                            <th class="text-end">Current (m³)</th>
+                            <th class="text-end">Consumption (m³)</th>
+                            <th class="text-end">Bill (JOD)</th>
+                            <th>Status</th>
+                            <th>Notes</th>
+                            <th>Documents</th>
+                            @if ($canManageWater)
+                                <th class="text-center">Actions</th>
+                            @endif
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($readings as $index => $reading)
+                            <tr>
+                                <td class="text-center text-muted">{{ $index + 1 }}</td>
+                                <td>
+                                    <div class="fw-semibold">{{ $reading->reading_date?->format('F d, Y') ?? '—' }}</div>
+                                    <small class="text-muted">Logged {{ $reading->created_at?->diffForHumans() }}</small>
+                                </td>
+                                @php
+                                    $computedPrevious = (float) $reading->getAttribute('computed_previous_reading');
+                                    $computedConsumption = $reading->getAttribute('computed_consumption');
+                                @endphp
+                                <td class="text-end">
+                                    {{ number_format($computedPrevious, 2) }}
+                                </td>
+                                <td class="text-end">
+                                    {{ number_format((float) $reading->current_reading, 2) }}
+                                </td>
+                                <td class="text-end">
+                                    {{ number_format((float) $computedConsumption, 2) }}
+                                </td>
+                                <td class="text-end">
+                                    {{ is_null($reading->bill_amount) ? '—' : number_format((float) $reading->bill_amount, 2) }}
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill fw-semibold {{ $reading->is_paid ? 'bg-success text-white' : 'bg-warning text-dark' }}">
+                                        {{ $reading->is_paid ? 'Paid' : 'Unpaid' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    @if ($reading->notes)
+                                        {{ \Illuminate\Support\Str::limit($reading->notes, 70) }}
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        @if ($reading->meter_image)
+                                            <a href="{{ route('water-services.readings.files.show', [$waterService, $reading, 'meter']) }}"
+                                                target="_blank" class="btn btn-sm btn-outline-primary" title="View Meter Image">
+                                                <i class="bi bi-camera"></i>
+                                            </a>
+                                        @endif
+                                        @if ($reading->bill_image)
+                                            <a href="{{ route('water-services.readings.files.show', [$waterService, $reading, 'bill']) }}"
+                                                target="_blank" class="btn btn-sm btn-outline-secondary" title="View Bill">
+                                                <i class="bi bi-file-earmark-text"></i>
+                                            </a>
+                                        @endif
+                                        @if (!$reading->meter_image && !$reading->bill_image)
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </div>
+                                </td>
+                                @if ($canManageWater)
+                                    <td>
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                                data-reading-id="{{ $reading->id }}"
+                                                data-reading-current="{{ $reading->current_reading }}"
+                                                data-reading-bill="{{ $reading->bill_amount }}"
+                                                data-reading-paid="{{ $reading->is_paid ? 1 : 0 }}"
+                                                data-reading-date="{{ $reading->reading_date?->format('Y-m-d') }}"
+                                                data-reading-notes="{{ $reading->notes }}"
+                                                data-reading-previous="{{ $reading->getAttribute('computed_previous_reading') }}"
+                                                data-reading-meter-url="{{ $reading->meter_image ? route('water-services.readings.files.show', [$waterService, $reading, 'meter']) : '' }}"
+                                                data-reading-bill-url="{{ $reading->bill_image ? route('water-services.readings.files.show', [$waterService, $reading, 'bill']) : '' }}"
+                                                onclick="openReadingModalFromButton(this)">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <form action="{{ route('water-services.readings.destroy', [$waterService, $reading]) }}"
+                                                method="POST" onsubmit="return confirm('Delete this reading entry?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                @endif
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="{{ $canManageWater ? 10 : 9 }}" class="text-center py-4">
+                                    <i class="bi bi-droplet" style="font-size: 3rem; opacity: 0.3;"></i>
+                                    <p class="text-muted mt-2 mb-0">No readings recorded yet.</p>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- Reading Modal -->
     @if ($canManageWater)
-        <div class="modal fade" id="readingModal" tabindex="-1" aria-labelledby="readingModalLabel" aria-hidden="true">
+        <div class="modal fade" id="readingModal" tabindex="-1" aria-labelledby="readingModalLabel" aria-hidden="true" style="z-index: 1060;">
             <div class="modal-dialog modal-lg modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -527,7 +529,7 @@
     @endif
 
     <!-- Deactivate Modal -->
-    <div class="modal fade" id="deactivateModal" tabindex="-1" aria-labelledby="deactivateModalLabel" aria-hidden="true">
+    <div class="modal fade" id="deactivateModal" tabindex="-1" aria-labelledby="deactivateModalLabel" aria-hidden="true" style="z-index: 1060;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-warning bg-opacity-10">
@@ -581,7 +583,7 @@
     </div>
 
     <!-- Reactivate Modal -->
-    <div class="modal fade" id="reactivateModal" tabindex="-1" aria-labelledby="reactivateModalLabel" aria-hidden="true">
+    <div class="modal fade" id="reactivateModal" tabindex="-1" aria-labelledby="reactivateModalLabel" aria-hidden="true" style="z-index: 1060;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-success bg-opacity-10">
@@ -632,7 +634,7 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true" style="z-index: 1060;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header border-0">

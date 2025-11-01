@@ -13,6 +13,7 @@
             background-color: #f8f9fa !important;
             background-image: none !important;
             position: relative;
+            z-index: auto !important;
         }
 
         #content::before {
@@ -30,9 +31,9 @@
             z-index: 0;
         }
 
-        #content>* {
+        #content>*:not(.modal-backdrop):not(.modal) {
             position: relative;
-            z-index: 1;
+            z-index: auto;
         }
     </style>
 
@@ -512,7 +513,7 @@
     @if ($canManageElectricity)
         <!-- Reading Modal -->
         <div class="modal fade" id="readingModal" tabindex="-1" aria-labelledby="readingModalLabel"
-            aria-hidden="true">
+            aria-hidden="true" style="z-index: 1060;">
             <div class="modal-dialog modal-xl modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -648,7 +649,7 @@
 
     <!-- Disconnection Modal -->
     <div class="modal fade" id="disconnectionModal" tabindex="-1" aria-labelledby="disconnectionModalLabel"
-        aria-hidden="true">
+        aria-hidden="true" style="z-index: 1060;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -698,7 +699,7 @@
 
     <!-- Deactivate Modal -->
     <div class="modal fade" id="deactivateModal" tabindex="-1" aria-labelledby="deactivateModalLabel"
-        aria-hidden="true">
+        aria-hidden="true" style="z-index: 1060;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-warning bg-opacity-10">
@@ -754,7 +755,7 @@
 
     <!-- Reactivate Modal -->
     <div class="modal fade" id="reactivateModal" tabindex="-1" aria-labelledby="reactivateModalLabel"
-        aria-hidden="true">
+        aria-hidden="true" style="z-index: 1060;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-success bg-opacity-10">
@@ -818,7 +819,7 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true" style="z-index: 1060;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header border-0">

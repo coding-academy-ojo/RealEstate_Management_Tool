@@ -517,11 +517,11 @@
 
     @if ($canManageElectricity)
         <div class="modal fade" id="electricReadingModal" tabindex="-1" aria-labelledby="electricReadingModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            aria-hidden="true" style="z-index: 1060;">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="electricReadingModalLabel">Edit Electricity Reading</h5>
+                        <h5 class="modal-title" id="electricReadingModalLabel">Edit Monthly Reading</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <form id="electricReadingForm" method="POST" enctype="multipart/form-data">
@@ -533,80 +533,100 @@
                                 <i class="bi bi-info-circle text-info fs-4"></i>
                                 <div>
                                     <div><strong>Service:</strong> <span id="electricModalServiceReg">--</span></div>
-                                    <div class="text-muted small">Building: <span
-                                            id="electricModalServiceBuilding">--</span></div>
-                                    <div class="text-muted small mt-1" id="electricModalPrevious">Previous imported
-                                        calculated: 0.00</div>
-                                    <div class="text-muted small" id="electricModalPreviousProduced" hidden>Previous
-                                        produced calculated: 0.00</div>
+                                    <div class="text-muted small">Building: <span id="electricModalServiceBuilding">--</span></div>
+                                    <div class="text-muted small mt-1" id="electricModalPrevious">Previous imported calculated: 0.00</div>
+                                    <div class="text-muted small" id="electricModalPreviousProduced" hidden>Previous produced calculated: 0.00</div>
                                 </div>
                             </div>
 
                             <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="electric_reading_date" class="form-label fw-bold">Reading Date <span
-                                            class="text-danger">*</span></label>
-                                    <input type="date" class="form-control" id="electric_reading_date"
-                                        name="reading_date" required>
+                                <div class="col-md-4">
+                                    <label for="electric_reading_date" class="form-label fw-bold">
+                                        Reading Date <span class="text-muted">(تاريخ القراءة)</span> <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" class="form-control" id="electric_reading_date" name="reading_date" required>
                                 </div>
-                                <div class="col-md-6">
-                                    <label for="electric_imported" class="form-label fw-bold">Imported Calculated (kWh)
-                                        <span class="text-danger">*</span></label>
-                                    <input type="number" step="0.01" class="form-control" id="electric_imported"
-                                        name="imported_calculated" required>
+                                <div class="col-md-4">
+                                    <label for="electric_imported_current" class="form-label fw-bold">
+                                        Imported Current <span class="text-muted">(المستجره الحالية)</span> (kWh)
+                                    </label>
+                                    <input type="number" step="0.01" min="0" class="form-control" id="electric_imported_current" name="imported_current">
                                 </div>
-                                <div class="col-md-6">
-                                    <label for="electric_produced" class="form-label fw-bold">Produced Calculated
-                                        (kWh)</label>
-                                    <input type="number" step="0.01" class="form-control" id="electric_produced"
-                                        name="produced_calculated">
-                                    <small class="text-muted">Required for solar services.</small>
+                                <div class="col-md-4">
+                                    <label for="electric_imported" class="form-label fw-bold">
+                                        Imported Calculated <span class="text-muted">(المستجره المحتسبه)</span> (kWh) <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" step="0.01" min="0" class="form-control" id="electric_imported" name="imported_calculated" required>
                                 </div>
-                                <div class="col-md-6" id="electricSavedEnergyWrapper">
-                                    <label for="electric_saved_energy" class="form-label fw-bold">Saved Energy
-                                        (kWh)</label>
-                                    <input type="number" step="0.01" class="form-control" id="electric_saved_energy"
-                                        name="saved_energy">
+                                <div class="col-md-4 solar-only" id="electricProducedCurrentWrapper" hidden>
+                                    <label for="electric_produced_current" class="form-label fw-bold">
+                                        Produced Current <span class="text-muted">(المصدره الحالية)</span> (kWh)
+                                    </label>
+                                    <input type="number" step="0.01" min="0" class="form-control" id="electric_produced_current" name="produced_current">
                                 </div>
-                                <div class="col-md-6">
-                                    <label for="electric_bill_amount" class="form-label fw-bold">Bill Amount (JOD)</label>
-                                    <input type="number" step="0.01" min="0" class="form-control"
-                                        id="electric_bill_amount" name="bill_amount">
+                                <div class="col-md-4 solar-only" id="electricProducedWrapper" hidden>
+                                    <label for="electric_produced" class="form-label fw-bold">
+                                        Produced Calculated <span class="text-muted">(المصدره المحتسبه)</span> (kWh)
+                                    </label>
+                                    <input type="number" step="0.01" min="0" class="form-control" id="electric_produced" name="produced_calculated">
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold d-block">Payment Status</label>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="electric_is_paid"
-                                            name="is_paid" value="1">
+                                <div class="col-md-4 solar-only" id="electricSavedEnergyWrapper" hidden>
+                                    <label for="electric_saved_energy" class="form-label fw-bold">
+                                        Saved Energy <span class="text-muted">(الطاقة الموفرة)</span> (kWh)
+                                    </label>
+                                    <input type="number" step="0.01" min="0" class="form-control" id="electric_saved_energy" name="saved_energy">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="electric_bill_amount" class="form-label fw-bold">
+                                        Bill Amount <span class="text-muted">(قيمة الفاتورة)</span> (JOD)
+                                    </label>
+                                    <input type="number" step="0.01" min="0" class="form-control" id="electric_bill_amount" name="bill_amount">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold d-block">
+                                        Payment Status <span class="text-muted">(حالة الدفع)</span>
+                                    </label>
+                                    <div class="form-check form-switch mt-2">
+                                        <input class="form-check-input" type="checkbox" id="electric_is_paid" name="is_paid" value="1">
                                         <label class="form-check-label" for="electric_is_paid">Mark as paid</label>
                                     </div>
                                 </div>
-                                <div class="col-12">
-                                    <label for="electric_notes" class="form-label fw-bold">Notes</label>
-                                    <textarea class="form-control" id="electric_notes" name="notes" rows="3"
-                                        placeholder="Optional remarks about this reading..."></textarea>
-                                </div>
                                 <div class="col-md-6">
-                                    <label for="electric_meter_image" class="form-label fw-bold">Meter Image</label>
-                                    <input type="file" class="form-control" id="electric_meter_image"
-                                        name="meter_image" accept=".jpg,.jpeg,.png">
-                                    <small class="text-muted">Accepted: JPG, PNG (max 4 MB)</small>
-                                    <div id="electricMeterPreview" class="mt-2 d-none">
-                                        <a id="electricMeterLink" href="#" target="_blank"
-                                            class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-camera"></i> View current meter image
-                                        </a>
+                                    <label class="form-label fw-bold d-block">
+                                        Consumption Preview <span class="text-muted">(معاينة الاستهلاك)</span>
+                                    </label>
+                                    <div class="p-2 rounded border bg-light" id="electricConsumptionPreview">
+                                        <i class="bi bi-calculator me-2 text-muted"></i>
+                                        <span class="text-muted small">Adjust readings to preview consumption.</span>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="electric_bill_image" class="form-label fw-bold">Bill Document</label>
-                                    <input type="file" class="form-control" id="electric_bill_image"
-                                        name="bill_image" accept=".pdf,.jpg,.jpeg,.png">
-                                    <small class="text-muted">Accepted: PDF, JPG, PNG (max 5 MB)</small>
+                                    <label for="electric_notes" class="form-label fw-bold">
+                                        Notes <span class="text-muted">(ملاحظات)</span>
+                                    </label>
+                                    <textarea class="form-control" id="electric_notes" name="notes" rows="2" placeholder="Optional remarks..."></textarea>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="electric_meter_image" class="form-label fw-bold">
+                                        Meter Image <span class="text-muted">(صورة العداد)</span>
+                                    </label>
+                                    <input type="file" class="form-control" id="electric_meter_image" name="meter_image" accept=".jpg,.jpeg,.png">
+                                    <small class="text-muted">JPG, PNG (max 4 MB)</small>
+                                    <div id="electricMeterPreview" class="mt-2 d-none">
+                                        <a id="electricMeterLink" href="#" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-camera"></i> View
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="electric_bill_image" class="form-label fw-bold">
+                                        Bill Document <span class="text-muted">(مستند الفاتورة)</span>
+                                    </label>
+                                    <input type="file" class="form-control" id="electric_bill_image" name="bill_image" accept=".pdf,.jpg,.jpeg,.png">
+                                    <small class="text-muted">PDF, JPG, PNG (max 5 MB)</small>
                                     <div id="electricBillPreview" class="mt-2 d-none">
-                                        <a id="electricBillLink" href="#" target="_blank"
-                                            class="btn btn-sm btn-outline-secondary">
-                                            <i class="bi bi-file-earmark-text"></i> View current bill
+                                        <a id="electricBillLink" href="#" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-file-earmark-text"></i> View
                                         </a>
                                     </div>
                                 </div>
@@ -624,7 +644,7 @@
         </div>
 
         <div class="modal fade" id="electricDeleteModal" tabindex="-1" aria-labelledby="electricDeleteModalLabel"
-            aria-hidden="true">
+            aria-hidden="true" style="z-index: 1060;">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header border-0">
@@ -717,43 +737,52 @@
                     form.action = button.dataset.updateUrl;
                     redirectInput.value = button.dataset.redirectUrl || '{{ request()->fullUrl() }}';
 
+                    // Populate all fields
                     document.getElementById('electric_reading_date').value = button.dataset.readingDate || '';
+                    document.getElementById('electric_imported_current').value = button.dataset.readingImportedCurrent || '';
                     document.getElementById('electric_imported').value = button.dataset.readingImported || '';
+                    document.getElementById('electric_produced_current').value = button.dataset.readingProducedCurrent || '';
                     document.getElementById('electric_produced').value = button.dataset.readingProduced || '';
                     document.getElementById('electric_saved_energy').value = button.dataset.readingSaved || '';
                     document.getElementById('electric_bill_amount').value = button.dataset.readingBill || '';
                     document.getElementById('electric_notes').value = button.dataset.readingNotes || '';
                     document.getElementById('electric_is_paid').checked = button.dataset.readingPaid === '1';
 
-                    document.getElementById('electricModalServiceReg').textContent = button.dataset.serviceReg ||
-                        '--';
-                    document.getElementById('electricModalServiceBuilding').textContent = button.dataset
-                        .serviceBuilding || '--';
+                    document.getElementById('electricModalServiceReg').textContent = button.dataset.serviceReg || '--';
+                    document.getElementById('electricModalServiceBuilding').textContent = button.dataset.serviceBuilding || '--';
 
                     const prevImported = parseFloat(button.dataset.prevImported || '0').toFixed(2);
                     const prevProduced = parseFloat(button.dataset.prevProduced || '0').toFixed(2);
                     const hasSolar = button.dataset.hasSolar === '1';
-                    const savedEnergyWrapper = document.getElementById('electricSavedEnergyWrapper');
 
                     const prevImportedLabel = document.getElementById('electricModalPrevious');
                     const prevProducedLabel = document.getElementById('electricModalPreviousProduced');
+
+                    // Show/hide solar fields
+                    const producedCurrentWrapper = document.getElementById('electricProducedCurrentWrapper');
+                    const producedWrapper = document.getElementById('electricProducedWrapper');
+                    const savedEnergyWrapper = document.getElementById('electricSavedEnergyWrapper');
 
                     prevImportedLabel.textContent = 'Previous imported calculated: ' + prevImported + ' kWh';
 
                     if (hasSolar) {
                         prevProducedLabel.textContent = 'Previous produced calculated: ' + prevProduced + ' kWh';
                         prevProducedLabel.hidden = false;
-                        document.getElementById('electric_produced').required = true;
-                        document.getElementById('electric_saved_energy').required = true;
+                        producedCurrentWrapper.hidden = false;
+                        producedWrapper.hidden = false;
                         savedEnergyWrapper.hidden = false;
                     } else {
                         prevProducedLabel.hidden = true;
-                        document.getElementById('electric_produced').required = false;
-                        document.getElementById('electric_saved_energy').required = false;
+                        producedCurrentWrapper.hidden = true;
+                        producedWrapper.hidden = true;
                         savedEnergyWrapper.hidden = true;
+                        document.getElementById('electric_produced_current').value = '';
                         document.getElementById('electric_produced').value = '';
                         document.getElementById('electric_saved_energy').value = '';
                     }
+
+                    // Update consumption preview
+                    updateElectricConsumptionPreview(prevImported, prevProduced, hasSolar);
 
                     const meterPreview = document.getElementById('electricMeterPreview');
                     const meterLink = document.getElementById('electricMeterLink');
@@ -787,6 +816,57 @@
                         console.error('Error showing electricity modal:', error);
                     }
                 };
+
+                function updateElectricConsumptionPreview(prevImported, prevProduced, hasSolar) {
+                    const importedInput = document.getElementById('electric_imported');
+                    const producedInput = document.getElementById('electric_produced');
+                    const preview = document.getElementById('electricConsumptionPreview');
+
+                    const imported = parseFloat(importedInput.value) || 0;
+                    const produced = parseFloat(producedInput.value) || 0;
+
+                    let message = '<i class="bi bi-calculator me-2 text-muted"></i><span class="text-muted small">Adjust readings to preview consumption.</span>';
+                    let bgClass = 'bg-light';
+
+                    if (hasSolar && imported > 0 && produced > 0) {
+                        const importedDelta = imported - prevImported;
+                        const producedDelta = produced - prevProduced;
+                        const consumption = importedDelta - producedDelta;
+
+                        if (consumption > 0) {
+                            message = `<i class="bi bi-arrow-up-circle text-danger me-2"></i><strong>Consumption:</strong> ${consumption.toFixed(2)} kWh <span class="text-muted small">(Imported: ${importedDelta.toFixed(2)}, Produced: ${producedDelta.toFixed(2)})</span>`;
+                            bgClass = 'bg-danger bg-opacity-10';
+                        } else if (consumption < 0) {
+                            message = `<i class="bi bi-arrow-down-circle text-success me-2"></i><strong>Net metering credit:</strong> ${Math.abs(consumption).toFixed(2)} kWh <span class="text-muted small">(excess production)</span>`;
+                            bgClass = 'bg-success bg-opacity-10';
+                        } else {
+                            message = `<i class="bi bi-check-circle text-info me-2"></i><strong>Balanced:</strong> Production matches consumption`;
+                            bgClass = 'bg-info bg-opacity-10';
+                        }
+                    } else if (!hasSolar && imported > 0) {
+                        const consumption = imported - prevImported;
+                        if (consumption > 0) {
+                            message = `<i class="bi bi-lightning-charge text-warning me-2"></i><strong>Consumption:</strong> ${consumption.toFixed(2)} kWh`;
+                            bgClass = 'bg-warning bg-opacity-10';
+                        }
+                    }
+
+                    preview.className = `p-2 rounded border ${bgClass}`;
+                    preview.innerHTML = message;
+                }
+
+                // Add event listeners for consumption preview
+                ['electric_imported', 'electric_produced'].forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.addEventListener('input', function() {
+                            const prevImported = parseFloat(document.getElementById('electricModalPrevious').textContent.match(/[\d.]+/)?.[0] || '0');
+                            const prevProduced = parseFloat(document.getElementById('electricModalPreviousProduced').textContent.match(/[\d.]+/)?.[0] || '0');
+                            const hasSolar = !document.getElementById('electricProducedWrapper').hidden;
+                            updateElectricConsumptionPreview(prevImported, prevProduced, hasSolar);
+                        });
+                    }
+                });
 
                 window.openElectricDeleteModal = function(id, serviceReg, deleteUrl) {
                     const modalElement = document.getElementById('electricDeleteModal');
