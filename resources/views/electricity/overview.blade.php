@@ -331,7 +331,7 @@
                                                 {{ number_format($entry['total_due'], 2) }}
                                                 <small class="text-muted fw-normal">JOD</small>
                                             </div>
-                                            <a href="{{ route('electricity-services.show', $service->id) }}"
+                                            <a href="{{ route('electric.show', $service->id) }}"
                                                 class="btn btn-sm btn-orange">
                                                 <i class="bi bi-eye me-1"></i>View
                                             </a>

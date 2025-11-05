@@ -3,7 +3,7 @@
 @section('title', 'Create Electricity Service')
 
 @section('breadcrumbs')
-    <li class="breadcrumb-item"><a href="{{ route('electricity-services.index') }}">Electricity Services</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('electric.index') }}">Electricity Services</a></li>
     <li class="breadcrumb-item active">Create</li>
 @endsection
 
@@ -55,7 +55,7 @@
                     </h4>
                 </div>
                 <div class="card-body p-4">
-                    <form action="{{ route('electricity-services.store') }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('electric.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
 
                         <div class="mb-4">
@@ -72,6 +72,7 @@
                                     </option>
                                 @endforeach
                             </select>
+                            <small class="text-muted">اختر المبنى المرتبط بهذه الخدمة</small>
                             @error('building_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -94,6 +95,7 @@
                                 @error('subscriber_name')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <small class="text-muted">اسم المشترك (بالعربية أو الإنجليزية)</small>
                             </div>
 
                             <div class="col-md-6 mb-3">
@@ -106,7 +108,7 @@
                                 @error('meter_number')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <small class="text-muted">Enter the unique serial number on the physical meter.</small>
+                                <small class="text-muted">أدخل الرقم التسلسلي الظاهر على العداد (فريد)</small>
                             </div>
                         </div>
 
@@ -166,6 +168,7 @@
                                 @error('registration_number')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <small class="text-muted">رقم تسجيل الخدمة أو الحساب لدى الشركة</small>
                             </div>
                         </div>
 
@@ -208,7 +211,7 @@
                             </div>
 
                             <div class="d-flex gap-2 justify-content-end mt-4">
-                                <a href="{{ route('electricity-services.index') }}" class="btn btn-secondary">
+                                <a href="{{ route('electric.index') }}" class="btn btn-secondary">
                                     <i class="bi bi-x-circle me-1"></i> Cancel
                                 </a>
                                 <button type="submit" class="btn btn-orange">
@@ -395,7 +398,7 @@
                     }
 
                     try {
-                        const response = await fetch('{{ route('electricity-companies.store') }}', {
+                        const response = await fetch('{{ route('electricity.companies.store') }}', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',

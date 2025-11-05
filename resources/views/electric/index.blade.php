@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Electricity Services')
 
@@ -76,7 +76,7 @@
             $params['sort'] = $column;
             $params['direction'] = $activeSort === $column && $activeDirection === 'asc' ? 'desc' : 'asc';
 
-            return route('electricity-services.index', $params);
+            return route('electric.index', $params);
         };
 
         $arrowClass = function (string $column, string $direction) use ($activeSort, $activeDirection) {
@@ -90,10 +90,10 @@
 
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
         <div>
-            <h2 class="mb-1">
+                <h2 class="mb-1">
                 <i class="bi bi-lightning-charge-fill text-warning me-2"></i>
                 Electricity Services Management
-                <small class="text-muted fs-6 fw-normal" style="font-family: 'Segoe UI', Tahoma, sans-serif;">إدارة خدمات الكهرباء</small>
+                    <small class="text-muted fs-6 fw-normal" style="font-family: 'Segoe UI', Tahoma, sans-serif;">عرض وإدارة خدمات الكهرباء</small>
             </h2>
             <p class="text-muted mb-0">
                 Track calculated electricity meters, solar status, and company assignments in one place.
@@ -107,10 +107,10 @@
                 <i class="bi bi-speedometer2 me-1"></i> Overview
             </a>
             @if ($canManageElectricity)
-                <a href="{{ route('electricity-services.deleted') }}" class="btn btn-trash">
+                <a href="{{ route('electric.deleted') }}" class="btn btn-trash">
                     <i class="bi bi-trash"></i> Deleted Services
                 </a>
-                <a href="{{ route('electricity-services.create') }}" class="btn btn-orange">
+                <a href="{{ route('electric.create') }}" class="btn btn-orange">
                     <i class="bi bi-plus-circle me-1"></i> Add Service
                 </a>
             @endif
@@ -175,7 +175,7 @@
                 </div>
                 <div class="col-12 col-lg-3 text-lg-end">
                     <div class="d-flex flex-wrap justify-content-lg-end gap-2">
-                        <a href="{{ route('electricity-services.index') }}" class="btn btn-light">
+                        <a href="{{ route('electric.index') }}" class="btn btn-light">
                             <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
                         </a>
                         <button type="submit" class="btn btn-primary">
@@ -261,7 +261,7 @@
                                         <div class="fw-semibold text-primary">
                                             <a href="{{ route('buildings.show', $service->building) }}" class="text-decoration-none">{{ $service->building->name }}</a>
                                         </div>
-                                        <small class="text-muted">{{ $governorate ?? '—' }}</small>
+                                        <small class="text-muted">{{ $governorate ?? '�' }}</small>
                                     @else
                                         <span class="text-muted">No Building</span>
                                     @endif
@@ -285,18 +285,18 @@
                                     @if ($latestReading)
                                         <div class="fw-semibold text-warning">{{ number_format((float) ($latestReading->consumption_value ?? 0), 2) }} kWh</div>
                                         <small class="text-muted">On {{ optional($latestReading->reading_date)->format('Y-m-d') ?? 'N/A' }}</small>
-                                        <div class="text-muted small">Bill: {{ $latestReading->bill_amount ? number_format((float) $latestReading->bill_amount, 2) . ' JOD' : '—' }}</div>
+                                        <div class="text-muted small">Bill: {{ $latestReading->bill_amount ? number_format((float) $latestReading->bill_amount, 2) . ' JOD' : '�' }}</div>
                                     @else
                                         <span class="text-muted">No readings</span>
                                     @endif
                                 </td>
                                 <td class="text-end">
                                     <div class="btn-group" role="group">
-                                        <a href="{{ route('electricity-services.show', $service) }}" class="btn btn-sm btn-outline-primary" title="View">
+                                        <a href="{{ route('electric.show', $service) }}" class="btn btn-sm btn-outline-primary" title="View">
                                             <i class="bi bi-eye"></i>
                                         </a>
                                         @if ($canManageElectricity)
-                                            <a href="{{ route('electricity-services.edit', $service) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                            <a href="{{ route('electric.edit', $service) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                             <button type="button" class="btn btn-sm btn-outline-danger" title="Delete"
@@ -363,7 +363,7 @@
     <script>
         function openDeleteModal(serviceId, registrationNumber, companyName) {
             document.getElementById('deleteServiceRegistration').textContent = registrationNumber;
-            document.getElementById('deleteServiceCompany').textContent = companyName || '—';
+            document.getElementById('deleteServiceCompany').textContent = companyName || '�';
             document.getElementById('deleteForm').action = '/electricity-services/' + serviceId;
 
             const modalElement = document.getElementById('deleteModal');

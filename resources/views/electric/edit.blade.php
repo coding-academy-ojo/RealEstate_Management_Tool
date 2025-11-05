@@ -3,9 +3,9 @@
 @section('title', 'Edit Electricity Service')
 
 @section('breadcrumbs')
-    <li class="breadcrumb-item"><a href="{{ route('electricity-services.index') }}">Electricity Services</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('electric.index') }}">Electricity Services</a></li>
     <li class="breadcrumb-item"><a
-            href="{{ route('electricity-services.show', $electricityService) }}">{{ $electricityService->registration_number }}</a>
+            href="{{ route('electric.show', $electricityService) }}">{{ $electricityService->registration_number }}</a>
     </li>
     <li class="breadcrumb-item active">Edit</li>
 @endsection
@@ -167,7 +167,7 @@
                     }
 
                     try {
-                        const response = await fetch('{{ route('electricity-companies.store') }}', {
+                        const response = await fetch('{{ route('electricity.companies.store') }}', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -335,7 +335,7 @@
                     </h4>
                 </div>
                 <div class="card-body p-4">
-                    <form action="{{ route('electricity-services.update', $electricityService) }}" method="POST"
+                    <form action="{{ route('electric.update', $electricityService) }}" method="POST"
                         enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
@@ -354,6 +354,7 @@
                                     </option>
                                 @endforeach
                             </select>
+                            <small class="text-muted">اختر المبنى المرتبط بهذه الخدمة</small>
                             @error('building_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -376,6 +377,7 @@
                                 @error('subscriber_name')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <small class="text-muted">اسم المشترك (بالعربية أو الإنجليزية)</small>
                             </div>
 
                             <div class="col-md-6 mb-3">
@@ -388,7 +390,7 @@
                                 @error('meter_number')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <small class="text-muted">Ensure this matches the serial printed on the meter.</small>
+                                <small class="text-muted">أدخل الرقم التسلسلي الظاهر على العداد (فريد)</small>
                             </div>
                         </div>
 
@@ -452,6 +454,7 @@
                                 @error('registration_number')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <small class="text-muted">رقم تسجيل الخدمة أو الحساب لدى الشركة</small>
                             </div>
                         </div>
 
@@ -485,7 +488,7 @@
                                     <small class="text-muted">Uploading a new file will replace the existing one.</small>
                                     @if ($electricityService->reset_file)
                                         <div class="mt-2">
-                                            <a href="{{ route('electricity-services.files.show', [$electricityService, 'reset']) }}"
+                                            <a href="{{ route('electric.files.show', [$electricityService, 'reset']) }}"
                                                 target="_blank" class="btn btn-sm btn-outline-primary">
                                                 <i class="bi bi-file-earmark-text me-1"></i> View current reset file
                                             </a>
@@ -502,7 +505,7 @@
                             </div>
 
                             <div class="d-flex gap-2 justify-content-end mt-4">
-                                <a href="{{ route('electricity-services.show', $electricityService) }}"
+                                <a href="{{ route('electric.show', $electricityService) }}"
                                     class="btn btn-secondary">
                                     <i class="bi bi-x-circle me-1"></i> Cancel
                                 </a>

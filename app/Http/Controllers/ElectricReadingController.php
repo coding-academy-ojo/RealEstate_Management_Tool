@@ -31,7 +31,7 @@ class ElectricReadingController extends Controller
         ElectricReading::create($data);
 
         return redirect()
-            ->route('electricity-services.show', $electricityService)
+            ->route('electric.show', $electricityService)
             ->with('success', 'Electricity reading added successfully.');
     }
 
@@ -55,7 +55,7 @@ class ElectricReadingController extends Controller
         $electricReading->update($data);
 
         return redirect()
-            ->route('electricity-services.show', $electricityService)
+            ->route('electric.show', $electricityService)
             ->with('success', 'Electricity reading updated successfully.');
     }
 
@@ -69,7 +69,7 @@ class ElectricReadingController extends Controller
         $electricReading->delete();
 
         return redirect()
-            ->route('electricity-services.show', $electricityService)
+            ->route('electric.show', $electricityService)
             ->with('success', 'Electricity reading deleted successfully.');
     }
 

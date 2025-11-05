@@ -384,10 +384,10 @@
                                 $consumption = $reading->getAttribute('computed_consumption');
                                 $readingDate = $reading->reading_date ?? $reading->created_at;
                                 $meterUrl = $reading->meter_image
-                                    ? route('electricity-services.readings.files.show', [$service, $reading, 'meter'])
+                                    ? route('electric.readings.files.show', [$service, $reading, 'meter'])
                                     : null;
                                 $billUrl = $reading->bill_image
-                                    ? route('electricity-services.readings.files.show', [$service, $reading, 'bill'])
+                                    ? route('electric.readings.files.show', [$service, $reading, 'bill'])
                                     : null;
                                 $importedCurrent = $reading->imported_current;
                                 $producedCurrent = $reading->produced_current;
@@ -460,7 +460,7 @@
                                 @if ($canManageElectricity)
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <a href="{{ route('electricity-services.show', $service) }}"
+                                            <a href="{{ route('electric.show', $service) }}"
                                                 class="btn btn-sm btn-outline-primary" title="View">
                                                 <i class="bi bi-eye"></i>
                                             </a>
@@ -477,7 +477,7 @@
                                                 data-reading-notes="{{ e($reading->notes ?? '') }}"
                                                 data-service-reg="{{ $service?->registration_number ?? 'N/A' }}"
                                                 data-service-building="{{ $building?->name ?? 'Unknown' }}"
-                                                data-update-url="{{ route('electricity-services.readings.update', [$service, $reading]) }}"
+                                                data-update-url="{{ route('electric.readings.update', [$service, $reading]) }}"
                                                 data-redirect-url="{{ request()->fullUrl() }}"
                                                 data-meter-url="{{ $meterUrl }}" data-bill-url="{{ $billUrl }}"
                                                 data-has-solar="{{ $service?->has_solar_power ? 1 : 0 }}"
@@ -487,7 +487,7 @@
                                                 <i class="bi bi-pencil"></i>
                                             </button>
                                             <button type="button" class="btn btn-sm btn-outline-danger"
-                                                onclick="openElectricDeleteModal({{ $reading->id }}, '{{ $service?->registration_number }}', '{{ route('electricity-services.readings.destroy', [$service, $reading]) }}')"
+                                                onclick="openElectricDeleteModal({{ $reading->id }}, '{{ $service?->registration_number }}', '{{ route('electric.readings.destroy', [$service, $reading]) }}')"
                                                 title="Delete">
                                                 <i class="bi bi-trash"></i>
                                             </button>

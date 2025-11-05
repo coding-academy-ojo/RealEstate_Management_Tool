@@ -177,9 +177,41 @@ Route::middleware('auth')->group(function () {
     Route::get('lands/{land}/documents/{document}', [\App\Http\Controllers\LandController::class, 'document'])
         ->name('lands.documents.show');
 
+    // Water Overview & Bills
+    Route::get('water/overview', [WaterOverviewController::class, 'overview'])
+        ->name('water.overview');
+    Route::get('water/bills', [\App\Http\Controllers\WaterReadingController::class, 'index'])
+        ->name('water.bills.index');
+    Route::get('water/index', [WaterServiceController::class, 'index'])
+        ->name('water.services.index');
+
+    // Water Companies
+    Route::prefix('water/companies')
+        ->name('water.companies.')
+        ->group(function () {
+            Route::get('/', [WaterCompanyController::class, 'index'])->name('index');
+            Route::post('/', [WaterCompanyController::class, 'store'])->middleware('privilege:water')->name('store');
+            Route::put('{waterCompany}', [WaterCompanyController::class, 'update'])->middleware('privilege:water')->name('update');
+            Route::delete('{waterCompany}', [WaterCompanyController::class, 'destroy'])->middleware('privilege:water')->name('destroy');
+            Route::post('{company}/restore', [WaterCompanyController::class, 'restore'])->middleware('privilege:water')->name('restore');
+        });
+
+    // Water Services - Special routes (must come BEFORE resource routes)
     Route::get('water-services/deleted/list', [\App\Http\Controllers\WaterServiceController::class, 'deleted'])
         ->middleware('privilege:water')
         ->name('water-services.deleted');
+    Route::get('water-services/create', [\App\Http\Controllers\WaterServiceController::class, 'create'])
+        ->middleware('privilege:water')
+        ->name('water-services.create');
+
+    // Water services - viewing allowed for all, editing requires privilege
+    Route::resource('water-services', \App\Http\Controllers\WaterServiceController::class)
+        ->except(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::resource('water-services', \App\Http\Controllers\WaterServiceController::class)
+        ->only(['store', 'edit', 'update', 'destroy'])
+        ->middleware('privilege:water');
+
+    // Water Services - Additional routes (must come AFTER resource routes)
     Route::post('water-services/{id}/restore', [\App\Http\Controllers\WaterServiceController::class, 'restore'])
         ->middleware('privilege:water')
         ->name('water-services.restore');
@@ -190,25 +222,8 @@ Route::middleware('auth')->group(function () {
         ->name('water-services.files.show');
     Route::get('water-services/{waterService}/readings/{waterReading}/files/{document}', [\App\Http\Controllers\WaterReadingController::class, 'file'])
         ->name('water-services.readings.files.show');
-    Route::get('water/overview', [WaterOverviewController::class, 'overview'])
-        ->name('water.overview');
 
-    Route::get('water/bills', [\App\Http\Controllers\WaterReadingController::class, 'index'])
-        ->name('water.bills.index');
-
-    Route::get('water/index', [WaterServiceController::class, 'index'])
-        ->name('water.services.index');
-
-    Route::prefix('water/companies')
-        ->name('water.companies.')
-        ->group(function () {
-            Route::get('/', [WaterCompanyController::class, 'index'])->name('index');
-        Route::post('/', [WaterCompanyController::class, 'store'])->middleware('privilege:water')->name('store');
-        Route::put('{waterCompany}', [WaterCompanyController::class, 'update'])->middleware('privilege:water')->name('update');
-        Route::delete('{waterCompany}', [WaterCompanyController::class, 'destroy'])->middleware('privilege:water')->name('destroy');
-        Route::post('{company}/restore', [WaterCompanyController::class, 'restore'])->middleware('privilege:water')->name('restore');
-        });
-
+    // Water Readings
     Route::post('water-services/{waterService}/readings', [\App\Http\Controllers\WaterReadingController::class, 'store'])
         ->middleware('privilege:water')
         ->name('water-services.readings.store');
@@ -218,6 +233,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('water-services/{waterService}/readings/{waterReading}', [\App\Http\Controllers\WaterReadingController::class, 'destroy'])
         ->middleware('privilege:water')
         ->name('water-services.readings.destroy');
+
+    // Water Service Actions
     Route::post('water-services/{waterService}/deactivate', [\App\Http\Controllers\WaterServiceController::class, 'deactivate'])
         ->middleware('privilege:water')
         ->name('water-services.deactivate');
@@ -225,26 +242,10 @@ Route::middleware('auth')->group(function () {
         ->middleware('privilege:water')
         ->name('water-services.reactivate');
 
-    // Water services - viewing allowed for all, editing requires privilege
-    Route::resource('water-services', \App\Http\Controllers\WaterServiceController::class)
-        ->except(['index', 'create', 'store', 'edit', 'update', 'destroy']);
-    Route::resource('water-services', \App\Http\Controllers\WaterServiceController::class)
-        ->only(['create', 'store', 'edit', 'update', 'destroy'])
-        ->middleware('privilege:water');
-
-    Route::get('electricity-services/{electricityService}/files/{document}', [\App\Http\Controllers\ElectricityServiceController::class, 'file'])
-        ->name('electricity-services.files.show');
-    Route::get('electricity-services/{electricityService}/readings/{electricReading}/files/{document}', [\App\Http\Controllers\ElectricReadingController::class, 'file'])
-        ->name('electricity-services.readings.files.show');
-    Route::post('electricity-services/{electricityService}/readings', [\App\Http\Controllers\ElectricReadingController::class, 'store'])
+    // Electricity - specific routes BEFORE resource routes
+    Route::get('electric/deleted/list', [\App\Http\Controllers\ElectricityServiceController::class, 'deleted'])
         ->middleware('privilege:electricity')
-        ->name('electricity-services.readings.store');
-    Route::put('electricity-services/{electricityService}/readings/{electricReading}', [\App\Http\Controllers\ElectricReadingController::class, 'update'])
-        ->middleware('privilege:electricity')
-        ->name('electricity-services.readings.update');
-    Route::delete('electricity-services/{electricityService}/readings/{electricReading}', [\App\Http\Controllers\ElectricReadingController::class, 'destroy'])
-        ->middleware('privilege:electricity')
-        ->name('electricity-services.readings.destroy');
+        ->name('electric.deleted');
 
     Route::get('electricity/overview', [ElectricityOverviewController::class, 'index'])
         ->name('electricity.overview');
@@ -265,38 +266,50 @@ Route::middleware('auth')->group(function () {
         Route::post('{company}/restore', [ElectricityCompanyController::class, 'restore'])->middleware('privilege:electricity')->name('restore');
         });
 
-    Route::post('electricity-services/{electricityService}/disconnections', [\App\Http\Controllers\ElectricServiceDisconnectionController::class, 'store'])
-        ->middleware('privilege:electricity')
-        ->name('electricity-services.disconnections.store');
-    Route::put('electricity-services/{electricityService}/disconnections/{disconnection}', [\App\Http\Controllers\ElectricServiceDisconnectionController::class, 'update'])
-        ->middleware('privilege:electricity')
-        ->name('electricity-services.disconnections.update');
-    Route::delete('electricity-services/{electricityService}/disconnections/{disconnection}', [\App\Http\Controllers\ElectricServiceDisconnectionController::class, 'destroy'])
-        ->middleware('privilege:electricity')
-        ->name('electricity-services.disconnections.destroy');
-
-    Route::get('electricity-services/deleted/list', [\App\Http\Controllers\ElectricityServiceController::class, 'deleted'])
-        ->middleware('privilege:electricity')
-        ->name('electricity-services.deleted');
-    Route::post('electricity-services/{id}/restore', [\App\Http\Controllers\ElectricityServiceController::class, 'restore'])
-        ->middleware('privilege:electricity')
-        ->name('electricity-services.restore');
-    Route::delete('electricity-services/{id}/force-delete', [\App\Http\Controllers\ElectricityServiceController::class, 'forceDelete'])
-        ->middleware('privilege:electricity')
-        ->name('electricity-services.force-delete');
-    Route::post('electricity-services/{electricityService}/deactivate', [\App\Http\Controllers\ElectricityServiceController::class, 'deactivate'])
-        ->middleware('privilege:electricity')
-        ->name('electricity-services.deactivate');
-    Route::post('electricity-services/{electricityService}/reactivate', [\App\Http\Controllers\ElectricityServiceController::class, 'reactivate'])
-        ->middleware('privilege:electricity')
-        ->name('electricity-services.reactivate');
-
     // Electricity services - viewing allowed for all, editing requires privilege
-    Route::resource('electricity-services', \App\Http\Controllers\ElectricityServiceController::class)
-        ->only(['index', 'show']);
-    Route::resource('electricity-services', \App\Http\Controllers\ElectricityServiceController::class)
-        ->except(['index', 'show'])
-        ->middleware('privilege:electricity');
+    Route::resource('electric', \App\Http\Controllers\ElectricityServiceController::class)
+        ->only(['index', 'show', 'create'])
+        ->parameters(['electric' => 'electricityService']);
+    Route::resource('electric', \App\Http\Controllers\ElectricityServiceController::class)
+        ->except(['index', 'show', 'create'])
+        ->middleware('privilege:electricity')
+        ->parameters(['electric' => 'electricityService']);
+
+    // Electricity service files and nested resources
+    Route::get('electric/{electricityService}/files/{document}', [\App\Http\Controllers\ElectricityServiceController::class, 'file'])
+        ->name('electric.files.show');
+    Route::get('electric/{electricityService}/readings/{electricReading}/files/{document}', [\App\Http\Controllers\ElectricReadingController::class, 'file'])
+        ->name('electric.readings.files.show');
+    Route::post('electric/{electricityService}/readings', [\App\Http\Controllers\ElectricReadingController::class, 'store'])
+        ->middleware('privilege:electricity')
+        ->name('electric.readings.store');
+    Route::put('electric/{electricityService}/readings/{electricReading}', [\App\Http\Controllers\ElectricReadingController::class, 'update'])
+        ->middleware('privilege:electricity')
+        ->name('electric.readings.update');
+    Route::delete('electric/{electricityService}/readings/{electricReading}', [\App\Http\Controllers\ElectricReadingController::class, 'destroy'])
+        ->middleware('privilege:electricity')
+        ->name('electric.readings.destroy');
+    Route::post('electric/{electricityService}/disconnections', [\App\Http\Controllers\ElectricServiceDisconnectionController::class, 'store'])
+        ->middleware('privilege:electricity')
+        ->name('electric.disconnections.store');
+    Route::put('electric/{electricityService}/disconnections/{disconnection}', [\App\Http\Controllers\ElectricServiceDisconnectionController::class, 'update'])
+        ->middleware('privilege:electricity')
+        ->name('electric.disconnections.update');
+    Route::delete('electric/{electricityService}/disconnections/{disconnection}', [\App\Http\Controllers\ElectricServiceDisconnectionController::class, 'destroy'])
+        ->middleware('privilege:electricity')
+        ->name('electric.disconnections.destroy');
+    Route::post('electric/{id}/restore', [\App\Http\Controllers\ElectricityServiceController::class, 'restore'])
+        ->middleware('privilege:electricity')
+        ->name('electric.restore');
+    Route::delete('electric/{id}/force-delete', [\App\Http\Controllers\ElectricityServiceController::class, 'forceDelete'])
+        ->middleware('privilege:electricity')
+        ->name('electric.force-delete');
+    Route::post('electric/{electricityService}/deactivate', [\App\Http\Controllers\ElectricityServiceController::class, 'deactivate'])
+        ->middleware('privilege:electricity')
+        ->name('electric.deactivate');
+    Route::post('electric/{electricityService}/reactivate', [\App\Http\Controllers\ElectricityServiceController::class, 'reactivate'])
+        ->middleware('privilege:electricity')
+        ->name('electric.reactivate');
 
     Route::get('renovations/deleted/list', [\App\Http\Controllers\RenovationController::class, 'deleted'])
         ->middleware('privilege:renovation')

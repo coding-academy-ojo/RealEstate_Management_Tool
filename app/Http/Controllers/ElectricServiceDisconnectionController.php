@@ -21,7 +21,7 @@ class ElectricServiceDisconnectionController extends Controller
         ElectricServiceDisconnection::create($data);
 
         return redirect()
-            ->route('electricity-services.show', $electricityService)
+            ->route('electric.show', $electricityService)
             ->with('success', 'Disconnection record saved successfully.');
     }
 
@@ -36,7 +36,7 @@ class ElectricServiceDisconnectionController extends Controller
         $disconnection->update($data);
 
         return redirect()
-            ->route('electricity-services.show', $electricityService)
+            ->route('electric.show', $electricityService)
             ->with('success', 'Disconnection record updated successfully.');
     }
 
@@ -47,7 +47,7 @@ class ElectricServiceDisconnectionController extends Controller
         $disconnection->delete();
 
         return redirect()
-            ->route('electricity-services.show', $electricityService)
+            ->route('electric.show', $electricityService)
             ->with('success', 'Disconnection record removed successfully.');
     }
 

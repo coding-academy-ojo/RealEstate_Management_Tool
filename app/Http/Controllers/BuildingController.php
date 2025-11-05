@@ -138,6 +138,7 @@ class BuildingController extends Controller
             'contract_start_date' => ['nullable', 'date', 'required_if:property_type,rental'],
             'contract_end_date' => ['nullable', 'date', 'after_or_equal:contract_start_date', 'required_if:property_type,rental'],
             'contract_value' => ['nullable', 'numeric', 'min:0', 'required_if:property_type,rental'],
+            'contract_payment_frequency' => ['nullable', Rule::in(['monthly', 'quarterly', 'semi-annual', 'annual']), 'required_if:property_type,rental'],
             'special_conditions' => ['nullable', 'string'],
             'contract_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
             'annual_increase_rate' => ['nullable', 'numeric', 'min:0', 'max:100', 'required_if:property_type,rental'],
@@ -165,6 +166,7 @@ class BuildingController extends Controller
             'contract_start_date' => $propertyType === 'rental' ? $validated['contract_start_date'] : null,
             'contract_end_date' => $propertyType === 'rental' ? $validated['contract_end_date'] : null,
             'contract_value' => $propertyType === 'rental' ? $validated['contract_value'] : null,
+            'contract_payment_frequency' => $propertyType === 'rental' ? ($validated['contract_payment_frequency'] ?? null) : null,
             'special_conditions' => $propertyType === 'rental' ? ($validated['special_conditions'] ?? null) : null,
             'annual_increase_rate' => $propertyType === 'rental' ? $validated['annual_increase_rate'] : null,
             'increase_effective_date' => $propertyType === 'rental' ? $validated['increase_effective_date'] : null,
@@ -336,6 +338,7 @@ class BuildingController extends Controller
             'contract_start_date' => ['nullable', 'date', 'required_if:property_type,rental'],
             'contract_end_date' => ['nullable', 'date', 'after_or_equal:contract_start_date', 'required_if:property_type,rental'],
             'contract_value' => ['nullable', 'numeric', 'min:0', 'required_if:property_type,rental'],
+            'contract_payment_frequency' => ['nullable', Rule::in(['monthly', 'quarterly', 'semi-annual', 'annual']), 'required_if:property_type,rental'],
             'special_conditions' => ['nullable', 'string'],
             'contract_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
             'annual_increase_rate' => ['nullable', 'numeric', 'min:0', 'max:100', 'required_if:property_type,rental'],
@@ -363,6 +366,7 @@ class BuildingController extends Controller
             $building->contract_start_date = $validated['contract_start_date'];
             $building->contract_end_date = $validated['contract_end_date'];
             $building->contract_value = $validated['contract_value'];
+            $building->contract_payment_frequency = $validated['contract_payment_frequency'] ?? null;
             $building->special_conditions = $validated['special_conditions'] ?? null;
             $building->annual_increase_rate = $validated['annual_increase_rate'];
             $building->increase_effective_date = $validated['increase_effective_date'];
@@ -370,6 +374,7 @@ class BuildingController extends Controller
             $building->contract_start_date = null;
             $building->contract_end_date = null;
             $building->contract_value = null;
+            $building->contract_payment_frequency = null;
             $building->special_conditions = null;
             $building->annual_increase_rate = null;
             $building->increase_effective_date = null;

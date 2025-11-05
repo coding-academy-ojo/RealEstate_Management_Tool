@@ -3,7 +3,7 @@
 @section('title', 'Deleted Electricity Services')
 
 @section('breadcrumbs')
-    <li class="breadcrumb-item"><a href="{{ route('electricity-services.index') }}">Electricity Services</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('electric.index') }}">Electricity Services</a></li>
     <li class="breadcrumb-item active">Deleted Services</li>
 @endsection
 
@@ -40,7 +40,7 @@
         <h2 class="mb-0">
             <i class="bi bi-trash me-2 text-muted"></i>Deleted Electricity Services
         </h2>
-        <a href="{{ route('electricity-services.index') }}" class="btn btn-back">
+        <a href="{{ route('electric.index') }}" class="btn btn-back">
             <i class="bi bi-arrow-left me-1"></i> Back to Electricity Services
         </a>
     </div>

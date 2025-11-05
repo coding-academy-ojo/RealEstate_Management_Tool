@@ -133,6 +133,24 @@
                                         <div>{{ $building->contract_value !== null ? number_format($building->contract_value, 2) . ' JOD' : '—' }}</div>
                                     </div>
                                     <div class="col-md-4">
+                                        <div class="text-muted text-uppercase small fw-semibold">Payment Frequency</div>
+                                        <div>
+                                            @if($building->contract_payment_frequency)
+                                                @php
+                                                    $frequencies = [
+                                                        'monthly' => 'Monthly (شهري)',
+                                                        'quarterly' => 'Quarterly (ربع سنوي)',
+                                                        'semi-annual' => 'Semi-Annual (نصف سنوي)',
+                                                        'annual' => 'Annual (سنوي)'
+                                                    ];
+                                                @endphp
+                                                {{ $frequencies[$building->contract_payment_frequency] ?? ucfirst($building->contract_payment_frequency) }}
+                                            @else
+                                                —
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
                                         <div class="text-muted text-uppercase small fw-semibold">Annual Increase</div>
                                         <div>{{ $building->annual_increase_rate !== null ? rtrim(rtrim(number_format($building->annual_increase_rate, 2), '0'), '.') . '%' : '—' }}</div>
                                     </div>
@@ -441,7 +459,7 @@ foreach ($building->images as $image) {
                                 <td>{{ optional($service->reading_date)->format('Y-m-d') ?? '—' }}</td>
                                 <td>
                                     @if ($service->reset_file)
-                                        @php $resetUrl = route('electricity-services.files.show', [$service, 'reset-file']); @endphp
+                                        @php $resetUrl = route('electric.files.show', [$service, 'reset-file']); @endphp
                                         <div class="d-flex flex-wrap gap-2 align-items-center">
                                             <a href="{{ $resetUrl }}" target="_blank"
                                                 class="btn btn-sm btn-outline-warning">
@@ -459,7 +477,7 @@ foreach ($building->images as $image) {
                                 <td>{{ $service->remarks ?: '—' }}</td>
                                 <td class="text-end">
                                     <div class="btn-group" role="group">
-                                        <a href="{{ route('electricity-services.show', $service) }}"
+                                        <a href="{{ route('electric.show', $service) }}"
                                             class="btn btn-sm btn-outline-primary" title="View">
                                             <i class="bi bi-eye"></i>
                                         </a>

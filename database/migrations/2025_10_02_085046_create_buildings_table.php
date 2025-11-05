@@ -23,6 +23,7 @@ return new class extends Migration
             $table->date('contract_start_date')->nullable();
             $table->date('contract_end_date')->nullable();
             $table->decimal('contract_value', 14, 2)->nullable();
+            $table->string('contract_payment_frequency', 20)->nullable(); // monthly, quarterly, semi-annual, annual
             $table->text('special_conditions')->nullable();
             $table->string('contract_file')->nullable();
             $table->decimal('annual_increase_rate', 5, 2)->nullable();

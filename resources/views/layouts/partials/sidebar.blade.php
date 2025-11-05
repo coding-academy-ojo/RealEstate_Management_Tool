@@ -269,7 +269,7 @@
 
             $electricitySectionActive = request()->routeIs('electricity.overview') ||
                 request()->routeIs('electricity.services.index') ||
-                request()->routeIs('electricity-services.*') ||
+                request()->routeIs('electric.*') ||
                 request()->routeIs('electricity.bills.index') ||
                 request()->routeIs('electricity.companies.*');
         @endphp
@@ -327,7 +327,7 @@
                     <span>Electricity Overview</span>
                 </a>
                 <a href="{{ route('electricity.services.index') }}"
-                    class="sidebar-sublink {{ request()->routeIs('electricity.services.index') || request()->routeIs('electricity-services.*') ? 'active' : '' }}">
+                    class="sidebar-sublink {{ request()->routeIs('electricity.services.index') || request()->routeIs('electric.*') ? 'active' : '' }}">
                     <i class="bi bi-list-ul"></i>
                     <span>Electricity Services</span>
                 </a>
@@ -411,7 +411,7 @@
         <span>Electricity Overview</span>
     </a>
     <a href="{{ route('electricity.services.index') }}"
-        class="sidebar-sublink {{ request()->routeIs('electricity.services.index') || request()->routeIs('electricity-services.*') ? 'active' : '' }}"
+        class="sidebar-sublink {{ request()->routeIs('electricity.services.index') || request()->routeIs('electric.*') ? 'active' : '' }}"
         style="display: flex; align-items: center; padding: 12px 20px; color: #f1f1f1; text-decoration: none; border-left: 3px solid transparent; transition: all 0.2s ease;">
         <i class="bi bi-list-ul" style="margin-right: 12px; font-size: 1.1rem; width: 24px; text-align: center;"></i>
         <span>Electricity Services</span>

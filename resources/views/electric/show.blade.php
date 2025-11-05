@@ -1,9 +1,9 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Electricity Service Details')
 
 @section('breadcrumbs')
-    <li class="breadcrumb-item"><a href="{{ route('electricity-services.index') }}">Electricity Services</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('electric.index') }}">Electricity Services</a></li>
     <li class="breadcrumb-item active">{{ $electricityService->registration_number }}</li>
 @endsection
 
@@ -101,7 +101,7 @@
                 Electricity Service Record
             </h2>
             <p class="text-muted mb-1">
-                Registration #{{ $electricityService->registration_number }} · Meter {{ $electricityService->meter_number }}
+                Registration #{{ $electricityService->registration_number }} � Meter {{ $electricityService->meter_number }}
             </p>
             @if ($isSolar)
                 <span class="badge bg-success text-white fs-6"><i class="fas fa-sun me-1"></i>Solar / Net Metering</span>
@@ -118,7 +118,7 @@
                     <button type="button" class="btn btn-outline-primary" onclick="openDisconnectionModal('create')">
                         <i class="bi bi-plug me-1"></i> Log Disconnection
                     </button>
-                    <a href="{{ route('electricity-services.edit', $electricityService) }}" class="btn btn-outline-orange">
+                    <a href="{{ route('electric.edit', $electricityService) }}" class="btn btn-outline-orange">
                         <i class="bi bi-pencil me-1"></i> Edit
                     </a>
                     <button type="button" class="btn btn-warning" onclick="openDeactivateModal()">
@@ -182,7 +182,7 @@
                                             ({{ $electricityService->building->code }})
                                         </a>
                                         <div class="text-muted small">Site:
-                                            {{ $electricityService->building->site->name ?? '—' }}</div>
+                                            {{ $electricityService->building->site->name ?? '�' }}</div>
                                     @else
                                         <span class="text-muted">Unassigned</span>
                                     @endif
@@ -233,8 +233,8 @@
                             <table class="table table-hover align-middle">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Disconnection Date<br><small class="text-muted">تاريخ القطع</small></th>
-                                        <th>Reconnection Date<br><small class="text-muted">تاريخ إعادة الوصل</small></th>
+                                        <th>Disconnection Date<br><small class="text-muted">تاريخ الانقطاع</small></th>
+                                        <th>Reconnection Date<br><small class="text-muted">تاريخ إعادة الخدمة</small></th>
                                         <th>Reason<br><small class="text-muted">السبب</small></th>
                                         @if ($canManageElectricity)
                                             <th class="text-end">Actions</th>
@@ -244,7 +244,7 @@
                                 <tbody>
                                     @foreach ($electricityService->disconnections as $event)
                                         <tr>
-                                            <td>{{ $event->disconnection_date?->format('d M Y') ?? '—' }}</td>
+                                            <td>{{ $event->disconnection_date?->format('d M Y') ?? '�' }}</td>
                                             <td>
                                                 @if ($event->reconnection_date)
                                                     {{ $event->reconnection_date->format('d M Y') }}
@@ -252,7 +252,7 @@
                                                     <span class="badge bg-danger text-white">Still disconnected</span>
                                                 @endif
                                             </td>
-                                            <td>{{ $event->reason ?: '—' }}</td>
+                                            <td>{{ $event->reason ?: '�' }}</td>
                                             @if ($canManageElectricity)
                                                 <td class="text-end">
                                                     <div class="btn-group btn-group-sm">
@@ -265,7 +265,7 @@
                                                             <i class="bi bi-pencil"></i>
                                                         </button>
                                                         <form method="POST"
-                                                            action="{{ route('electricity-services.disconnections.destroy', [$electricityService, $event]) }}"
+                                                            action="{{ route('electric.disconnections.destroy', [$electricityService, $event]) }}"
                                                             onsubmit="return confirm('Delete this disconnection record?');">
                                                             @csrf
                                                             @method('DELETE')
@@ -292,14 +292,14 @@
                         <i class="bi bi-speedometer2 me-2"></i>Quick Stats
                     </h6>
                     <div class="d-flex flex-column gap-3">
-                        <div class="d-flex align-items-center gap-3">
+                                <div class="d-flex align-items-center gap-3">
                             <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center"
                                 style="width: 48px; height: 48px; flex-shrink: 0;">
                                 <i class="fas fa-bolt fa-lg"></i>
                             </div>
                             <div>
-                                <div class="text-muted small">Last Imported Calculated<br><span
-                                        class="text-muted">المستجره المحتسبه</span></div>
+                <div class="text-muted small">Last Imported Calculated<br><span
+                    class="text-muted">آخر قيمة واردة محسوبة</span></div>
                                 <div class="fw-bold">
                                     {{ $latestImportedCalculated ? number_format((float) $latestImportedCalculated, 2) . ' kWh' : 'No data' }}
                                 </div>
@@ -312,8 +312,8 @@
                                     <i class="fas fa-sun fa-lg"></i>
                                 </div>
                                 <div>
-                                    <div class="text-muted small">Last Produced Calculated<br><span
-                                            class="text-muted">المصدره المحتسبه</span></div>
+                    <div class="text-muted small">Last Produced Calculated<br><span
+                        class="text-muted">آخر قيمة منتجة محسوبة</span></div>
                                     <div class="fw-bold">
                                         {{ $latestProducedCalculated ? number_format((float) $latestProducedCalculated, 2) . ' kWh' : 'No data' }}
                                     </div>
@@ -325,8 +325,7 @@
                                     <i class="fas fa-battery-three-quarters fa-lg"></i>
                                 </div>
                                 <div>
-                                    <div class="text-muted small">Saved Energy<br><span class="text-muted">الطاقة
-                                            الموفرة</span></div>
+                    <div class="text-muted small">Saved Energy<br><span class="text-muted">الطاقة الموفرة</span></div>
                                     <div class="fw-bold">
                                         {{ $latestSavedEnergy ? number_format((float) $latestSavedEnergy, 2) . ' kWh' : 'No data' }}
                                     </div>
@@ -344,7 +343,7 @@
                 <div class="card-body">
                     <div class="d-flex flex-column gap-2">
                         @if ($electricityService->reset_file)
-                            <a href="{{ route('electricity-services.files.show', [$electricityService, 'reset']) }}"
+                            <a href="{{ route('electric.files.show', [$electricityService, 'reset']) }}"
                                 class="btn btn-sm btn-outline-primary" target="_blank">
                                 <i class="bi bi-paperclip me-1"></i> Reset File
                             </a>
@@ -397,10 +396,10 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Date<br><small class="text-muted">التاريخ</small></th>
-                                <th>Imported Readings<br><small class="text-muted">المستجره (kWh)</small></th>
-                                <th>Produced Readings<br><small class="text-muted">المصدره (kWh)</small></th>
-                                <th>Saved Energy<br><small class="text-muted">الطاقة الموفرة (kWh)</small></th>
-                                <th>Consumption<br><small class="text-muted">الاستهلاك (kWh)</small></th>
+                                <th>Imported Readings<br><small class="text-muted">القراءة المستجرة (كيلوواط·ساعة)</small></th>
+                                <th>Produced Readings<br><small class="text-muted">القراءة المصدّرة (كيلوواط·ساعة)</small></th>
+                                <th>Saved Energy<br><small class="text-muted">الطاقة الموفرة (كيلوواط·ساعة)</small></th>
+                                <th>Consumption<br><small class="text-muted">الاستهلاك (كيلوواط·ساعة)</small></th>
                                 <th>Bill<br><small class="text-muted">الفاتورة</small></th>
                                 <th>Notes<br><small class="text-muted">ملاحظات</small></th>
                                 @if ($canManageElectricity)
@@ -427,27 +426,27 @@
                                     </td>
                                     <td>
                                         <div class="fw-bold">
-                                            {{ $importedCalculated !== null ? number_format((float) $importedCalculated, 2) : '—' }}
+                                            {{ $importedCalculated !== null ? number_format((float) $importedCalculated, 2) : '�' }}
                                             <span class="text-muted">kWh</span>
                                         </div>
-                                        <small class="text-muted d-block">Current:
-                                            {{ $importedCurrent !== null ? number_format((float) $importedCurrent, 2) . ' kWh' : '—' }}</small>
-                                        <small class="text-muted d-block">Prev. calculated:
+                                        <small class="text-muted d-block">الحالية:
+                                            {{ $importedCurrent !== null ? number_format((float) $importedCurrent, 2) . ' kWh' : '�' }}</small>
+                                        <small class="text-muted d-block">المحتسبة السابقة:
                                             {{ number_format((float) ($reading->computed_previous_imported_calculated ?? 0), 2) }}
                                             kWh</small>
                                     </td>
                                     <td>
                                         <div class="fw-bold">
-                                            {{ $producedCalculated !== null ? number_format((float) $producedCalculated, 2) : '—' }}
+                                            {{ $producedCalculated !== null ? number_format((float) $producedCalculated, 2) : '�' }}
                                             <span class="text-muted">kWh</span>
                                         </div>
-                                        <small class="text-muted d-block">Current:
-                                            {{ $producedCurrent !== null ? number_format((float) $producedCurrent, 2) . ' kWh' : '—' }}</small>
-                                        <small class="text-muted d-block">Prev. calculated:
+                                        <small class="text-muted d-block">الحالية:
+                                            {{ $producedCurrent !== null ? number_format((float) $producedCurrent, 2) . ' kWh' : '�' }}</small>
+                                        <small class="text-muted d-block">المحتسبة السابقة:
                                             {{ number_format((float) ($reading->computed_previous_produced_calculated ?? 0), 2) }}
                                             kWh</small>
                                     </td>
-                                    <td>{{ $savedEnergy !== null ? number_format((float) $savedEnergy, 2) . ' kWh' : '—' }}
+                                    <td>{{ $savedEnergy !== null ? number_format((float) $savedEnergy, 2) . ' kWh' : '�' }}
                                     </td>
                                     <td>
                                         <div class="fw-semibold">{{ number_format((float) $consumption, 2) }} kWh</div>
@@ -467,7 +466,7 @@
                                             <span class="text-muted">No bills recorded</span>
                                         @endif
                                     </td>
-                                    <td>{{ $reading->notes ?: '—' }}</td>
+                                    <td>{{ $reading->notes ?: '�' }}</td>
                                     @if ($canManageElectricity)
                                         <td class="text-end">
                                             <div class="btn-group btn-group-sm">
@@ -485,12 +484,12 @@
                                                     data-reading-notes="{{ $reading->notes }}"
                                                     data-prev-imported-calculated="{{ $reading->computed_previous_imported_calculated ?? 0 }}"
                                                     data-prev-produced-calculated="{{ $reading->computed_previous_produced_calculated ?? 0 }}"
-                                                    data-reading-meter-url="{{ $reading->meter_image ? route('electricity-services.readings.files.show', [$electricityService, $reading, 'meter']) : '' }}"
-                                                    data-reading-bill-url="{{ $reading->bill_image ? route('electricity-services.readings.files.show', [$electricityService, $reading, 'bill']) : '' }}">
+                                                    data-reading-meter-url="{{ $reading->meter_image ? route('electric.readings.files.show', [$electricityService, $reading, 'meter']) : '' }}"
+                                                    data-reading-bill-url="{{ $reading->bill_image ? route('electric.readings.files.show', [$electricityService, $reading, 'bill']) : '' }}">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
                                                 <form method="POST"
-                                                    action="{{ route('electricity-services.readings.destroy', [$electricityService, $reading]) }}"
+                                                    action="{{ route('electric.readings.destroy', [$electricityService, $reading]) }}"
                                                     onsubmit="return confirm('Delete this reading?');">
                                                     @csrf
                                                     @method('DELETE')
@@ -521,7 +520,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <form id="readingForm" method="POST"
-                        action="{{ route('electricity-services.readings.store', $electricityService) }}"
+                        action="{{ route('electric.readings.store', $electricityService) }}"
                         enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" name="_method" id="readingMethod" value="POST">
@@ -540,28 +539,28 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label for="reading_imported_current" class="form-label fw-bold">
-                                        Imported Current <span class="text-muted">(المستجره الحالية)</span> (kWh)
+                                        Imported Current <span class="text-muted">(القراءة المستجرة الحالية)</span> (kWh)
                                     </label>
                                     <input type="number" step="0.01" min="0" class="form-control"
                                         id="reading_imported_current" name="imported_current">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="reading_imported_calculated" class="form-label fw-bold">
-                                        Imported Calculated <span class="text-muted">(المستجره المحتسبه)</span> (kWh)
+                                        Imported Calculated <span class="text-muted">(المستجرة المحتسبة)</span> (kWh)
                                     </label>
                                     <input type="number" step="0.01" min="0" class="form-control"
                                         id="reading_imported_calculated" name="imported_calculated">
                                 </div>
                                 <div class="col-md-4 solar-only d-none">
                                     <label for="reading_produced_current" class="form-label fw-bold">
-                                        Produced Current <span class="text-muted">(المصدره الحالية)</span> (kWh)
+                                        Produced Current <span class="text-muted">(القراءة المصدّرة الحالية)</span> (kWh)
                                     </label>
                                     <input type="number" step="0.01" min="0" class="form-control"
                                         id="reading_produced_current" name="produced_current">
                                 </div>
                                 <div class="col-md-4 solar-only d-none">
                                     <label for="reading_produced_calculated" class="form-label fw-bold">
-                                        Produced Calculated <span class="text-muted">(المصدره المحتسبه)</span> (kWh)
+                                        Produced Calculated <span class="text-muted">(المصدّرة المحتسبة)</span> (kWh)
                                     </label>
                                     <input type="number" step="0.01" min="0" class="form-control"
                                         id="reading_produced_calculated" name="produced_calculated">
@@ -575,7 +574,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label for="reading_bill" class="form-label fw-bold">
-                                        Bill Amount <span class="text-muted">(قيمة الفاتورة)</span> (JOD)
+                                        Bill Amount <span class="text-muted">(مبلغ الفاتورة)</span> (JOD)
                                     </label>
                                     <input type="number" step="0.01" min="0" class="form-control"
                                         id="reading_bill" name="bill_amount">
@@ -621,7 +620,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label for="reading_bill_image" class="form-label fw-bold">
-                                        Bill Document <span class="text-muted">(مستند الفاتورة)</span>
+                                        Bill Document <span class="text-muted">(مرفق الفاتورة)</span>
                                     </label>
                                     <input type="file" class="form-control" id="reading_bill_image" name="bill_image"
                                         accept=".pdf,.jpg,.jpeg,.png">
@@ -657,21 +656,21 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="disconnectionForm" method="POST"
-                    action="{{ route('electricity-services.disconnections.store', $electricityService) }}">
+                    action="{{ route('electric.disconnections.store', $electricityService) }}">
                     @csrf
                     <input type="hidden" name="_method" id="disconnectionMethod" value="POST">
                     <div class="modal-body">
                         <div class="row g-3">
-                            <div class="col-md-6">
+                                <div class="col-md-6">
                                 <label for="disconnection_date" class="form-label fw-bold">
-                                    Disconnection Date <span class="text-muted">(تاريخ القطع)</span>
+                                    Disconnection Date <span class="text-muted">(تاريخ الانقطاع)</span>
                                 </label>
                                 <input type="date" class="form-control" id="disconnection_date"
                                     name="disconnection_date" required>
                             </div>
                             <div class="col-md-6">
                                 <label for="reconnection_date" class="form-label fw-bold">
-                                    Reconnection Date <span class="text-muted">(تاريخ إعادة الوصل)</span>
+                                    Reconnection Date <span class="text-muted">(تاريخ إعادة التوصيل)</span>
                                 </label>
                                 <input type="date" class="form-control" id="reconnection_date"
                                     name="reconnection_date">
@@ -708,7 +707,7 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form method="POST" action="{{ route('electricity-services.deactivate', $electricityService) }}">
+                <form method="POST" action="{{ route('electric.deactivate', $electricityService) }}">
                     @csrf
                     <div class="modal-body">
                         <div class="alert alert-warning">
@@ -718,15 +717,15 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="deactivation_reason" class="form-label fw-bold">
+                                <label for="deactivation_reason" class="form-label fw-bold">
                                 Deactivation Reason <span class="text-danger">*</span>
-                                <span class="text-muted">(سبب التعطيل)</span>
+                                <span class="text-muted">(سبب الإيقاف)</span>
                             </label>
                             <select class="form-select" id="deactivation_reason" name="deactivation_reason" required>
                                 <option value="">Select a reason...</option>
-                                <option value="cancelled">Service Cancelled (الخدمة أُلغيت)</option>
+                                <option value="cancelled">Service Cancelled (تم إلغاء الخدمة)</option>
                                 <option value="meter_changed">Meter Changed (تم تغيير العداد)</option>
-                                <option value="merged">Merged with Another Service (تم الدمج)</option>
+                                <option value="merged">Merged with Another Service (تم الدمج مع خدمة أخرى)</option>
                                 <option value="other">Other Reason (سبب آخر)</option>
                             </select>
                         </div>
@@ -734,7 +733,7 @@
                         <div class="mb-3">
                             <label for="deactivation_date" class="form-label fw-bold">
                                 Deactivation Date <span class="text-danger">*</span>
-                                <span class="text-muted">(تاريخ التعطيل)</span>
+                                <span class="text-muted">(تاريخ الإيقاف)</span>
                             </label>
                             <input type="date" class="form-control" id="deactivation_date" name="deactivation_date"
                                 value="{{ date('Y-m-d') }}" required>
@@ -764,7 +763,7 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form method="POST" action="{{ route('electricity-services.reactivate', $electricityService) }}">
+                <form method="POST" action="{{ route('electric.reactivate', $electricityService) }}">
                     @csrf
                     <div class="modal-body">
                         <div class="alert alert-success">
@@ -852,16 +851,16 @@
         </div>
     </div>
     <script>
-        const createReadingUrl = @json(route('electricity-services.readings.store', $electricityService));
-        const updateReadingUrlTemplate = @json(route('electricity-services.readings.update', [$electricityService, '__reading__']));
+        const createReadingUrl = @json(route('electric.readings.store', $electricityService));
+        const updateReadingUrlTemplate = @json(route('electric.readings.update', [$electricityService, '__reading__']));
         const serviceIsSolar = @json($isSolar);
         const latestImportedCurrent = parseFloat(@json($latestImportedCurrent ?? 0)) || 0;
         const latestImportedCalculated = parseFloat(@json($latestImportedCalculated ?? 0)) || 0;
         const latestProducedCurrent = parseFloat(@json($latestProducedCurrent ?? 0)) || 0;
         const latestProducedCalculated = parseFloat(@json($latestProducedCalculated ?? 0)) || 0;
 
-        const createDisconnectionUrl = @json(route('electricity-services.disconnections.store', $electricityService));
-        const updateDisconnectionUrlTemplate = @json(route('electricity-services.disconnections.update', [$electricityService, '__disconnection__']));
+        const createDisconnectionUrl = @json(route('electric.disconnections.store', $electricityService));
+        const updateDisconnectionUrlTemplate = @json(route('electric.disconnections.update', [$electricityService, '__disconnection__']));
 
         function openDeleteModal(serviceId, registrationNumber, companyName) {
             document.getElementById('deleteServiceRegistration').textContent = registrationNumber;

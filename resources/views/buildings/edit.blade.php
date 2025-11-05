@@ -21,6 +21,7 @@
         $contractStartValue = old('contract_start_date', optional($building->contract_start_date)->format('Y-m-d'));
         $contractEndValue = old('contract_end_date', optional($building->contract_end_date)->format('Y-m-d'));
         $contractValue = old('contract_value', $building->contract_value);
+        $contractPaymentFrequency = old('contract_payment_frequency', $building->contract_payment_frequency);
         $annualIncreaseValue = old('annual_increase_rate', $building->annual_increase_rate);
         $increaseEffectiveValue = old(
             'increase_effective_date',
@@ -172,12 +173,29 @@
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="contract_value" class="form-label fw-bold">
-                                        Annual Contract Value (JOD) <span class="text-danger">*</span>
+                                        Contract Value (JOD) <span class="text-danger">*</span>
                                     </label>
                                     <input type="number" step="0.01" name="contract_value" id="contract_value"
                                         class="form-control @error('contract_value') is-invalid @enderror"
                                         value="{{ $contractValue }}" data-rental-required="true">
                                     @error('contract_value')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="contract_payment_frequency" class="form-label fw-bold">
+                                        Payment Frequency <span class="text-danger">*</span>
+                                    </label>
+                                    <select name="contract_payment_frequency" id="contract_payment_frequency"
+                                        class="form-select @error('contract_payment_frequency') is-invalid @enderror"
+                                        data-rental-required="true">
+                                        <option value="">Select frequency...</option>
+                                        <option value="monthly" {{ $contractPaymentFrequency == 'monthly' ? 'selected' : '' }}>Monthly (شهري)</option>
+                                        <option value="quarterly" {{ $contractPaymentFrequency == 'quarterly' ? 'selected' : '' }}>Quarterly (ربع سنوي)</option>
+                                        <option value="semi-annual" {{ $contractPaymentFrequency == 'semi-annual' ? 'selected' : '' }}>Semi-Annual (نصف سنوي)</option>
+                                        <option value="annual" {{ $contractPaymentFrequency == 'annual' ? 'selected' : '' }}>Annual (سنوي)</option>
+                                    </select>
+                                    @error('contract_payment_frequency')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>

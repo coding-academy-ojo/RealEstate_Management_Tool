@@ -171,7 +171,7 @@ class ElectricityServiceController extends Controller
         ElectricityService::create($validated);
 
         return redirect()
-            ->route('electricity-services.index')
+            ->route('electric.index')
             ->with('success', 'Electricity service record created successfully!');
     }
 
@@ -304,7 +304,7 @@ class ElectricityServiceController extends Controller
         $electricityService->update($validated);
 
         return redirect()
-            ->route('electricity-services.index')
+            ->route('electric.index')
             ->with('success', 'Electricity service record updated successfully!');
     }
 
@@ -316,7 +316,7 @@ class ElectricityServiceController extends Controller
         $electricityService->delete();
 
         return redirect()
-            ->route('electricity-services.index')
+            ->route('electric.index')
             ->with('success', 'Electricity service record deleted successfully!');
     }
 
@@ -342,7 +342,7 @@ class ElectricityServiceController extends Controller
         $electricityService->restore();
 
         return redirect()
-            ->route('electricity-services.deleted')
+            ->route('electric.deleted')
             ->with('success', 'Electricity service restored successfully!');
     }
 
@@ -365,7 +365,7 @@ class ElectricityServiceController extends Controller
         $electricityService->forceDelete();
 
         return redirect()
-            ->route('electricity-services.deleted')
+            ->route('electric.deleted')
             ->with('success', 'Electricity service permanently deleted!');
     }
 
@@ -438,7 +438,7 @@ class ElectricityServiceController extends Controller
         );
 
         return redirect()
-            ->route('electricity-services.show', $electricityService)
+            ->route('electric.show', $electricityService)
             ->with('success', 'Electricity service has been deactivated successfully.');
     }
 
@@ -447,7 +447,7 @@ class ElectricityServiceController extends Controller
         $electricityService->reactivate();
 
         return redirect()
-            ->route('electricity-services.show', $electricityService)
+            ->route('electric.show', $electricityService)
             ->with('success', 'Electricity service has been reactivated successfully.');
     }
 }
