@@ -22,6 +22,7 @@ class Building extends Model
         'contract_start_date',
         'contract_end_date',
         'contract_value',
+        'contract_payment_frequency',
         'special_conditions',
         'contract_file',
         'annual_increase_rate',
