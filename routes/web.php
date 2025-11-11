@@ -325,6 +325,21 @@ Route::middleware('auth')->group(function () {
     // Activities route
     Route::get('activities', [\App\Http\Controllers\ActivityController::class, 'index'])->name('activities.index');
 
+    // Reports & Export routes
+    Route::get('reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
+    Route::post('reports/export/sites', [\App\Http\Controllers\ReportController::class, 'exportSites'])->name('reports.export.sites');
+    Route::post('reports/export/all', [\App\Http\Controllers\ReportController::class, 'exportAllHierarchy'])->name('reports.export.all');
+    Route::post('reports/export/buildings', [\App\Http\Controllers\ReportController::class, 'exportBuildings'])->name('reports.export.buildings');
+    Route::post('reports/export/lands', [\App\Http\Controllers\ReportController::class, 'exportLands'])->name('reports.export.lands');
+    Route::post('reports/export/water-services', [\App\Http\Controllers\ReportController::class, 'exportWaterServices'])->name('reports.export.water-services');
+    Route::post('reports/export/electricity-services', [\App\Http\Controllers\ReportController::class, 'exportElectricityServices'])->name('reports.export.electricity-services');
+    Route::post('reports/export/renovations', [\App\Http\Controllers\ReportController::class, 'exportRenovations'])->name('reports.export.renovations');
+
+    // Reports
+    Route::post('reports/water-services-report', [\App\Http\Controllers\ReportController::class, 'exportWaterServicesReport'])->name('reports.water-services-report');
+    Route::post('reports/electricity-services-report', [\App\Http\Controllers\ReportController::class, 'exportElectricityServicesReport'])->name('reports.electricity-services-report');
+    Route::post('reports/renovations-report', [\App\Http\Controllers\ReportController::class, 'exportRenovationsReport'])->name('reports.renovations-report');
+
     // Image routes
     Route::post('images/{type}/{id}/upload', [\App\Http\Controllers\ImageController::class, 'upload'])->name('images.upload');
     Route::patch('images/{image}', [\App\Http\Controllers\ImageController::class, 'update'])->name('images.update');

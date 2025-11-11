@@ -363,9 +363,9 @@
             </a>
         @endif
 
-        <a href="#" class="sidebar-link" data-tooltip="Reports">
-            <i class="bi bi-graph-up"></i>
-            <span>Reports</span>
+        <a href="{{ route('reports.index') }}" class="sidebar-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" data-tooltip="Exports & Reports">
+            <i class="bi bi-file-earmark-spreadsheet"></i>
+            <span>Exports & Reports</span>
         </a>
 
         <a href="#" class="sidebar-link" data-tooltip="Settings">
