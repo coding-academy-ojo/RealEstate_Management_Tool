@@ -293,6 +293,21 @@ Route::middleware('auth')->group(function () {
         ->name('electric.files.show');
     Route::get('electric/{electricityService}/readings/{electricReading}/files/{document}', [\App\Http\Controllers\ElectricReadingController::class, 'file'])
         ->name('electric.readings.files.show');
+
+    // Electricity bulk readings
+    Route::get('electric/readings/bulk', [\App\Http\Controllers\ElectricityReadingBulkController::class, 'index'])
+        ->middleware('privilege:electricity')
+        ->name('electric.readings.bulk');
+    Route::get('api/electricity-services/search', [\App\Http\Controllers\ElectricityReadingBulkController::class, 'search'])
+        ->middleware('privilege:electricity')
+        ->name('api.electric.services.search');
+    Route::get('api/electricity-services/{service}', [\App\Http\Controllers\ElectricityReadingBulkController::class, 'show'])
+        ->middleware('privilege:electricity')
+        ->name('api.electric.services.show');
+    Route::post('api/electricity-readings/bulk', [\App\Http\Controllers\ElectricityReadingBulkController::class, 'store'])
+        ->middleware('privilege:electricity')
+        ->name('api.electric.readings.bulk.store');
+
     Route::post('electric/{electricityService}/readings', [\App\Http\Controllers\ElectricReadingController::class, 'store'])
         ->middleware('privilege:electricity')
         ->name('electric.readings.store');

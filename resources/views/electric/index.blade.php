@@ -107,6 +107,9 @@
                 <i class="bi bi-speedometer2 me-1"></i> Overview
             </a>
             @if ($canManageElectricity)
+                <a href="{{ route('electric.readings.bulk') }}" class="btn btn-outline-warning">
+                    <i class="bi bi-list-check me-1"></i> Bulk Add Readings
+                </a>
                 <a href="{{ route('electric.deleted') }}" class="btn btn-trash">
                     <i class="bi bi-trash"></i> Deleted Services
                 </a>
