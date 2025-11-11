@@ -35,6 +35,8 @@ return new class extends Migration
             $table->string('occupancy_permit_file')->nullable(); // إذن إشغال
             $table->boolean('has_profession_permit')->nullable();
             $table->string('profession_permit_file')->nullable(); // رخصة مهن
+            $table->string('as_built_drawing_pdf')->nullable();   // As-built drawing PDF
+            $table->string('as_built_drawing_cad')->nullable();   // As-built drawing CAD/DWG
 
             $table->text('remarks')->nullable();
             $table->timestamps();

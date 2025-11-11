@@ -536,7 +536,7 @@ class ComprehensiveSeeder extends Seeder
 
         $land1_3 = $site1->lands()->create([            'has_profession_permit' => true,
 
-            'plot_number' => '103',            'as_built_drawing' => null,
+            'plot_number' => '103',            'as_built_drawing_pdf' => null,            'as_built_drawing_cad' => null,
 
             'basin' => '25',            'remarks' => 'دفاع مدني'
 
@@ -556,7 +556,7 @@ class ComprehensiveSeeder extends Seeder
 
         // Building 1: Office Tower on lands 1 & 2            'has_profession_permit' => null,
 
-        $building1_1 = $site1->buildings()->create([            'as_built_drawing' => null,
+    $building1_1 = $site1->buildings()->create([            'as_built_drawing_pdf' => null,            'as_built_drawing_cad' => null,
 
             'name' => 'Abdoun Tower A - Corporate Offices',            'remarks' => null
 
@@ -576,7 +576,7 @@ class ComprehensiveSeeder extends Seeder
 
             'has_profession_permit' => null,
 
-        // Water service for building 1            'as_built_drawing' => null,
+    // Water service for building 1            'as_built_drawing_pdf' => null,            'as_built_drawing_cad' => null,
 
         WaterService::create([            'remarks' => null
 
@@ -704,7 +704,7 @@ class ComprehensiveSeeder extends Seeder
 
             'building_id' => $building1_2->id,            'has_profession_permit' => true,
 
-            'subscriber_number' => 'ELEC-AM-2024-002',            'as_built_drawing' => null,
+            'subscriber_number' => 'ELEC-AM-2024-002',            'as_built_drawing_pdf' => null,            'as_built_drawing_cad' => null,
 
             'annual_consumption_kwh' => 520000.00,            'remarks' => null
 
@@ -724,7 +724,7 @@ class ComprehensiveSeeder extends Seeder
 
             'building_id' => $building1_2->id,            'has_profession_permit' => null,
 
-            'type' => 'Smart Building',            'as_built_drawing' => null,
+            'type' => 'Smart Building',            'as_built_drawing_pdf' => null,            'as_built_drawing_cad' => null,
 
             'description' => 'IoT-based HVAC and lighting automation system',            'remarks' => null
 
@@ -744,7 +744,7 @@ class ComprehensiveSeeder extends Seeder
 
             'name' => 'Community Pavilion',            'has_profession_permit' => null,
 
-            'area_m2' => 1200.00,            'as_built_drawing' => null,
+            'area_m2' => 1200.00,            'as_built_drawing_pdf' => null,            'as_built_drawing_cad' => null,
 
             'has_building_permit' => true,            'remarks' => null
 
