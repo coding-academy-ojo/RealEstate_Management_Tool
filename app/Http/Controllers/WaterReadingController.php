@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\WaterReading;
 use App\Models\WaterService;
+use App\Services\WaterReadingManager;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -173,8 +174,8 @@ class WaterReadingController extends Controller
       $data['bill_image'] = $request->file('bill_image')->store('water-services/readings/bills', 'private');
     }
 
-    WaterReading::create($data);
-    $this->recalculateReadings($waterService);
+  WaterReading::create($data);
+  WaterReadingManager::recalculate($waterService->fresh());
 
     $redirectUrl = $this->resolveRedirectUrl($request, route('water-services.show', $waterService));
 
@@ -199,8 +200,8 @@ class WaterReadingController extends Controller
       $data['bill_image'] = $request->file('bill_image')->store('water-services/readings/bills', 'private');
     }
 
-    $waterReading->update($data);
-    $this->recalculateReadings($waterService);
+  $waterReading->update($data);
+  WaterReadingManager::recalculate($waterService->fresh());
 
     $redirectUrl = $this->resolveRedirectUrl($request, route('water-services.show', $waterService));
 
@@ -215,8 +216,8 @@ class WaterReadingController extends Controller
     $this->deleteStoredFile($waterReading->meter_image);
     $this->deleteStoredFile($waterReading->bill_image);
 
-    $waterReading->delete();
-    $this->recalculateReadings($waterService);
+  $waterReading->delete();
+  WaterReadingManager::recalculate($waterService->fresh());
 
     $redirectUrl = $this->resolveRedirectUrl(request(), route('water-services.show', $waterService));
 
@@ -265,27 +266,6 @@ class WaterReadingController extends Controller
       'bill_image' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
       'notes' => 'nullable|string',
     ]);
-  }
-
-  private function recalculateReadings(WaterService $waterService): void
-  {
-    $readings = $waterService->readings()->orderBy('reading_date')->orderBy('id')->get();
-    $previous = 0.0;
-    $isFirst = true;
-
-    foreach ($readings as $reading) {
-      $current = (float) ($reading->current_reading ?? 0);
-      $consumption = $isFirst
-        ? $current
-        : max(0, round($current - $previous, 2));
-
-      $reading->forceFill([
-        'consumption_value' => $consumption,
-      ])->saveQuietly();
-
-      $previous = $current;
-      $isFirst = false;
-    }
   }
 
   private function ensureBelongsToService(WaterService $waterService, WaterReading $waterReading): void

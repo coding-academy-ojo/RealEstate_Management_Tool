@@ -7,6 +7,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WaterCompanyController;
 use App\Http\Controllers\WaterOverviewController;
 use App\Http\Controllers\WaterServiceController;
+use App\Http\Controllers\WaterReadingBulkUploadController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
@@ -220,6 +221,18 @@ Route::middleware('auth')->group(function () {
         ->name('water-services.force-delete');
     Route::get('water-services/{waterService}/files/{document}', [\App\Http\Controllers\WaterServiceController::class, 'file'])
         ->name('water-services.files.show');
+    Route::get('water-services/readings/bulk', [WaterReadingBulkUploadController::class, 'show'])
+        ->middleware('privilege:water')
+        ->name('water-services.readings.bulk');
+    Route::get('water-services/readings/template', [WaterReadingBulkUploadController::class, 'template'])
+        ->middleware('privilege:water')
+        ->name('water-services.readings.bulk.template');
+    Route::post('water-services/readings/bulk/preview', [WaterReadingBulkUploadController::class, 'preview'])
+        ->middleware('privilege:water')
+        ->name('water-services.readings.bulk.preview');
+    Route::post('water-services/readings/bulk/confirm', [WaterReadingBulkUploadController::class, 'confirm'])
+        ->middleware('privilege:water')
+        ->name('water-services.readings.bulk.confirm');
     Route::get('water-services/{waterService}/readings/{waterReading}/files/{document}', [\App\Http\Controllers\WaterReadingController::class, 'file'])
         ->name('water-services.readings.files.show');
 
