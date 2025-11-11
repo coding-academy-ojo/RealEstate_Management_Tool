@@ -13,6 +13,7 @@
             background-color: #f8f9fa !important;
             background-image: none !important;
             position: relative;
+            z-index: auto !important;
         }
 
         #content::before {
@@ -30,9 +31,18 @@
             z-index: 0;
         }
 
-        #content>* {
+        #content>*:not(.modal-backdrop):not(.modal) {
             position: relative;
-            z-index: 1;
+            z-index: auto;
+        }
+
+        /* Ensure modals appear above everything */
+        .modal-backdrop {
+            z-index: 9999 !important;
+        }
+
+        .modal {
+            z-index: 10000 !important;
         }
     </style>
 
@@ -252,7 +262,7 @@
 
     <!-- Confirmation Modal -->
     <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true"
-        style="z-index: 9999;">
+        style="z-index: 10000 !important;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-warning text-dark border-0">
@@ -274,9 +284,8 @@
 
     <!-- Error Alert Modal -->
     <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true"
-        style="z-index: 9999;">
+        style="z-index: 10000 !important;">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-danger text-white border-0">
                     <h5 class="modal-title" id="errorModalLabel">
                         <i class="bi bi-x-circle-fill me-2"></i>Error
@@ -337,7 +346,7 @@
             if (!backdrop) {
                 backdrop = document.createElement('div');
                 backdrop.className = 'modal-backdrop fade show';
-                backdrop.style.zIndex = '9998';
+                backdrop.style.zIndex = '9999';
                 document.body.appendChild(backdrop);
             }
         }
@@ -367,7 +376,7 @@
             if (!backdrop) {
                 backdrop = document.createElement('div');
                 backdrop.className = 'modal-backdrop fade show';
-                backdrop.style.zIndex = '9998';
+                backdrop.style.zIndex = '9999';
                 document.body.appendChild(backdrop);
             }
         }
