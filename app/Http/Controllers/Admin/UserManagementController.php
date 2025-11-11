@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Mail\AdminWelcomeMail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class UserManagementController extends Controller
@@ -83,6 +85,7 @@ class UserManagementController extends Controller
             'privileges.*' => ['string', Rule::in(array_keys(self::PRIVILEGES))],
         ]);
 
+        $plainPassword = $data['password'];
         $role = $data['role'];
 
         // Admin role gets all privileges (stored as null like super_admin)
@@ -90,6 +93,11 @@ class UserManagementController extends Controller
         $privileges = in_array($role, ['super_admin', 'admin'])
             ? null
             : $this->normalizePrivileges($data['privileges'] ?? []);
+
+        $friendlyPrivileges = null;
+        if (is_array($privileges)) {
+            $friendlyPrivileges = array_map(fn ($key) => self::PRIVILEGES[$key] ?? $key, $privileges);
+        }
 
         unset($data['privileges']);
         unset($data['role']);
@@ -101,6 +109,8 @@ class UserManagementController extends Controller
             'role' => $role,
             'privileges' => $privileges,
         ]);
+
+        Mail::to($user->email)->send(new AdminWelcomeMail($user, $plainPassword, $friendlyPrivileges));
 
         $roleLabel = self::ROLES[$user->role] ?? ucfirst(str_replace('_', ' ', $user->role));
 

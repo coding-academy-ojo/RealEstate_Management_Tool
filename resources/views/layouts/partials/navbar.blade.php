@@ -90,8 +90,7 @@
                     </ul>
                 </div>
             @else
-                <a href="{{ route('login') }}" class="btn btn-outline-light me-2">Login</a>
-                <a href="{{ route('register') }}" class="btn btn-light">Register</a>
+                <a href="{{ route('login') }}" class="btn btn-outline-light">Login</a>
             @endauth
         </div>
     </div>
