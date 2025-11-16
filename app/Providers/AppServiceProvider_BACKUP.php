@@ -6,7 +6,6 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,26 +22,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // ==========================================
-        // 1) Fix HTTPS behind Google Load Balancer
-        // ==========================================
-        if (
-            (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
-            || (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on')
-        ) {
-            URL::forceScheme('https');
-        }
-
-        // ==========================================
-        // 2) Fix Laravel when running in subfolder
-        // ==========================================
-        if (config('app.url')) {
-            URL::forceRootUrl(config('app.url')); // e.g. https://www.odcjordan.com/realstate
-        }
-
-        // ==========================================
-        // 3) Your Original Code (kept as-is)
-        // ==========================================
         Schema::defaultStringLength(191);
         \Illuminate\Pagination\Paginator::defaultView('vendor.pagination.custom');
 
@@ -70,4 +49,3 @@ class AppServiceProvider extends ServiceProvider
         });
     }
 }
-

@@ -15,6 +15,7 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
+
 Route::get('/dashboard', function () {
     // Get all governorate codes
     $governorates = ['AM', 'IR', 'AJ', 'JA', 'MA', 'BA', 'ZA', 'KA', 'TF', 'MN', 'AQ', 'MF'];
